@@ -1,0 +1,258 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block dash_title %}Analitika{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Analitika</h1>
+      <p class="dash-head__sub">Mavjud ma'lumotlar asosida umumiy va davr ichidagi ko'rsatkichlar</p>
+    </div>
+  </div>
+
+  {# --- Davr filtri --- #}
+  <div class="tabs">
+    {% for key, item in range_choices.items %}
+      <a class="chip {% if range_key == key %}is-active{% endif %}" href="?range={{ key }}">{{ item.0 }}</a>
+    {% endfor %}
+  </div>
+
+  {# --- Umumiy statistika --- #}
+  <div class="dash-stats">
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.totals.movies }}</div>
+      <div class="dash-stat__label">Jami film</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.totals.series }}</div>
+      <div class="dash-stat__label">Jami serial</div>
+      <div class="dash-stat__hint">{{ summary.totals.episodes }} ta epizod</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.totals.users }}</div>
+      <div class="dash-stat__label">Foydalanuvchilar</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.totals.views|intcomma }}</div>
+      <div class="dash-stat__label">Jami ko'rish</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.totals.downloads|intcomma }}</div>
+      <div class="dash-stat__label">Jami yuklab olish</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.totals.avg_rating }}</div>
+      <div class="dash-stat__label">O'rtacha reyting</div>
+      <div class="dash-stat__hint">{{ summary.totals.ratings }} ta baho</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.totals.unique_viewers }}</div>
+      <div class="dash-stat__label">Ko'rgan foydalanuvchilar</div>
+      <div class="dash-stat__hint">Kamida bitta filmni tomosha qilganlar</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.totals.returning_viewers }}</div>
+      <div class="dash-stat__label">Qaytgan foydalanuvchilar</div>
+      <div class="dash-stat__hint">2+ turli filmni ko'rganlar</div>
+    </div>
+  </div>
+
+  {# --- Davr ichidagi o'zgarish --- #}
+  <div class="dash-stats">
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.period.new_users.value }}</div>
+      <div class="dash-stat__label">Yangi foydalanuvchi ({{ range_label }})</div>
+      <div class="dash-stat__hint">
+        {% if summary.period.new_users.change is not None %}
+          {% if summary.period.new_users.change >= 0 %}
+            <span style="color: var(--success)">↑ {{ summary.period.new_users.change }}%</span>
+          {% else %}
+            <span style="color: var(--danger)">↓ {{ summary.period.new_users.change }}%</span>
+          {% endif %}
+          oldingi davrga nisbatan
+        {% else %}
+          oldingi davrda ma'lumot yo'q
+        {% endif %}
+      </div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.period.new_movies.value }}</div>
+      <div class="dash-stat__label">Yangi film ({{ range_label }})</div>
+      <div class="dash-stat__hint">
+        {% if summary.period.new_movies.change is not None %}
+          {% if summary.period.new_movies.change >= 0 %}
+            <span style="color: var(--success)">↑ {{ summary.period.new_movies.change }}%</span>
+          {% else %}
+            <span style="color: var(--danger)">↓ {{ summary.period.new_movies.change }}%</span>
+          {% endif %}
+          oldingi davrga nisbatan
+        {% else %}
+          oldingi davrda ma'lumot yo'q
+        {% endif %}
+      </div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ summary.period.views.value }}</div>
+      <div class="dash-stat__label">Ko'rishlar ({{ range_label }})</div>
+      <div class="dash-stat__hint">
+        {% if summary.period.views.change is not None %}
+          {% if summary.period.views.change >= 0 %}
+            <span style="color: var(--success)">↑ {{ summary.period.views.change }}%</span>
+          {% else %}
+            <span style="color: var(--danger)">↓ {{ summary.period.views.change }}%</span>
+          {% endif %}
+          oldingi davrga nisbatan
+        {% else %}
+          oldingi davrda ma'lumot yo'q
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# --- Grafiklar --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Ko'rishlar dinamikasi</h2></div>
+    <div class="js-chart" data-chart="{{ views_chart }}"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Foydalanuvchilar o'sishi</h2></div>
+    <div class="js-chart" data-chart="{{ user_growth_chart }}"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Kontent o'sishi (yangi filmlar)</h2></div>
+    <div class="js-chart" data-chart="{{ content_growth_chart }}"></div>
+  </div>
+
+  {# --- Eng mashhur filmlar --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Eng ko'p ko'rilgan filmlar</h2></div>
+    {% if top_movies_views %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Film</th><th>Yil</th><th>Ko'rishlar</th></tr></thead>
+          <tbody>
+            {% for movie in top_movies_views %}
+              <tr>
+                <td class="table__title"><a href="{{ movie.get_absolute_url }}">{{ movie.title }}</a></td>
+                <td class="muted">{{ movie.release_year }}</td>
+                <td>{{ movie.views_count|intcomma }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Ma'lumot yo'q.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Eng ko'p yuklab olingan filmlar</h2></div>
+    {% if top_movies_downloads %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Film</th><th>Yil</th><th>Yuklab olishlar</th></tr></thead>
+          <tbody>
+            {% for movie in top_movies_downloads %}
+              <tr>
+                <td class="table__title"><a href="{{ movie.get_absolute_url }}">{{ movie.title }}</a></td>
+                <td class="muted">{{ movie.release_year }}</td>
+                <td>{{ movie.downloads_count|intcomma }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Ma'lumot yo'q.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Yuqori baholangan filmlar</h2></div>
+    {% if top_movies_rating %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Film</th><th>Yil</th><th>Reyting</th><th>Baholar soni</th></tr></thead>
+          <tbody>
+            {% for movie in top_movies_rating %}
+              <tr>
+                <td class="table__title"><a href="{{ movie.get_absolute_url }}">{{ movie.title }}</a></td>
+                <td class="muted">{{ movie.release_year }}</td>
+                <td>{{ movie.avg_rating }}/5</td>
+                <td class="muted">{{ movie.rating_count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Hali baholangan film yo'q.</p>
+    {% endif %}
+  </div>
+
+  {% if top_series %}
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Eng ko'p ko'rilgan seriallar</h2></div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Serial</th><th>Yil</th><th>Ko'rishlar</th></tr></thead>
+          <tbody>
+            {% for series in top_series %}
+              <tr>
+                <td class="table__title">{{ series.title }}</td>
+                <td class="muted">{{ series.release_year }}</td>
+                <td>{{ series.views_count|intcomma }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+  {# --- Janrlar ulushi --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Janrlar ulushi</h2></div>
+    {% if genre_share %}
+      <div class="stack">
+        {% for genre in genre_share %}
+          <div class="row" style="gap: var(--s-3)">
+            <span style="width: 110px; flex-shrink: 0" class="muted">{{ genre.name }}</span>
+            <div style="flex: 1; height: 8px; border-radius: var(--r-full); background: var(--surface); overflow: hidden">
+              <div style="height: 100%; border-radius: var(--r-full); background: var(--red);
+                          width: {% widthratio genre.movie_total genre_share.0.movie_total 100 %}%"></div>
+            </div>
+            <span style="width: 40px; text-align: right" class="dim">{{ genre.movie_total }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">Ma'lumot yo'q.</p>
+    {% endif %}
+  </div>
+
+  {# --- Reyting taqsimoti --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Reyting taqsimoti</h2></div>
+    <div class="stack">
+      {% for row in rating_distribution reversed %}
+        <div class="row" style="gap: var(--s-3)">
+          <span style="width: 70px; flex-shrink: 0" class="muted">{{ row.score }} yulduz</span>
+          <div style="flex: 1; height: 8px; border-radius: var(--r-full); background: var(--surface); overflow: hidden">
+            {% if summary.totals.ratings %}
+              <div style="height: 100%; border-radius: var(--r-full); background: var(--warning);
+                          width: {% widthratio row.count summary.totals.ratings 100 %}%"></div>
+            {% endif %}
+          </div>
+          <span style="width: 30px; text-align: right" class="dim">{{ row.count }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+{% endblock %}

@@ -8,6 +8,7 @@ app_name = "dashboard"
 
 urlpatterns = [
     path("", views.DashboardIndexView.as_view(), name="index"),
+    path("analytics/", views.AnalyticsView.as_view(), name="analytics"),
 
     # --- Filmlar ---
     path("movies/", views.MovieManageListView.as_view(), name="movie_list"),

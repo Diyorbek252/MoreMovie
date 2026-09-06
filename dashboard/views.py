@@ -6,7 +6,6 @@ soddalashtirilgan.
 """
 
 import json
-from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -14,7 +13,6 @@ from django.db.models import Avg, Count, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
@@ -26,12 +24,12 @@ from django.views.generic import (
 )
 
 from core.models import ContactMessage
-from movies.models import Category, Favorite, Genre, Movie, ViewHistory, Watchlist
-from series.models import Episode, Season, Series
+from movies.models import Category, Favorite, Genre, Movie, Watchlist
 from reviews.models import Review
-
+from series.models import Episode, Season, Series
 from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
 
+from . import analytics
 from .forms import (
     BannerForm,
     CategoryForm,
@@ -100,32 +98,49 @@ class DashboardIndexView(StaffRequiredMixin, TemplateView):
         )
 
         # Oxirgi 14 kunlik ko'rishlar — inline SVG grafik uchun.
-        context["chart_data"] = json.dumps(self._daily_views(days=14))
+        # `analytics.daily_views()` bilan bir xil naqsh -- Blok F da shu
+        # yerdan ko'chirilib, umumiy modulga o'tkazilgan (Analitika sahifasi
+        # ham shundan foydalanadi, mantiq ikki joyda takrorlanmaydi).
+        context["chart_data"] = json.dumps(analytics.daily_views(days=14))
 
         context["recent_users"] = User.objects.order_by("-date_joined")[:8]
 
         return context
 
-    def _daily_views(self, days=14):
-        """Kunlik ko'rishlar sonini [{"label": "12/03", "value": n}, ...] shaklida."""
-        today = timezone.localdate()
-        start = today - timedelta(days=days - 1)
 
-        # Bitta so'rov bilan kunlar bo'yicha guruhlaymiz.
-        rows = (
-            ViewHistory.objects.filter(watched_at__date__gte=start)
-            .values("watched_at__date")
-            .annotate(total=Count("id"))
+class AnalyticsView(DashboardPermissionMixin, TemplateView):
+    """Analitika sahifasi -- sof so'rov funksiyalari (`dashboard/analytics.py`)
+    ustiga qurilgan yupqa view. Barcha og'ir hisob-kitob o'sha modulda."""
+
+    required_perms = ["dashboard.view_analytics"]
+    template_name = "dashboard/analytics.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        range_key, range_label, days = analytics.resolve_range(
+            self.request.GET.get("range", analytics.DEFAULT_RANGE)
         )
-        counts = {row["watched_at__date"]: row["total"] for row in rows}
 
-        return [
-            {
-                "label": (start + timedelta(days=i)).strftime("%d/%m"),
-                "value": counts.get(start + timedelta(days=i), 0),
-            }
-            for i in range(days)
-        ]
+        context["range_key"] = range_key
+        context["range_label"] = range_label
+        context["range_choices"] = analytics.DATE_RANGES
+
+        context["summary"] = analytics.engagement_summary(days=days)
+
+        context["views_chart"] = json.dumps(analytics.daily_views(days=days))
+        context["user_growth_chart"] = json.dumps(analytics.user_growth(days=days))
+        context["content_growth_chart"] = json.dumps(analytics.content_growth(days=days))
+
+        context["top_movies_views"] = analytics.top_movies(10, "views")
+        context["top_movies_downloads"] = analytics.top_movies(10, "downloads")
+        context["top_movies_rating"] = analytics.top_movies(10, "rating")
+        context["top_series"] = analytics.top_series(10)
+
+        context["genre_share"] = analytics.genre_share(8)
+        context["rating_distribution"] = analytics.rating_distribution()
+
+        return context
 
 
 # ---------------------------------------------------------------------------
