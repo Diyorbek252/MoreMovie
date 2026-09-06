@@ -1,0 +1,127 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Seriallar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Seriallar</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta yozuv</p>
+    </div>
+    <a class="btn btn--primary" href="{% url 'dashboard:series_add' %}">
+      {% include "partials/icon.html" with name="plus" %} Serial qo'shish
+    </a>
+  </div>
+
+  {# --- Qidiruv va holat filtri --- #}
+  <form class="row row--wrap" method="get" style="margin-bottom: var(--s-4)">
+    <input class="input" type="search" name="q" value="{{ current_q }}"
+           placeholder="Sarlavha yoki rejissyor..." style="max-width: 320px">
+
+    <select class="select" name="status" style="max-width: 200px">
+      <option value="">Barchasi</option>
+      <option value="published" {% if current_status == "published" %}selected{% endif %}>Chop etilgan</option>
+      <option value="draft" {% if current_status == "draft" %}selected{% endif %}>Qoralama</option>
+    </select>
+
+    <button class="btn btn--primary" type="submit">Qidirish</button>
+    {% if current_q or current_status %}
+      <a class="btn btn--ghost" href="{% url 'dashboard:series_list' %}">Tozalash</a>
+    {% endif %}
+  </form>
+
+  <div class="panel">
+    {% if series_list %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Sarlavha</th>
+              <th>Yil</th>
+              <th>Holat</th>
+              <th>Fasllar</th>
+              <th>Chop etilgan</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for series in series_list %}
+              <tr>
+                <td>
+                  {% if series.poster %}
+                    <img class="table__poster" src="{{ series.poster.url }}" alt="" loading="lazy">
+                  {% else %}
+                    <div class="table__poster"></div>
+                  {% endif %}
+                </td>
+
+                <td class="table__title">
+                  {{ series.title }}
+                  {% if series.director %}
+                    <div class="dim" style="font-size: var(--fs-xs); font-weight: 400">
+                      {{ series.director.full_name }}
+                    </div>
+                  {% endif %}
+                </td>
+
+                <td class="muted">
+                  {{ series.release_year }}{% if series.end_year %}–{{ series.end_year }}{% endif %}
+                </td>
+
+                <td>
+                  {% if series.status == "ongoing" %}
+                    <span class="badge badge--warning">Davom etmoqda</span>
+                  {% elif series.status == "completed" %}
+                    <span class="badge badge--success">Tugallangan</span>
+                  {% else %}
+                    <span class="badge">E'lon qilingan</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <a href="{% url 'dashboard:season_list' series.pk %}">{{ series.season_count }} ta</a>
+                </td>
+
+                <td>
+                  <button class="switch js-toggle {% if series.is_published %}is-on{% endif %}"
+                          type="button" role="switch"
+                          aria-checked="{% if series.is_published %}true{% else %}false{% endif %}"
+                          aria-label="Chop etish holati"
+                          data-url="{% url 'dashboard:api_toggle_series_publish' series.pk %}"></button>
+                </td>
+
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:season_list' series.pk %}"
+                       aria-label="Fasllar">
+                      {% include "partials/icon.html" with name="grid" %}
+                    </a>
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:series_edit' series.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:series_delete' series.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="film" %}
+        <h2 class="empty__title">Serial topilmadi</h2>
+        <a class="btn btn--primary" href="{% url 'dashboard:series_add' %}">Birinchi serialni qo'shish</a>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

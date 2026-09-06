@@ -1,0 +1,72 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}{{ series.title }} — fasllar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">{{ series.title }}</h1>
+      <p class="dash-head__sub">{{ seasons|length }} ta fasl</p>
+    </div>
+    <div class="row">
+      <a class="btn btn--ghost" href="{% url 'dashboard:series_list' %}">← Seriallarga qaytish</a>
+      <a class="btn btn--primary" href="{% url 'dashboard:season_add' series.pk %}">
+        {% include "partials/icon.html" with name="plus" %} Fasl qo'shish
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    {% if seasons %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Fasl</th><th>Yil</th><th>Epizodlar</th><th>Chop etilgan</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for season in seasons %}
+              <tr>
+                <td class="table__title">{{ season.display_title }}</td>
+                <td class="muted">{{ season.year|default:"—" }}</td>
+                <td>
+                  <a href="{% url 'dashboard:episode_list' season.pk %}">{{ season.episode_total }} ta</a>
+                </td>
+                <td>
+                  {% if season.is_published %}
+                    <span class="badge badge--success">Ha</span>
+                  {% else %}
+                    <span class="dim">Yo'q</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:episode_list' season.pk %}"
+                       aria-label="Epizodlar">
+                      {% include "partials/icon.html" with name="grid" %}
+                    </a>
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:season_edit' season.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:season_delete' season.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="grid" %}
+        <h2 class="empty__title">Hali fasl qo'shilmagan</h2>
+        <a class="btn btn--primary" href="{% url 'dashboard:season_add' series.pk %}">Birinchi faslni qo'shish</a>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Serialni o'chirish{% endblock %}
+
+{% block dash_content %}
+  <div class="panel" style="max-width: 560px">
+    <h1 class="dash-head__title" style="margin-bottom: var(--s-4)">Serialni o'chirish</h1>
+
+    <div class="alert alert--error">
+      {% include "partials/icon.html" with name="alert" %}
+      <div>
+        <strong>«{{ object.title }}»</strong> serial butunlay o'chiriladi.
+        Unga tegishli barcha fasllar va epizodlar ham o'chib ketadi.
+        Bu amalni bekor qilib bo'lmaydi.
+      </div>
+    </div>
+
+    <form method="post" style="margin-top: var(--s-5)">
+      {% csrf_token %}
+      <div class="row">
+        <button class="btn btn--danger btn--lg" type="submit">Ha, o'chirilsin</button>
+        <a class="btn btn--ghost btn--lg" href="{% url 'dashboard:series_list' %}">Bekor qilish</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

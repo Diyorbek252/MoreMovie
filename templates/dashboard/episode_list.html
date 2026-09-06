@@ -1,0 +1,78 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block dash_title %}{{ season.display_title }} — epizodlar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">{{ season.series.title }} — {{ season.display_title }}</h1>
+      <p class="dash-head__sub">{{ episodes|length }} ta epizod</p>
+    </div>
+    <div class="row">
+      <a class="btn btn--ghost" href="{% url 'dashboard:season_list' season.series.pk %}">← Fasllarga qaytish</a>
+      <a class="btn btn--primary" href="{% url 'dashboard:episode_add' season.pk %}">
+        {% include "partials/icon.html" with name="plus" %} Epizod qo'shish
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    {% if episodes %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th><th>№</th><th>Sarlavha</th><th>Davomiyligi</th>
+              <th>Ko'rishlar</th><th>Chop etilgan</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for episode in episodes %}
+              <tr>
+                <td>
+                  {% if episode.thumbnail %}
+                    <img class="table__poster" src="{{ episode.thumbnail.url }}" alt="" loading="lazy">
+                  {% else %}
+                    <div class="table__poster"></div>
+                  {% endif %}
+                </td>
+                <td class="muted">{{ episode.episode_number }}</td>
+                <td class="table__title">{{ episode.title }}</td>
+                <td class="muted">{{ episode.duration_display }}</td>
+                <td>{{ episode.views_count|intcomma }}</td>
+                <td>
+                  <button class="switch js-toggle {% if episode.is_published %}is-on{% endif %}"
+                          type="button" role="switch"
+                          aria-checked="{% if episode.is_published %}true{% else %}false{% endif %}"
+                          aria-label="Chop etish holati"
+                          data-url="{% url 'dashboard:api_toggle_episode_publish' episode.pk %}"></button>
+                </td>
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:episode_edit' episode.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:episode_delete' episode.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="film" %}
+        <h2 class="empty__title">Hali epizod qo'shilmagan</h2>
+        <a class="btn btn--primary" href="{% url 'dashboard:episode_add' season.pk %}">Birinchi epizodni qo'shish</a>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

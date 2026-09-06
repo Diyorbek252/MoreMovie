@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     "users.apps.UsersConfig",
     "movies.apps.MoviesConfig",
+    "series.apps.SeriesConfig",
     "reviews.apps.ReviewsConfig",
     "dashboard.apps.DashboardConfig",
 ]

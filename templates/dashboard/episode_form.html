@@ -1,0 +1,105 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}{% if object %}Epizodni tahrirlash{% else %}Yangi epizod{% endif %}{% endblock %}
+
+{% block dash_content %}
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">
+        {% if object %}{{ object.title }}{% else %}Yangi epizod{% endif %}
+      </h1>
+      <p class="dash-head__sub">{{ season.series.title }} — {{ season.display_title }}</p>
+    </div>
+    <a class="btn btn--ghost" href="{% url 'dashboard:episode_list' season.pk %}">← Epizodlarga qaytish</a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert--error">
+        {% include "partials/icon.html" with name="alert" %}
+        <div>{{ form.non_field_errors }}</div>
+      </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Asosiy ma'lumot</h2></div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "episode_number" or field.name == "title" or field.name == "duration_minutes" or field.name == "quality" or field.name == "language" or field.name == "air_date" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="form-grid form-grid--full" style="margin-top: var(--s-4)">
+        {% for field in form %}
+          {% if field.name == "description" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Media</h2></div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "thumbnail" or field.name == "video_file" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+
+              {% if object and field.name == "thumbnail" and object.thumbnail %}
+                <div class="preview"><img src="{{ object.thumbnail.url }}" alt="Joriy kadr"></div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="form-grid" style="margin-top: var(--s-4)">
+        {% for field in form %}
+          {% if field.name == "video_url" or field.name == "download_url" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <label class="checkbox" style="margin-top: var(--s-4)">
+        {{ form.is_download_allowed }} {{ form.is_download_allowed.label }}
+      </label>
+      {% if form.is_download_allowed.errors %}
+        <p class="field__error">{{ form.is_download_allowed.errors|first }}</p>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Chop etish</h2></div>
+      <label class="checkbox">{{ form.is_published }} {{ form.is_published.label }}</label>
+    </div>
+
+    <div class="row">
+      <button class="btn btn--primary btn--lg" type="submit">
+        {% if object %}O'zgarishlarni saqlash{% else %}Epizodni qo'shish{% endif %}
+      </button>
+      <a class="btn btn--ghost btn--lg" href="{% url 'dashboard:episode_list' season.pk %}">Bekor qilish</a>
+    </div>
+  </form>
+{% endblock %}

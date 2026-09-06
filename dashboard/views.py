@@ -26,9 +26,10 @@ from django.views.generic import (
 
 from core.models import ContactMessage
 from movies.models import Category, Favorite, Genre, Movie, ViewHistory, Watchlist
+from series.models import Episode, Season, Series
 from reviews.models import Review
 
-from .forms import CategoryForm, GenreForm, MovieForm
+from .forms import CategoryForm, EpisodeForm, GenreForm, MovieForm, SeasonForm, SeriesForm
 from .mixins import DashboardPermissionMixin, StaffRequiredMixin, dashboard_perm_required
 
 User = get_user_model()
@@ -60,6 +61,8 @@ class DashboardIndexView(StaffRequiredMixin, TemplateView):
             "movies_draft": (movie_stats["total"] or 0) - (movie_stats["published"] or 0),
             "views_total": movie_stats["views"] or 0,
             "avg_rating": round(movie_stats["avg"] or 0, 2),
+            "series_total": Series.objects.count(),
+            "episodes_total": Episode.objects.count(),
             "users_total": User.objects.count(),
             "users_blocked": User.objects.filter(is_blocked=True).count(),
             "favorites_total": Favorite.objects.count(),
@@ -386,6 +389,243 @@ class MessageListView(DashboardPermissionMixin, ListView):
     def get_queryset(self):
         return ContactMessage.objects.all()
 
+# ---------------------------------------------------------------------------
+# Seriallar / fasllar / epizodlar
+# ---------------------------------------------------------------------------
+
+
+class SeriesManageListView(DashboardPermissionMixin, ListView):
+    """Seriallar jadvali — Movie ro'yxati bilan bir xil naqsh."""
+
+    required_perms = ["series.view_series"]
+    model = Series
+    template_name = "dashboard/series_list.html"
+    context_object_name = "series_list"
+    paginate_by = 20
+
+    def get_queryset(self):
+        queryset = Series.objects.select_related("country", "language", "director")
+
+        if query := self.request.GET.get("q", "").strip():
+            queryset = queryset.filter(
+                Q(title__icontains=query) | Q(director__full_name__icontains=query)
+            )
+
+        status = self.request.GET.get("status")
+        if status == "published":
+            queryset = queryset.filter(is_published=True)
+        elif status == "draft":
+            queryset = queryset.filter(is_published=False)
+
+        return queryset.order_by("-created_at")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_q"] = self.request.GET.get("q", "")
+        context["current_status"] = self.request.GET.get("status", "")
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        context["querystring"] = params.urlencode()
+        return context
+
+
+class SeriesCreateView(DashboardPermissionMixin, CreateView):
+    required_perms = ["series.add_series"]
+    model = Series
+    form_class = SeriesForm
+    template_name = "dashboard/series_form.html"
+    success_url = reverse_lazy("dashboard:series_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{form.instance.title}» qo'shildi.")
+        return super().form_valid(form)
+
+
+class SeriesUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["series.change_series"]
+    model = Series
+    form_class = SeriesForm
+    template_name = "dashboard/series_form.html"
+    success_url = reverse_lazy("dashboard:series_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{form.instance.title}» yangilandi.")
+        return super().form_valid(form)
+
+
+class SeriesDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["series.delete_series"]
+    model = Series
+    template_name = "dashboard/series_confirm_delete.html"
+    success_url = reverse_lazy("dashboard:series_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{self.object.title}» o'chirildi.")
+        return super().form_valid(form)
+
+
+class SeasonListView(DashboardPermissionMixin, ListView):
+    """Bitta serialning fasllari ro'yxati — /dashboard/series/<pk>/seasons/."""
+
+    required_perms = ["series.view_season"]
+    template_name = "dashboard/season_list.html"
+    context_object_name = "seasons"
+
+    def get_queryset(self):
+        self.series = get_object_or_404(Series, pk=self.kwargs["series_pk"])
+        return Season.objects.filter(series=self.series).annotate(
+            episode_total=Count("episodes")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["series"] = self.series
+        return context
+
+
+class SeasonCreateView(DashboardPermissionMixin, CreateView):
+    """Fasl qo'shish — series_pk URL orqali keladi, forma o'zida ko'rsatilmaydi."""
+
+    required_perms = ["series.add_season"]
+    model = Season
+    form_class = SeasonForm
+    template_name = "dashboard/season_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.series = get_object_or_404(Series, pk=kwargs["series_pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.series = self.series
+        messages.success(self.request, f"{form.instance.number}-fasl qo'shildi.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["series"] = self.series
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy("dashboard:season_list", kwargs={"series_pk": self.series.pk})
+
+
+class SeasonUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["series.change_season"]
+    model = Season
+    form_class = SeasonForm
+    template_name = "dashboard/season_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["series"] = self.object.series
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f"{form.instance.number}-fasl yangilandi.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("dashboard:season_list", kwargs={"series_pk": self.object.series.pk})
+
+
+class SeasonDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["series.delete_season"]
+    model = Season
+    template_name = "dashboard/season_confirm_delete.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["series"] = self.object.series
+        return context
+
+    def form_valid(self, form):
+        series_pk = self.object.series.pk
+        messages.success(self.request, f"{self.object.number}-fasl o'chirildi.")
+        self.success_url = reverse_lazy("dashboard:season_list", kwargs={"series_pk": series_pk})
+        return super().form_valid(form)
+
+
+class EpisodeListView(DashboardPermissionMixin, ListView):
+    """Bitta faslning epizodlari — /dashboard/seasons/<pk>/episodes/."""
+
+    required_perms = ["series.view_episode"]
+    template_name = "dashboard/episode_list.html"
+    context_object_name = "episodes"
+
+    def get_queryset(self):
+        self.season = get_object_or_404(
+            Season.objects.select_related("series"), pk=self.kwargs["season_pk"]
+        )
+        return Episode.objects.filter(season=self.season).order_by("episode_number")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["season"] = self.season
+        return context
+
+
+class EpisodeCreateView(DashboardPermissionMixin, CreateView):
+    required_perms = ["series.add_episode"]
+    model = Episode
+    form_class = EpisodeForm
+    template_name = "dashboard/episode_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.season = get_object_or_404(
+            Season.objects.select_related("series"), pk=kwargs["season_pk"]
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.season = self.season
+        messages.success(self.request, f"«{form.instance.title}» epizodi qo'shildi.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["season"] = self.season
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy("dashboard:episode_list", kwargs={"season_pk": self.season.pk})
+
+
+class EpisodeUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["series.change_episode"]
+    model = Episode
+    form_class = EpisodeForm
+    template_name = "dashboard/episode_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["season"] = self.object.season
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{form.instance.title}» epizodi yangilandi.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("dashboard:episode_list", kwargs={"season_pk": self.object.season.pk})
+
+
+class EpisodeDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["series.delete_episode"]
+    model = Episode
+    template_name = "dashboard/episode_confirm_delete.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["season"] = self.object.season
+        return context
+
+    def form_valid(self, form):
+        season_pk = self.object.season.pk
+        messages.success(self.request, f"«{self.object.title}» epizodi o'chirildi.")
+        self.success_url = reverse_lazy("dashboard:episode_list", kwargs={"season_pk": season_pk})
+        return super().form_valid(form)
+
+
 
 # ---------------------------------------------------------------------------
 # AJAX harakatlar
@@ -482,3 +722,27 @@ def moderate_review(request, pk, action):
         return JsonResponse({"status": "deleted", "message": "Sharh o'chirildi"})
 
     return JsonResponse({"error": "Noma'lum amal"}, status=400)
+
+
+@require_POST
+@dashboard_perm_required("series.change_series")
+def toggle_series_publish(request, pk):
+    """Serialni chop etish / yashirish (AJAX)."""
+    series = get_object_or_404(Series, pk=pk)
+    series.is_published = not series.is_published
+    series.save(update_fields=["is_published", "updated_at"])
+
+    note = "chop etildi" if series.is_published else "yashirildi"
+    return JsonResponse({"state": series.is_published, "message": f"«{series.title}» {note}"})
+
+
+@require_POST
+@dashboard_perm_required("series.change_episode")
+def toggle_episode_publish(request, pk):
+    """Epizodni chop etish / yashirish (AJAX)."""
+    episode = get_object_or_404(Episode, pk=pk)
+    episode.is_published = not episode.is_published
+    episode.save(update_fields=["is_published", "updated_at"])
+
+    note = "chop etildi" if episode.is_published else "yashirildi"
+    return JsonResponse({"state": episode.is_published, "message": f"«{episode.title}» {note}"})
