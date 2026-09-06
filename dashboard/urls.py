@@ -56,6 +56,22 @@ urlpatterns = [
     path("reviews/", views.ReviewManageListView.as_view(), name="review_list"),
     path("messages/", views.MessageListView.as_view(), name="message_list"),
 
+    # --- Sayt sozlamalari ---
+    path("settings/", views.SiteSettingsUpdateView.as_view(), name="site_settings"),
+
+    # --- Bannerlar ---
+    path("banners/", views.BannerManageListView.as_view(), name="banner_list"),
+    path("banners/add/", views.BannerCreateView.as_view(), name="banner_add"),
+    path("banners/<int:pk>/edit/", views.BannerUpdateView.as_view(), name="banner_edit"),
+    path("banners/<int:pk>/delete/", views.BannerDeleteView.as_view(), name="banner_delete"),
+
+    # --- Bosh sahifa bo'limlari ---
+    path("homepage/", views.HomepageSectionListView.as_view(), name="homepage_sections"),
+    path(
+        "homepage/<int:pk>/edit/",
+        views.HomepageSectionUpdateView.as_view(), name="homepage_section_edit",
+    ),
+
     # --- AJAX ---
     path("api/movie/<int:pk>/publish/", views.toggle_publish, name="api_toggle_publish"),
     path("api/movie/<int:pk>/featured/", views.toggle_featured, name="api_toggle_featured"),
@@ -64,4 +80,7 @@ urlpatterns = [
     path("api/episode/<int:pk>/publish/", views.toggle_episode_publish, name="api_toggle_episode_publish"),
     path("api/user/<int:pk>/block/", views.toggle_block, name="api_toggle_block"),
     path("api/review/<int:pk>/<str:action>/", views.moderate_review, name="api_moderate_review"),
+    path("api/banner/<int:pk>/toggle/", views.toggle_banner, name="api_toggle_banner"),
+    path("api/homepage/<int:pk>/toggle/", views.toggle_section, name="api_toggle_section"),
+    path("api/homepage/reorder/", views.reorder_sections, name="api_reorder_sections"),
 ]

@@ -1,0 +1,38 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}{{ object.title }} tahrirlash{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">{{ object.title }}</h1>
+      <p class="dash-head__sub">{{ object.get_key_display }}</p>
+    </div>
+    <a class="btn btn--ghost" href="{% url 'dashboard:homepage_sections' %}">← Ro'yxatga qaytish</a>
+  </div>
+
+  <form method="post" class="panel" style="max-width: 640px" novalidate>
+    {% csrf_token %}
+
+    {% for field in form %}
+      {% if field.name == "is_active" %}
+        <label class="checkbox" style="margin-bottom: var(--s-4)">
+          {{ field }} {{ field.label }}
+        </label>
+      {% else %}
+        <div class="field" style="margin-bottom: var(--s-4)">
+          <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    <div class="row">
+      <button class="btn btn--primary btn--lg" type="submit">Saqlash</button>
+      <a class="btn btn--ghost btn--lg" href="{% url 'dashboard:homepage_sections' %}">Bekor qilish</a>
+    </div>
+  </form>
+
+{% endblock %}

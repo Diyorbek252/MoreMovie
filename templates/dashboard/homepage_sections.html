@@ -1,0 +1,61 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Bosh sahifa bo'limlari{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Bosh sahifa bo'limlari</h1>
+      <p class="dash-head__sub">
+        Bo'limlarni sudrab tartiblang, yoqing/o'chiring yoki sarlavhasini tahrirlang.
+      </p>
+    </div>
+  </div>
+
+  <div class="panel">
+    {% if sections %}
+      <ul class="sortable" id="section-sortable" data-url="{% url 'dashboard:api_reorder_sections' %}">
+        {% for section in sections %}
+          <li class="sortable__row" data-id="{{ section.pk }}">
+            <span class="sortable__handle" aria-hidden="true">
+              {% include "partials/icon.html" with name="grid" %}
+            </span>
+
+            <div class="sortable__body">
+              <strong>{{ section.title }}</strong>
+              <span class="dim" style="font-size: var(--fs-xs)">
+                {{ section.get_key_display }}
+                {% if section.subtitle %} — {{ section.subtitle }}{% endif %}
+                · {{ section.item_limit }} ta element
+                {% if section.category %} · {{ section.category.name }}{% endif %}
+                {% if section.movie %} · {{ section.movie.title }}{% endif %}
+              </span>
+            </div>
+
+            <button class="switch js-toggle {% if section.is_active %}is-on{% endif %}"
+                    type="button" role="switch"
+                    aria-checked="{% if section.is_active %}true{% else %}false{% endif %}"
+                    aria-label="Faollik holati"
+                    data-url="{% url 'dashboard:api_toggle_section' section.pk %}"></button>
+
+            <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:homepage_section_edit' section.pk %}"
+               aria-label="Tahrirlash">
+              {% include "partials/icon.html" with name="edit" %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="grid" %}
+        <h2 class="empty__title">Bo'limlar hali yaratilmagan</h2>
+        <p class="muted">
+          Terminalda ishlating:
+          <code>python manage.py seed_homepage_sections</code>
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

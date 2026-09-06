@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "movies.apps.MoviesConfig",
     "series.apps.SeriesConfig",
     "reviews.apps.ReviewsConfig",
+    "siteconfig.apps.SiteConfigConfig",
     "dashboard.apps.DashboardConfig",
 ]
 
@@ -112,6 +113,10 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 # Sayt nomi, slogan, navbar janrlari, foydalanuvchi to'plamlari.
                 "core.context_processors.site_globals",
+                # Boshqaruv panelidan tahrirlanadigan sayt sozlamalari
+                # (logo, ijtimoiy tarmoqlar, SEO). Alohida kalit
+                # ("site_settings") ishlatadi -- yuqoridagini bosib qo'ymaydi.
+                "siteconfig.context_processors.site_settings",
             ],
         },
     },

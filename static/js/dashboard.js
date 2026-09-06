@@ -206,4 +206,76 @@
       "</svg>"
     );
   }
+
+  /* --------------------------------------------------------------------
+     Sudrab tartiblash — bosh sahifa bo'limlari (.sortable)
+     Native HTML5 drag-and-drop, tashqi kutubxonasiz.
+     -------------------------------------------------------------------- */
+
+  const sortableList = document.getElementById("section-sortable");
+
+  if (sortableList) {
+    const getRows = function () {
+      return Array.prototype.slice.call(sortableList.querySelectorAll(".sortable__row"));
+    };
+
+    getRows().forEach(function (row) {
+      row.setAttribute("draggable", "true");
+    });
+
+    let draggedRow = null;
+
+    sortableList.addEventListener("dragstart", function (event) {
+      const row = event.target.closest(".sortable__row");
+      if (!row) return;
+      draggedRow = row;
+      row.classList.add("is-dragging");
+      event.dataTransfer.effectAllowed = "move";
+      // Firefox'da dataTransfer.setData chaqirilmasa drag boshlanmaydi.
+      event.dataTransfer.setData("text/plain", row.dataset.id);
+    });
+
+    sortableList.addEventListener("dragend", function () {
+      if (draggedRow) draggedRow.classList.remove("is-dragging");
+      getRows().forEach(function (row) { row.classList.remove("is-drop-target"); });
+      draggedRow = null;
+    });
+
+    sortableList.addEventListener("dragover", function (event) {
+      // Standart holatda "drop" hodisasi faqat preventDefault() chaqirilsa ishlaydi.
+      event.preventDefault();
+      const row = event.target.closest(".sortable__row");
+      if (!row || row === draggedRow) return;
+      getRows().forEach(function (r) { r.classList.remove("is-drop-target"); });
+      row.classList.add("is-drop-target");
+      event.dataTransfer.dropEffect = "move";
+    });
+
+    sortableList.addEventListener("drop", async function (event) {
+      event.preventDefault();
+      const target = event.target.closest(".sortable__row");
+      if (!target || !draggedRow || target === draggedRow) return;
+
+      const rows = getRows();
+      const draggedIndex = rows.indexOf(draggedRow);
+      const targetIndex = rows.indexOf(target);
+
+      // Qaysi tomonga tashlanganiga qarab, DOM'da tegishli joyga ko'chiramiz.
+      if (draggedIndex < targetIndex) {
+        target.after(draggedRow);
+      } else {
+        target.before(draggedRow);
+      }
+      target.classList.remove("is-drop-target");
+
+      const order = getRows().map(function (row) { return parseInt(row.dataset.id, 10); });
+
+      try {
+        const data = await MM.postJSON(sortableList.dataset.url, { order: order });
+        MM.toast(data.message, "success");
+      } catch (error) {
+        MM.toast(error.message, "error");
+      }
+    });
+  }
 })();

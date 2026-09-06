@@ -1,0 +1,138 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Sayt sozlamalari{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Sayt sozlamalari</h1>
+      <p class="dash-head__sub">Logo, aloqa, ijtimoiy tarmoqlar va SEO — barcha sahifalarda ishlatiladi</p>
+    </div>
+  </div>
+
+  {# enctype -- logo/favicon yuklash uchun majburiy #}
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert--error">
+        {% include "partials/icon.html" with name="alert" %}
+        <div>{{ form.non_field_errors }}</div>
+      </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Umumiy</h2></div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "site_name" or field.name == "logo" or field.name == "favicon" or field.name == "contact_email" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+
+              {% if field.name == "logo" and object.logo %}
+                <div class="preview"><img src="{{ object.logo.url }}" alt="Joriy logotip"></div>
+              {% elif field.name == "favicon" and object.favicon %}
+                <div class="preview"><img src="{{ object.favicon.url }}" alt="Joriy favicon"></div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="field" style="margin-top: var(--s-4)">
+        <label class="field__label" for="{{ form.site_description.id_for_label }}">
+          {{ form.site_description.label }}
+        </label>
+        {{ form.site_description }}
+        {% if form.site_description.errors %}
+          <p class="field__error">{{ form.site_description.errors|first }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Ijtimoiy tarmoqlar</h2></div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "telegram" or field.name == "youtube" or field.name == "instagram" or field.name == "facebook" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="field" style="margin-top: var(--s-4)">
+        <label class="field__label" for="{{ form.copyright_text.id_for_label }}">
+          {{ form.copyright_text.label }}
+        </label>
+        {{ form.copyright_text }}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">SEO</h2></div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "seo_title" or field.name == "google_analytics_id" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="field" style="margin-top: var(--s-4)">
+        <label class="field__label" for="{{ form.seo_description.id_for_label }}">
+          {{ form.seo_description.label }}
+        </label>
+        {{ form.seo_description }}
+      </div>
+
+      <div class="field" style="margin-top: var(--s-4)">
+        <label class="field__label" for="{{ form.seo_keywords.id_for_label }}">
+          {{ form.seo_keywords.label }}
+        </label>
+        {{ form.seo_keywords }}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Texnik xizmat rejimi</h2></div>
+
+      <div class="license-note" style="margin-bottom: var(--s-4)">
+        {% include "partials/icon.html" with name="alert" %}
+        <div>
+          <strong>Diqqat.</strong> Yoqilsa, oddiy foydalanuvchilar saytga kira olmaydi.
+          Xodimlar (staff) hamon kirishi mumkin bo'ladi.
+        </div>
+      </div>
+
+      <label class="checkbox">
+        {{ form.maintenance_mode }} {{ form.maintenance_mode.label }}
+      </label>
+
+      <div class="field" style="margin-top: var(--s-4)">
+        <label class="field__label" for="{{ form.maintenance_message.id_for_label }}">
+          {{ form.maintenance_message.label }}
+        </label>
+        {{ form.maintenance_message }}
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn btn--primary btn--lg" type="submit">Saqlash</button>
+    </div>
+  </form>
+
+{% endblock %}

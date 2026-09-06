@@ -44,6 +44,8 @@ ROLES = {
     "Editor": [
         "dashboard.access_dashboard",
         "dashboard.manage_homepage",
+        "dashboard.manage_banners",
+        "dashboard.send_notifications",
         # Faqat tahrirlash — add/delete yo'q
         "movies.view_movie", "movies.change_movie",
         "series.view_series", "series.change_series",

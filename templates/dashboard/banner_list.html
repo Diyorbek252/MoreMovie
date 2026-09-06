@@ -1,0 +1,102 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Bannerlar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Bannerlar</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta banner</p>
+    </div>
+    <a class="btn btn--primary" href="{% url 'dashboard:banner_add' %}">
+      {% include "partials/icon.html" with name="plus" %} Banner qo'shish
+    </a>
+  </div>
+
+  <form class="row row--wrap" method="get" style="margin-bottom: var(--s-4)">
+    <select class="select" name="position" style="max-width: 260px">
+      <option value="">Barcha joylashuvlar</option>
+      {% for value, label in position_choices %}
+        <option value="{{ value }}" {% if current_position == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn--primary" type="submit">Filtrlash</button>
+    {% if current_position %}
+      <a class="btn btn--ghost" href="{% url 'dashboard:banner_list' %}">Tozalash</a>
+    {% endif %}
+  </form>
+
+  <div class="panel">
+    {% if banners %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Sarlavha</th>
+              <th>Joylashuv</th>
+              <th>Muddati</th>
+              <th>Ko'rsatilish / Bosilish</th>
+              <th>CTR</th>
+              <th>Faol</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for banner in banners %}
+              <tr>
+                <td>
+                  <img class="table__poster" style="width:60px;height:34px;object-fit:cover"
+                       src="{{ banner.image.url }}" alt="" loading="lazy">
+                </td>
+                <td class="table__title">
+                  {{ banner.title }}
+                  {% if banner.is_running %}
+                    <span class="badge badge--success">Ishlamoqda</span>
+                  {% endif %}
+                </td>
+                <td class="muted">{{ banner.get_position_display }}</td>
+                <td class="dim" style="font-size: var(--fs-xs)">
+                  {% if banner.start_date %}{{ banner.start_date|date:"d.m.Y" }}{% else %}—{% endif %}
+                  →
+                  {% if banner.end_date %}{{ banner.end_date|date:"d.m.Y" }}{% else %}cheksiz{% endif %}
+                </td>
+                <td class="muted">{{ banner.impressions }} / {{ banner.clicks }}</td>
+                <td class="muted">{{ banner.ctr }}%</td>
+                <td>
+                  <button class="switch js-toggle {% if banner.is_active %}is-on{% endif %}"
+                          type="button" role="switch"
+                          aria-checked="{% if banner.is_active %}true{% else %}false{% endif %}"
+                          aria-label="Faollik holati"
+                          data-url="{% url 'dashboard:api_toggle_banner' banner.pk %}"></button>
+                </td>
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:banner_edit' banner.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:banner_delete' banner.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="star" %}
+        <h2 class="empty__title">Banner topilmadi</h2>
+        <a class="btn btn--primary" href="{% url 'dashboard:banner_add' %}">Birinchi bannerni qo'shish</a>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

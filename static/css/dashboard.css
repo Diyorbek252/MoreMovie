@@ -426,6 +426,64 @@
   margin-bottom: var(--s-4);
 }
 
+/* --- Sudrab tartiblanadigan ro'yxat (bosh sahifa bo'limlari) --- */
+
+.sortable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  list-style: none;
+}
+
+.sortable__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: box-shadow var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+
+/* Sudrab olib borilayotgan qator */
+.sortable__row.is-dragging {
+  opacity: 0.4;
+}
+
+/* Qator ustidan o'tayotganda tashlanadigan joyni ko'rsatish */
+.sortable__row.is-drop-target {
+  box-shadow: 0 -2px 0 var(--red) inset;
+}
+
+.sortable__handle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: var(--text-faint);
+  cursor: grab;
+  touch-action: none;
+}
+
+.sortable__handle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sortable__row.is-dragging .sortable__handle {
+  cursor: grabbing;
+}
+
+.sortable__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
 /* --- Responsive --- */
 
 @media (max-width: 1024px) {

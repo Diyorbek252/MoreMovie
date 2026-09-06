@@ -29,7 +29,19 @@ from movies.models import Category, Favorite, Genre, Movie, ViewHistory, Watchli
 from series.models import Episode, Season, Series
 from reviews.models import Review
 
-from .forms import CategoryForm, EpisodeForm, GenreForm, MovieForm, SeasonForm, SeriesForm
+from siteconfig.models import Banner, HomepageSection, SiteSettings
+
+from .forms import (
+    BannerForm,
+    CategoryForm,
+    EpisodeForm,
+    GenreForm,
+    HomepageSectionForm,
+    MovieForm,
+    SeasonForm,
+    SeriesForm,
+    SiteSettingsForm,
+)
 from .mixins import DashboardPermissionMixin, StaffRequiredMixin, dashboard_perm_required
 
 User = get_user_model()
@@ -626,6 +638,121 @@ class EpisodeDeleteView(DashboardPermissionMixin, DeleteView):
         return super().form_valid(form)
 
 
+# ---------------------------------------------------------------------------
+# Sayt sozlamalari
+# ---------------------------------------------------------------------------
+
+
+class SiteSettingsUpdateView(DashboardPermissionMixin, UpdateView):
+    """Yagona qatorli forma — URL'da ``pk`` yo'q, doim ``SiteSettings.load()``."""
+
+    required_perms = ["dashboard.manage_settings"]
+    form_class = SiteSettingsForm
+    template_name = "dashboard/settings_form.html"
+    success_url = reverse_lazy("dashboard:site_settings")
+
+    def get_object(self, queryset=None):
+        return SiteSettings.load()
+
+    def form_valid(self, form):
+        messages.success(self.request, "Sayt sozlamalari saqlandi.")
+        return super().form_valid(form)
+
+
+# ---------------------------------------------------------------------------
+# Bannerlar
+# ---------------------------------------------------------------------------
+
+
+class BannerManageListView(DashboardPermissionMixin, ListView):
+    required_perms = ["dashboard.manage_banners"]
+    model = Banner
+    template_name = "dashboard/banner_list.html"
+    context_object_name = "banners"
+    paginate_by = 20
+
+    def get_queryset(self):
+        queryset = Banner.objects.all()
+        if position := self.request.GET.get("position"):
+            queryset = queryset.filter(position=position)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_position"] = self.request.GET.get("position", "")
+        context["position_choices"] = Banner.Position.choices
+        return context
+
+
+class BannerCreateView(DashboardPermissionMixin, CreateView):
+    required_perms = ["dashboard.manage_banners"]
+    model = Banner
+    form_class = BannerForm
+    template_name = "dashboard/banner_form.html"
+    success_url = reverse_lazy("dashboard:banner_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{form.instance.title}» banneri qo'shildi.")
+        return super().form_valid(form)
+
+
+class BannerUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["dashboard.manage_banners"]
+    model = Banner
+    form_class = BannerForm
+    template_name = "dashboard/banner_form.html"
+    success_url = reverse_lazy("dashboard:banner_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{form.instance.title}» banneri yangilandi.")
+        return super().form_valid(form)
+
+
+class BannerDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["dashboard.manage_banners"]
+    model = Banner
+    template_name = "dashboard/banner_confirm_delete.html"
+    success_url = reverse_lazy("dashboard:banner_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{self.object.title}» banneri o'chirildi.")
+        return super().form_valid(form)
+
+
+# ---------------------------------------------------------------------------
+# Bosh sahifa bo'limlari
+# ---------------------------------------------------------------------------
+
+
+class HomepageSectionListView(DashboardPermissionMixin, ListView):
+    """Bo'limlar ro'yxati + tartiblash (drag-and-drop, AJAX orqali).
+
+    Yaratish/o'chirish yo'q — bo'limlar to'plami ``seed_homepage_sections``
+    orqali belgilanadi (asosiy sahifa dizayni shu bo'limlarga tayanadi).
+    Admin faqat sarlavha/limit/faollik/tartibni o'zgartira oladi.
+    """
+
+    required_perms = ["dashboard.manage_homepage"]
+    model = HomepageSection
+    template_name = "dashboard/homepage_sections.html"
+    context_object_name = "sections"
+
+    def get_queryset(self):
+        return HomepageSection.objects.select_related("category", "movie").order_by("order", "id")
+
+
+class HomepageSectionUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["dashboard.manage_homepage"]
+    model = HomepageSection
+    form_class = HomepageSectionForm
+    template_name = "dashboard/homepage_section_form.html"
+    success_url = reverse_lazy("dashboard:homepage_sections")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{form.instance.title}» bo'limi yangilandi.")
+        return super().form_valid(form)
+
+
 
 # ---------------------------------------------------------------------------
 # AJAX harakatlar
@@ -746,3 +873,57 @@ def toggle_episode_publish(request, pk):
 
     note = "chop etildi" if episode.is_published else "yashirildi"
     return JsonResponse({"state": episode.is_published, "message": f"«{episode.title}» {note}"})
+
+
+@require_POST
+@dashboard_perm_required("dashboard.manage_banners")
+def toggle_banner(request, pk):
+    """Bannerni faollashtirish / o'chirish (AJAX)."""
+    banner = get_object_or_404(Banner, pk=pk)
+    banner.is_active = not banner.is_active
+    banner.save(update_fields=["is_active", "updated_at"])
+
+    note = "faollashtirildi" if banner.is_active else "o'chirildi"
+    return JsonResponse({"state": banner.is_active, "message": f"«{banner.title}» {note}"})
+
+
+@require_POST
+@dashboard_perm_required("dashboard.manage_homepage")
+def toggle_section(request, pk):
+    """Bosh sahifa bo'limini yoqish / o'chirish (AJAX)."""
+    section = get_object_or_404(HomepageSection, pk=pk)
+    section.is_active = not section.is_active
+    section.save(update_fields=["is_active"])
+
+    note = "yoqildi" if section.is_active else "o'chirildi"
+    return JsonResponse({"state": section.is_active, "message": f"«{section.title}» {note}"})
+
+
+@require_POST
+@dashboard_perm_required("dashboard.manage_homepage")
+def reorder_sections(request):
+    """Bosh sahifa bo'limlarini drag-and-drop orqali qayta tartiblash (AJAX).
+
+    So'rov tanasi: {"order": [id1, id2, id3, ...]} -- ro'yxatdagi
+    ketma-ketlik yangi tartibni bildiradi (0 dan boshlab).
+    """
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Noto'g'ri so'rov formati."}, status=400)
+
+    ordered_ids = payload.get("order")
+    if not isinstance(ordered_ids, list) or not ordered_ids:
+        return JsonResponse({"error": "Tartib ro'yxati kerak."}, status=400)
+
+    sections = {s.pk: s for s in HomepageSection.objects.filter(pk__in=ordered_ids)}
+    if len(sections) != len(ordered_ids):
+        return JsonResponse({"error": "Ba'zi bo'limlar topilmadi."}, status=400)
+
+    for index, section_id in enumerate(ordered_ids):
+        section = sections[section_id]
+        if section.order != index:
+            section.order = index
+            section.save(update_fields=["order"])
+
+    return JsonResponse({"message": "Tartib saqlandi."})

@@ -4,6 +4,7 @@ from django import forms
 
 from movies.models import Category, Genre, Movie
 from series.models import Episode, Season, Series
+from siteconfig.models import Banner, HomepageSection, SiteSettings
 
 
 class MovieForm(forms.ModelForm):
@@ -232,3 +233,90 @@ class EpisodeForm(forms.ModelForm):
         if cleaned.get("is_download_allowed") and not cleaned.get("download_url"):
             self.add_error("download_url", "Yuklab olish uchun havola kiriting.")
         return cleaned
+
+
+class SiteSettingsForm(forms.ModelForm):
+    """Yagona qatorli global sozlamalar formasi."""
+
+    class Meta:
+        model = SiteSettings
+        fields = [
+            "site_name", "logo", "favicon", "site_description",
+            "contact_email", "telegram", "youtube", "instagram", "facebook",
+            "copyright_text",
+            "seo_title", "seo_description", "seo_keywords", "google_analytics_id",
+            "maintenance_mode", "maintenance_message",
+        ]
+        widgets = {
+            "site_name": forms.TextInput(attrs={"class": "input"}),
+            "site_description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
+            "contact_email": forms.EmailInput(attrs={"class": "input"}),
+            "telegram": forms.URLInput(attrs={"class": "input", "placeholder": "https://t.me/..."}),
+            "youtube": forms.URLInput(attrs={"class": "input", "placeholder": "https://youtube.com/..."}),
+            "instagram": forms.URLInput(attrs={"class": "input", "placeholder": "https://instagram.com/..."}),
+            "facebook": forms.URLInput(attrs={"class": "input", "placeholder": "https://facebook.com/..."}),
+            "copyright_text": forms.TextInput(
+                attrs={"class": "input", "placeholder": "© 2026 MORE-MOVIE. Barcha huquqlar himoyalangan."}
+            ),
+            "seo_title": forms.TextInput(attrs={"class": "input", "maxlength": 70}),
+            "seo_description": forms.TextInput(attrs={"class": "input", "maxlength": 170}),
+            "seo_keywords": forms.TextInput(
+                attrs={"class": "input", "placeholder": "kino, film, uzbek tilida"}
+            ),
+            "google_analytics_id": forms.TextInput(
+                attrs={"class": "input", "placeholder": "G-XXXXXXXXXX"}
+            ),
+            "maintenance_message": forms.Textarea(
+                attrs={"class": "textarea", "rows": 3,
+                       "placeholder": "Sayt texnik xizmat ko'rsatish tufayli vaqtincha yopiq."}
+            ),
+        }
+
+
+class BannerForm(forms.ModelForm):
+    class Meta:
+        model = Banner
+        fields = [
+            "title", "image", "link", "position",
+            "start_date", "end_date", "is_active", "order",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "input", "placeholder": "Banner sarlavhasi"}),
+            "link": forms.URLInput(attrs={"class": "input", "placeholder": "https://..."}),
+            "position": forms.Select(attrs={"class": "select"}),
+            "start_date": forms.DateTimeInput(attrs={"class": "input", "type": "datetime-local"}),
+            "end_date": forms.DateTimeInput(attrs={"class": "input", "type": "datetime-local"}),
+            "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+        }
+
+    def clean(self):
+        """Sana oralig'i noto'g'ri bo'lsa bazadagi CheckConstraint'gacha
+        yetib bormasdan, foydalanuvchiga tushunarli xato ko'rsatamiz."""
+        cleaned = super().clean()
+        start = cleaned.get("start_date")
+        end = cleaned.get("end_date")
+        if start and end and end <= start:
+            self.add_error("end_date", "Tugash sanasi boshlanish sanasidan keyin bo'lishi kerak.")
+        return cleaned
+
+
+class HomepageSectionForm(forms.ModelForm):
+    """Bosh sahifa bo'limining sarlavhasi va parametrlarini tahrirlash.
+
+    ``key`` formada YO'Q — bo'lim turi (Trending, Top Rated va h.k.)
+    yaratilgandan keyin o'zgarmaydi, faqat ``seed_homepage_sections``
+    orqali belgilanadi. Tartib alohida drag-and-drop AJAX orqali
+    boshqariladi (``reorder_sections``), shu sabab ``order`` ham bu
+    yerda yo'q.
+    """
+
+    class Meta:
+        model = HomepageSection
+        fields = ["title", "subtitle", "item_limit", "is_active", "category", "movie"]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "input"}),
+            "subtitle": forms.TextInput(attrs={"class": "input"}),
+            "item_limit": forms.NumberInput(attrs={"class": "input", "min": 1, "max": 50}),
+            "category": forms.Select(attrs={"class": "select"}),
+            "movie": forms.Select(attrs={"class": "select"}),
+        }
