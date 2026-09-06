@@ -26,7 +26,11 @@
       const data = await MM.postJSON(url, {});
 
       // Server qaysi maydonni qaytarganiga qarab holatni aniqlaymiz.
-      const state = data.published !== undefined ? data.published
+      // Yangi endpointlar generik "state" kalitini qaytaradi — shuning
+      // uchun u birinchi tekshiriladi; eski uchta endpoint (publish/
+      // featured/blocked) o'z nomlari bilan ishlayveradi.
+      const state = data.state !== undefined ? data.state
+                  : data.published !== undefined ? data.published
                   : data.featured !== undefined ? data.featured
                   : data.blocked;
 
@@ -60,11 +64,13 @@
     const buttons = card ? card.querySelectorAll("button") : [button];
     buttons.forEach(function (b) { b.disabled = true; });
 
+    // data-url mavjud bo'lsa o'shani ishlatamiz (yangi shablonlar buni
+    // beradi); eski shablonlarda hali yo'q bo'lsa avvalgi qattiq yozilgan
+    // yo'lga tushamiz — shu bilan eski review_list.html ham ishlayveradi.
+    const url = button.dataset.url || ("/dashboard/api/review/" + reviewId + "/" + action + "/");
+
     try {
-      const data = await MM.postJSON(
-        "/dashboard/api/review/" + reviewId + "/" + action + "/",
-        {}
-      );
+      const data = await MM.postJSON(url, {});
 
       MM.toast(data.message, action === "approve" ? "success" : "info");
 
@@ -83,40 +89,44 @@
      Rasm yuklashda oldindan ko'rish
      -------------------------------------------------------------------- */
 
-  document.querySelectorAll('input[type="file"]').forEach(function (input) {
-    input.addEventListener("change", function () {
-      const file = input.files && input.files[0];
-      if (!file || !file.type.startsWith("image/")) return;
+  // Delegatsiya orqali — keyinroq DOM'ga qo'shiladigan fayl maydonlari
+  // (masalan formset orqali qo'shilgan epizod qatorlari) uchun ham ishlaydi.
+  document.addEventListener("change", function (event) {
+    const input = event.target.closest('input[type="file"]');
+    if (!input) return;
 
-      // Oldingi preview ni almashtiramiz.
-      let preview = input.parentElement.querySelector(".preview");
-      if (!preview) {
-        preview = document.createElement("div");
-        preview.className = "preview";
-        const newImg = document.createElement("img");
-        newImg.alt = "Tanlangan rasm";
-        preview.appendChild(newImg);
-        input.parentElement.appendChild(preview);
-      }
+    const file = input.files && input.files[0];
+    if (!file || !file.type.startsWith("image/")) return;
 
-      const img = preview.querySelector("img");
-      const previousUrl = img.dataset.objectUrl;
-      // Eski object URL ni bo'shatamiz — xotira sizib ketmasin.
-      if (previousUrl) URL.revokeObjectURL(previousUrl);
+    // Oldingi preview ni almashtiramiz.
+    let preview = input.parentElement.querySelector(".preview");
+    if (!preview) {
+      preview = document.createElement("div");
+      preview.className = "preview";
+      const newImg = document.createElement("img");
+      newImg.alt = "Tanlangan rasm";
+      preview.appendChild(newImg);
+      input.parentElement.appendChild(preview);
+    }
 
-      const url = URL.createObjectURL(file);
-      img.src = url;
-      img.dataset.objectUrl = url;
-    });
+    const img = preview.querySelector("img");
+    const previousUrl = img.dataset.objectUrl;
+    // Eski object URL ni bo'shatamiz — xotira sizib ketmasin.
+    if (previousUrl) URL.revokeObjectURL(previousUrl);
+
+    const url = URL.createObjectURL(file);
+    img.src = url;
+    img.dataset.objectUrl = url;
   });
 
   /* --------------------------------------------------------------------
      Ko'rishlar grafigi — kutubxonasiz inline SVG
      -------------------------------------------------------------------- */
 
-  const chartHost = document.getElementById("views-chart");
-
-  if (chartHost && chartHost.dataset.chart) {
+  // Bir sahifada bir nechta grafik bo'lishi mumkin (masalan Analitika
+  // sahifasida) — shuning uchun class bo'yicha barchasi qidiriladi.
+  // Eski `#views-chart` id'si ham saqlanadi (shablon ikkalasini beradi).
+  document.querySelectorAll(".js-chart[data-chart]").forEach(function (chartHost) {
     let points;
     try {
       points = JSON.parse(chartHost.dataset.chart);
@@ -127,7 +137,7 @@
     if (points.length) {
       chartHost.innerHTML = renderChart(points);
     }
-  }
+  });
 
   /**
    * Kunlik qiymatlardan chiziqli grafik SVG si yasaydi.

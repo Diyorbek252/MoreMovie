@@ -34,6 +34,11 @@
   text-transform: uppercase;
 }
 
+/* Birinchidan keyingi har bir guruh sarlavhasi tepasida bo'shliq */
+.dash-nav__title--group {
+  margin-top: var(--s-4);
+}
+
 .dash-nav__link {
   display: flex;
   align-items: center;

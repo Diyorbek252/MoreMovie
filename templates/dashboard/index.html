@@ -64,7 +64,7 @@
       <h2 class="panel__title">Oxirgi 14 kunlik ko'rishlar</h2>
     </div>
     {# Grafik JS tomonidan data-chart dagi JSON asosida chiziladi #}
-    <div id="views-chart" data-chart="{{ chart_data }}"></div>
+    <div id="views-chart" class="js-chart" data-chart="{{ chart_data }}"></div>
   </div>
 
   {# ==================== MASHHUR FILMLAR ==================== #}
@@ -131,11 +131,14 @@
 
           <div class="mod-card__actions">
             <button class="btn btn--sm btn--primary js-moderate"
-                    data-review="{{ review.id }}" data-action="approve">Tasdiqlash</button>
+                    data-review="{{ review.id }}" data-action="approve"
+                    data-url="{% url 'dashboard:api_moderate_review' review.pk 'approve' %}">Tasdiqlash</button>
             <button class="btn btn--sm btn--ghost js-moderate"
-                    data-review="{{ review.id }}" data-action="reject">Rad etish</button>
+                    data-review="{{ review.id }}" data-action="reject"
+                    data-url="{% url 'dashboard:api_moderate_review' review.pk 'reject' %}">Rad etish</button>
             <button class="btn btn--sm btn--danger js-moderate"
-                    data-review="{{ review.id }}" data-action="delete">O'chirish</button>
+                    data-review="{{ review.id }}" data-action="delete"
+                    data-url="{% url 'dashboard:api_moderate_review' review.pk 'delete' %}">O'chirish</button>
           </div>
         </div>
       {% endfor %}

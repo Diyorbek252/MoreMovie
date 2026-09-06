@@ -15,43 +15,28 @@ Har bir dashboard sahifasi shundan meros oladi va `dash_content` blokini to'ldir
 {% block content %}
 <div class="container dash">
 
-  {# --- Yon menyu --- #}
+  {% comment %}
+    Yon menyu — ro'yxat qo'lda yozilmaydi: `dashboard.navigation.build_nav()`
+    joriy foydalanuvchi ruxsatlariga qarab band(lar)ni filtrlab beradi
+    (`dash_nav` konteksti — `DashboardPermissionMixin.get_context_data`
+    orqali har bir dashboard sahifasida avtomatik mavjud).
+  {% endcomment %}
   <nav class="dash-nav" aria-label="Boshqaruv menyusi">
-    <span class="dash-nav__title">Boshqaruv</span>
+    {% for group_title, items in dash_nav %}
+      <span class="dash-nav__title {% if not forloop.first %}dash-nav__title--group{% endif %}">
+        {{ group_title }}
+      </span>
+      {% for item in items %}
+        <a class="dash-nav__link {% if item.is_active %}is-active{% endif %}" href="{{ item.url }}">
+          {% include "partials/icon.html" with name=item.icon %} {{ item.label }}
+          {% if item.count %}
+            <span class="dash-nav__count">{{ item.count }}</span>
+          {% endif %}
+        </a>
+      {% endfor %}
+    {% endfor %}
 
-    {% url 'dashboard:index' as u_index %}
-    {% url 'dashboard:movie_list' as u_movies %}
-    {% url 'dashboard:genre_list' as u_genres %}
-    {% url 'dashboard:user_list' as u_users %}
-    {% url 'dashboard:review_list' as u_reviews %}
-    {% url 'dashboard:message_list' as u_messages %}
-
-    <a class="dash-nav__link {% if request.path == u_index %}is-active{% endif %}" href="{{ u_index }}">
-      {% include "partials/icon.html" with name="grid" %} Umumiy
-    </a>
-    <a class="dash-nav__link {% if request.path == u_movies %}is-active{% endif %}" href="{{ u_movies }}">
-      {% include "partials/icon.html" with name="film" %} Filmlar
-    </a>
-    <a class="dash-nav__link {% if request.path == u_genres %}is-active{% endif %}" href="{{ u_genres }}">
-      {% include "partials/icon.html" with name="trending" %} Janrlar
-    </a>
-    <a class="dash-nav__link {% if request.path == u_users %}is-active{% endif %}" href="{{ u_users }}">
-      {% include "partials/icon.html" with name="users" %} Foydalanuvchilar
-    </a>
-    <a class="dash-nav__link {% if request.path == u_reviews %}is-active{% endif %}" href="{{ u_reviews }}">
-      {% include "partials/icon.html" with name="message" %} Sharhlar
-      {% if nav_counts.reviews_pending %}
-        <span class="dash-nav__count">{{ nav_counts.reviews_pending }}</span>
-      {% endif %}
-    </a>
-    <a class="dash-nav__link {% if request.path == u_messages %}is-active{% endif %}" href="{{ u_messages }}">
-      {% include "partials/icon.html" with name="mail" %} Murojaatlar
-      {% if nav_counts.messages_unread %}
-        <span class="dash-nav__count">{{ nav_counts.messages_unread }}</span>
-      {% endif %}
-    </a>
-
-    <span class="dash-nav__title" style="margin-top: var(--s-4)">Boshqa</span>
+    <span class="dash-nav__title dash-nav__title--group">Boshqa</span>
 
     <a class="dash-nav__link" href="/admin/">
       {% include "partials/icon.html" with name="settings" %} Django admin

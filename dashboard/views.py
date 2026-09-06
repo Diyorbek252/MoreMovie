@@ -10,7 +10,6 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Avg, Count, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -30,31 +29,14 @@ from movies.models import Favorite, Genre, Movie, ViewHistory, Watchlist
 from reviews.models import Review
 
 from .forms import GenreForm, MovieForm
+from .mixins import DashboardPermissionMixin, StaffRequiredMixin, dashboard_perm_required
 
 User = get_user_model()
 
-
-class StaffRequiredMixin(UserPassesTestMixin):
-    """Dashboard'ning barcha sahifalari uchun majburiy tekshiruv.
-
-    `raise_exception = True` — tizimga kirmagan foydalanuvchi login sahifasiga
-    yo'naltiriladi, kirgan lekin xodim bo'lmagani esa 403 oladi.
-    """
-
-    raise_exception = True
-
-    def test_func(self):
-        user = self.request.user
-        return user.is_authenticated and user.is_staff and not user.is_blocked
-
-    def get_context_data(self, **kwargs):
-        """Yon menyudagi "kutilmoqda" hisoblagichlari — barcha sahifalarda ko'rinadi."""
-        context = super().get_context_data(**kwargs)
-        context["nav_counts"] = {
-            "reviews_pending": Review.objects.filter(status=Review.Status.PENDING).count(),
-            "messages_unread": ContactMessage.objects.filter(is_read=False).count(),
-        }
-        return context
+# Eslatma: `StaffRequiredMixin` endi `.mixins` dan import qilinadi (bu yerda
+# import qilib qo'yilishi eski kodni buzmasligi uchun). Yangi view'lar
+# `DashboardPermissionMixin` dan to'g'ridan-to'g'ri, `required_perms` bilan
+# meros olishi kerak — pastdagi misollarga qarang.
 
 
 class DashboardIndexView(StaffRequiredMixin, TemplateView):
@@ -134,9 +116,10 @@ class DashboardIndexView(StaffRequiredMixin, TemplateView):
 # ---------------------------------------------------------------------------
 
 
-class MovieManageListView(StaffRequiredMixin, ListView):
+class MovieManageListView(DashboardPermissionMixin, ListView):
     """Filmlar jadvali — qidiruv va holat filtri bilan."""
 
+    required_perms = ["movies.view_movie"]
     model = Movie
     template_name = "dashboard/movie_list.html"
     context_object_name = "movies"
@@ -170,7 +153,8 @@ class MovieManageListView(StaffRequiredMixin, ListView):
         return context
 
 
-class MovieCreateView(StaffRequiredMixin, CreateView):
+class MovieCreateView(DashboardPermissionMixin, CreateView):
+    required_perms = ["movies.add_movie"]
     model = Movie
     form_class = MovieForm
     template_name = "dashboard/movie_form.html"
@@ -181,7 +165,8 @@ class MovieCreateView(StaffRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MovieUpdateView(StaffRequiredMixin, UpdateView):
+class MovieUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["movies.change_movie"]
     model = Movie
     form_class = MovieForm
     template_name = "dashboard/movie_form.html"
@@ -192,7 +177,8 @@ class MovieUpdateView(StaffRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class MovieDeleteView(StaffRequiredMixin, DeleteView):
+class MovieDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["movies.delete_movie"]
     model = Movie
     template_name = "dashboard/movie_confirm_delete.html"
     success_url = reverse_lazy("dashboard:movie_list")
@@ -207,9 +193,10 @@ class MovieDeleteView(StaffRequiredMixin, DeleteView):
 # ---------------------------------------------------------------------------
 
 
-class GenreManageView(StaffRequiredMixin, ListView):
+class GenreManageView(DashboardPermissionMixin, ListView):
     """Janrlar ro'yxati + qo'shish formasi bir sahifada."""
 
+    required_perms = ["movies.view_genre"]
     model = Genre
     template_name = "dashboard/genre_list.html"
     context_object_name = "genres"
@@ -232,7 +219,8 @@ class GenreManageView(StaffRequiredMixin, ListView):
         return redirect("dashboard:genre_list")
 
 
-class GenreUpdateView(StaffRequiredMixin, UpdateView):
+class GenreUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["movies.change_genre"]
     model = Genre
     form_class = GenreForm
     template_name = "dashboard/genre_form.html"
@@ -243,7 +231,8 @@ class GenreUpdateView(StaffRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class GenreDeleteView(StaffRequiredMixin, DeleteView):
+class GenreDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["movies.delete_genre"]
     model = Genre
     template_name = "dashboard/genre_confirm_delete.html"
     success_url = reverse_lazy("dashboard:genre_list")
@@ -258,7 +247,8 @@ class GenreDeleteView(StaffRequiredMixin, DeleteView):
 # ---------------------------------------------------------------------------
 
 
-class UserManageListView(StaffRequiredMixin, ListView):
+class UserManageListView(DashboardPermissionMixin, ListView):
+    required_perms = ["users.view_user"]
     model = User
     template_name = "dashboard/user_list.html"
     context_object_name = "users_list"
@@ -298,7 +288,8 @@ class UserManageListView(StaffRequiredMixin, ListView):
 # ---------------------------------------------------------------------------
 
 
-class ReviewManageListView(StaffRequiredMixin, ListView):
+class ReviewManageListView(DashboardPermissionMixin, ListView):
+    required_perms = ["reviews.view_review"]
     model = Review
     template_name = "dashboard/review_list.html"
     context_object_name = "reviews"
@@ -326,9 +317,10 @@ class ReviewManageListView(StaffRequiredMixin, ListView):
         return context
 
 
-class MessageListView(StaffRequiredMixin, ListView):
+class MessageListView(DashboardPermissionMixin, ListView):
     """Contact formasidan kelgan murojaatlar."""
 
+    required_perms = ["core.view_contactmessage"]
     model = ContactMessage
     template_name = "dashboard/message_list.html"
     context_object_name = "contact_messages"
@@ -343,18 +335,10 @@ class MessageListView(StaffRequiredMixin, ListView):
 # ---------------------------------------------------------------------------
 
 
-def _staff_check(request):
-    """AJAX endpointlar uchun ruxsat tekshiruvi."""
-    user = request.user
-    return user.is_authenticated and user.is_staff and not user.is_blocked
-
-
 @require_POST
+@dashboard_perm_required("movies.change_movie")
 def toggle_publish(request, pk):
     """Filmni chop etish / yashirish (AJAX)."""
-    if not _staff_check(request):
-        return JsonResponse({"error": "Ruxsat yo'q"}, status=403)
-
     movie = get_object_or_404(Movie, pk=pk)
     movie.is_published = not movie.is_published
     movie.save(update_fields=["is_published", "updated_at"])
@@ -368,11 +352,9 @@ def toggle_publish(request, pk):
 
 
 @require_POST
+@dashboard_perm_required("movies.change_movie")
 def toggle_featured(request, pk):
     """Filmni "tanlangan" qilish / bekor qilish (AJAX)."""
-    if not _staff_check(request):
-        return JsonResponse({"error": "Ruxsat yo'q"}, status=403)
-
     movie = get_object_or_404(Movie, pk=pk)
     movie.is_featured = not movie.is_featured
     movie.save(update_fields=["is_featured", "updated_at"])
@@ -381,11 +363,9 @@ def toggle_featured(request, pk):
 
 
 @require_POST
+@dashboard_perm_required("users.change_user")
 def toggle_block(request, pk):
     """Foydalanuvchini bloklash / blokdan chiqarish (AJAX)."""
-    if not _staff_check(request):
-        return JsonResponse({"error": "Ruxsat yo'q"}, status=403)
-
     target = get_object_or_404(User, pk=pk)
 
     # O'zini yoki superuser'ni bloklashga yo'l qo'ymaymiz.
@@ -406,11 +386,9 @@ def toggle_block(request, pk):
 
 
 @require_POST
+@dashboard_perm_required("reviews.change_review")
 def moderate_review(request, pk, action):
     """Sharhni tasdiqlash / rad etish / o'chirish (AJAX)."""
-    if not _staff_check(request):
-        return JsonResponse({"error": "Ruxsat yo'q"}, status=403)
-
     review = get_object_or_404(Review, pk=pk)
 
     if action == "approve":
