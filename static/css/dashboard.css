@@ -1,0 +1,464 @@
+/* ==========================================================================
+   MORE-MOVIE — Boshqaruv paneli
+   Sayt bilan bir xil design system (variables.css) dan foydalanadi.
+   ========================================================================== */
+
+.dash {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: var(--s-6);
+  align-items: start;
+  padding-block: var(--s-5) var(--s-8);
+}
+
+/* --- Yon menyu --- */
+
+.dash-nav {
+  position: sticky;
+  top: calc(var(--nav-h) + var(--s-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+}
+
+.dash-nav__title {
+  padding: var(--s-2) var(--s-3) var(--s-3);
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.dash-nav__link {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  transition: all var(--dur-fast) var(--ease);
+}
+
+.dash-nav__link:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.dash-nav__link.is-active {
+  background: var(--red-soft);
+  color: var(--red);
+  font-weight: 600;
+}
+
+.dash-nav__link svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Kutilayotgan elementlar soni */
+.dash-nav__count {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: var(--r-full);
+  background: var(--red);
+  color: #fff;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+/* --- Sarlavha --- */
+
+.dash-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+}
+
+.dash-head__title {
+  font-size: var(--fs-2xl);
+}
+
+.dash-head__sub {
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
+/* --- Statistika kartalari --- */
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--s-4);
+  margin-bottom: var(--s-6);
+}
+
+.dash-stat {
+  position: relative;
+  padding: var(--s-5);
+  border-radius: var(--r-lg);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.dash-stat:hover {
+  border-color: var(--border-strong);
+}
+
+/* Yuqori chetidagi qizil chiziq */
+.dash-stat::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--red), transparent);
+}
+
+.dash-stat__value {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.dash-stat__label {
+  margin-top: var(--s-1);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dash-stat__hint {
+  margin-top: var(--s-2);
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+
+/* --- Panel (bo'lim konteyneri) --- */
+
+.panel {
+  padding: var(--s-5);
+  margin-bottom: var(--s-5);
+  border-radius: var(--r-lg);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+
+.panel__title {
+  font-size: var(--fs-lg);
+}
+
+/* --- Jadval --- */
+
+/* Tor ekranda jadval o'z ichida gorizontal aylanadi */
+.table-wrap {
+  overflow-x: auto;
+  margin-inline: calc(var(--s-5) * -1);
+  padding-inline: var(--s-5);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.table th {
+  padding: var(--s-3);
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.table td {
+  padding: var(--s-3);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.table tbody tr:hover {
+  background: var(--surface);
+}
+
+.table__poster {
+  width: 40px;
+  height: 60px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.table__actions {
+  display: flex;
+  gap: var(--s-2);
+  justify-content: flex-end;
+}
+
+.table__title {
+  white-space: normal;
+  max-width: 320px;
+  font-weight: 600;
+}
+
+/* --- Toggle switch --- */
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  width: 42px;
+  height: 24px;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease);
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-full);
+  background: var(--text-muted);
+  transition: transform var(--dur-base) var(--ease),
+              background var(--dur-fast) var(--ease);
+}
+
+.switch.is-on {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.switch.is-on::after {
+  transform: translateX(18px);
+  background: #fff;
+}
+
+.switch[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* --- Grafik --- */
+
+.chart {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart__area {
+  fill: url(#chart-gradient);
+}
+
+.chart__line {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart__dot {
+  fill: var(--red);
+}
+
+.chart__label {
+  fill: var(--text-faint);
+  font-size: 10px;
+}
+
+/* --- Film formasi --- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s-4);
+}
+
+.form-grid--full {
+  grid-template-columns: 1fr;
+}
+
+/* Janrlar checkbox ro'yxati */
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.checks li {
+  display: flex;
+}
+
+.checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.checks input {
+  appearance: none;
+  width: 17px;
+  height: 17px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-3);
+  cursor: pointer;
+}
+
+.checks input:checked {
+  background: var(--red);
+  border-color: var(--red);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+  background-size: 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Rasm oldindan ko'rish */
+.preview {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+}
+
+.preview img {
+  max-height: 110px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+}
+
+/* --- Sharh moderatsiyasi --- */
+
+.mod-card {
+  padding: var(--s-4);
+  margin-bottom: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: opacity var(--dur-base) var(--ease),
+              transform var(--dur-base) var(--ease);
+}
+
+.mod-card.is-gone {
+  opacity: 0;
+  transform: translateX(24px);
+}
+
+.mod-card__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+}
+
+.mod-card__text {
+  color: var(--text-muted);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.mod-card__actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+/* --- Filtr tabs --- */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 1024px) {
+  .dash {
+    grid-template-columns: 1fr;
+  }
+
+  /* Yon menyu gorizontal chiziqqa aylanadi */
+  .dash-nav {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .dash-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dash-nav__title {
+    display: none;
+  }
+
+  .dash-nav__link {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-stat {
+    padding: var(--s-4);
+  }
+
+  .dash-stat__value {
+    font-size: var(--fs-2xl);
+  }
+}

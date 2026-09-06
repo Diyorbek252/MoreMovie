@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{{ genre.name }} filmlari — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ genre.name }} janridagi eng yaxshi filmlar {{ SITE_NAME }} platformasida.{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head" style="text-align: left">
+    <h1 class="page-head__title" style="margin-bottom: var(--s-2)">{{ genre.name }}</h1>
+    <p class="muted">
+      {{ page_obj.paginator.count }} ta film
+      {% if genre.description %} — {{ genre.description }}{% endif %}
+    </p>
+  </div>
+
+  {% if movies %}
+    <div class="grid">
+      {% for movie in movies %}
+        {% include "partials/movie_card.html" with movie=movie %}
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="film" %}
+      <h2 class="empty__title">Bu janrda hali film yo'q</h2>
+      <a class="btn btn--primary" href="{% url 'movies:movie_list' %}">Barcha filmlar</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

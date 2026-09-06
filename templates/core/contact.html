@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Bog'lanish — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} jamoasi bilan bog'laning — savol, taklif yoki mualliflik huquqi bo'yicha murojaat.{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <h1 class="page-head__title">Bog'lanish</h1>
+    <p class="page-head__text">Savolingiz, taklifingiz yoki murojaatingiz bormi? Yozing — javob beramiz.</p>
+  </div>
+
+  <div class="contact-grid">
+
+    <div class="stack">
+      <div class="info-card">
+        {% include "partials/icon.html" with name="mail" %}
+        <h3>Email</h3>
+        <p class="muted">info@more-movie.uz</p>
+      </div>
+
+      <div class="info-card">
+        {% include "partials/icon.html" with name="message" %}
+        <h3>Telegram</h3>
+        <p class="muted">@more_movie</p>
+      </div>
+
+      <div class="info-card">
+        {% include "partials/icon.html" with name="shield" %}
+        <h3>Mualliflik huquqi</h3>
+        <p class="muted">
+          Huquq buzilishi bo'yicha murojaatlar ustuvor tartibda ko'rib chiqiladi.
+        </p>
+      </div>
+    </div>
+
+    <form method="post" class="stack" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert--error">
+          {% include "partials/icon.html" with name="alert" %}
+          <div>{{ form.non_field_errors }}</div>
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="field">
+          <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="field__error">{{ field.errors|first }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <button class="btn btn--primary btn--lg" type="submit">Xabarni yuborish</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

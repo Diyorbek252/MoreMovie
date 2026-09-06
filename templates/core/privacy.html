@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Maxfiylik siyosati — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} maxfiylik siyosati — qanday ma'lumot yig'iladi va u qanday himoyalanadi.{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <h1 class="page-head__title">Maxfiylik siyosati</h1>
+    <p class="page-head__text">Oxirgi yangilanish: {% now "d.m.Y" %}</p>
+  </div>
+
+  <div class="prose" style="margin-inline: auto; padding-bottom: var(--s-8)">
+    <h2>Qanday ma'lumot yig'amiz</h2>
+    <ul>
+      <li><strong>Hisob ma'lumotlari:</strong> foydalanuvchi nomi, email va parol. Parol
+        bir tomonlama hashlangan holda saqlanadi — biz uni hech qachon ochiq ko'rmaymiz.</li>
+      <li><strong>Profil:</strong> avatar, bio va davlat — ixtiyoriy.</li>
+      <li><strong>Faoliyat:</strong> Watchlist, Sevimlilar, ko'rish tarixi, reyting va sharhlar.</li>
+    </ul>
+
+    <h2>Ma'lumotdan qanday foydalanamiz</h2>
+    <p>
+      Yig'ilgan ma'lumot faqat xizmatni taqdim etish uchun ishlatiladi: ro'yxatlaringizni
+      saqlash, to'xtagan joyingizni eslab qolish va tavsiyalar ko'rsatish.
+      Ma'lumotlaringizni uchinchi tomonlarga sotmaymiz.
+    </p>
+
+    <h2>Cookie fayllar</h2>
+    <p>
+      Sayt sessiya va CSRF himoyasi uchun zarur cookie fayllardan foydalanadi.
+      Ularsiz tizimga kirish va formalarni yuborish ishlamaydi.
+    </p>
+
+    <h2>Xavfsizlik</h2>
+    <p>
+      Parollar bir tomonlama hashlash algoritmi bilan saqlanadi. Barcha formalar
+      CSRF himoyasi bilan ta'minlangan. Bazaga so'rovlar parametrlashtirilgan —
+      SQL injection imkoni yo'q. Foydalanuvchi kiritgan matn shablonda avtomatik
+      ekranlanadi, bu XSS hujumlarining oldini oladi.
+    </p>
+
+    <h2>Sizning huquqlaringiz</h2>
+    <p>
+      Istalgan vaqtda profil ma'lumotlaringizni tahrirlashingiz yoki hisobingizni
+      o'chirishni so'rashingiz mumkin. Buning uchun
+      <a href="{% url 'core:contact' %}" style="color: var(--red)">biz bilan bog'laning</a>.
+    </p>
+  </div>
+</div>
+{% endblock %}

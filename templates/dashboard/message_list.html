@@ -1,0 +1,38 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Murojaatlar{% endblock %}
+
+{% block dash_content %}
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Murojaatlar</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta xabar</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    {% if contact_messages %}
+      {% for msg in contact_messages %}
+        <div class="mod-card">
+          <div class="mod-card__head">
+            <strong>{{ msg.name }}</strong>
+            <a href="mailto:{{ msg.email }}" class="muted">{{ msg.email }}</a>
+            {% if not msg.is_read %}<span class="badge badge--red">Yangi</span>{% endif %}
+            <span class="dim" style="font-size: var(--fs-xs); margin-left: auto">
+              {{ msg.created_at|date:"d.m.Y H:i" }}
+            </span>
+          </div>
+          <p style="font-weight: 600; margin-bottom: var(--s-2)">{{ msg.subject }}</p>
+          <p class="mod-card__text">{{ msg.message }}</p>
+        </div>
+      {% endfor %}
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="mail" %}
+        <h2 class="empty__title">Murojaatlar yo'q</h2>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Foydalanuvchilar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Foydalanuvchilar</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta hisob</p>
+    </div>
+  </div>
+
+  <form class="row row--wrap" method="get" style="margin-bottom: var(--s-4)">
+    <input class="input" type="search" name="q" value="{{ current_q }}"
+           placeholder="Username yoki email..." style="max-width: 320px">
+
+    <select class="select" name="status" style="max-width: 200px">
+      <option value="">Barchasi</option>
+      <option value="blocked" {% if current_status == "blocked" %}selected{% endif %}>Bloklangan</option>
+      <option value="staff" {% if current_status == "staff" %}selected{% endif %}>Xodimlar</option>
+    </select>
+
+    <button class="btn btn--primary" type="submit">Qidirish</button>
+    {% if current_q or current_status %}
+      <a class="btn btn--ghost" href="{% url 'dashboard:user_list' %}">Tozalash</a>
+    {% endif %}
+  </form>
+
+  <div class="panel">
+    {% if users_list %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th><th>Foydalanuvchi</th><th>Email</th>
+              <th>Ro'yxatdan o'tgan</th><th>Sevimli</th><th>Sharh</th>
+              <th>Rol</th><th>Bloklangan</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users_list %}
+              <tr>
+                <td>
+                  <div class="avatar avatar--sm">
+                    {% if u.profile.avatar_url %}
+                      <img src="{{ u.profile.avatar_url }}" alt="" width="32" height="32" loading="lazy">
+                    {% else %}{{ u.initials }}{% endif %}
+                  </div>
+                </td>
+
+                <td><strong>{{ u.username }}</strong></td>
+                <td class="muted">{{ u.email }}</td>
+                <td class="muted">{{ u.date_joined|date:"d.m.Y" }}</td>
+                <td>{{ u.fav_count }}</td>
+                <td>{{ u.review_count }}</td>
+
+                <td>
+                  {% if u.is_superuser %}
+                    <span class="badge badge--red">Superuser</span>
+                  {% elif u.is_staff %}
+                    <span class="badge">Xodim</span>
+                  {% else %}
+                    <span class="dim">Foydalanuvchi</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if u.is_superuser or u == request.user %}
+                    {# O'zini va superuser'ni bloklab bo'lmaydi #}
+                    <span class="dim" title="Bu hisobni bloklab bo'lmaydi">—</span>
+                  {% else %}
+                    <button class="switch js-toggle {% if u.is_blocked %}is-on{% endif %}"
+                            type="button" role="switch"
+                            aria-checked="{% if u.is_blocked %}true{% else %}false{% endif %}"
+                            aria-label="{{ u.username }} ni bloklash"
+                            data-url="{% url 'dashboard:api_toggle_block' u.pk %}"></button>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <p class="muted">Foydalanuvchi topilmadi.</p>
+    {% endif %}
+  </div>
+
+{% endblock %}

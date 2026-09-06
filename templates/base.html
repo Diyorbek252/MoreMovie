@@ -1,0 +1,89 @@
+{% load static %}<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+
+  {# --- SEO --- #}
+  <title>{% block title %}{{ SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{{ SITE_NAME }} — litsenziyalangan va public domain filmlarni onlayn tomosha qiling. {{ SITE_TAGLINE }}{% endblock %}">
+  <link rel="canonical" href="{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}">
+
+  {# --- Open Graph / Twitter --- #}
+  <meta property="og:site_name" content="{{ SITE_NAME }}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ SITE_TAGLINE }}{% endblock %}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo-share.png' %}{% endblock %}">
+  <meta name="twitter:card" content="summary_large_image">
+
+  {# --- Ikonkalar --- #}
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+
+  {# --- Shriftlar --- #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
+  {# --- Uslublar. Tartib muhim: variables birinchi. --- #}
+  <link rel="stylesheet" href="{% static 'css/variables.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}">
+  <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+  {% block extra_css %}{% endblock %}
+
+  {% block extra_head %}{% endblock %}
+</head>
+{# AJAX endpoint manzillari data-atributlarda — JS da URL qattiq yozilmaydi. #}
+<body
+  data-url-search-api="{% url 'movies:api_search' %}"
+  data-url-watchlist="{% url 'movies:api_watchlist_toggle' %}"
+  data-url-favorite="{% url 'movies:api_favorite_toggle' %}"
+  data-url-progress="{% url 'movies:api_progress' %}"
+  data-url-rate="{% url 'reviews:api_rate' %}"
+  data-url-review="{% url 'reviews:api_review' %}">
+
+  {# --- Yuklanish ekrani. JS uni birinchi bo'yashdan keyin yashiradi. --- #}
+  <div class="loader" id="loader" aria-hidden="true">
+    <div class="loader__inner">
+      <img class="loader__logo" src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="240" height="72">
+      <div class="loader__bar"></div>
+    </div>
+  </div>
+
+  <a class="skip-link" href="#main">Asosiy qismga o'tish</a>
+
+  {% include "partials/navbar.html" %}
+
+  <main id="main">
+    {# Django messages framework xabarlari toast sifatida ko'rsatiladi. #}
+    {% if messages %}
+      <div id="server-messages" hidden>
+        {% for message in messages %}
+          <div data-level="{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "partials/footer.html" %}
+
+  {# Toast konteyner — JS shu yerga qo'shadi. --- #}
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  {# CSRF tokeni AJAX so'rovlar uchun (cookie mavjud bo'lmagan holatga zaxira). #}
+  {% csrf_token %}
+
+  <script src="{% static 'js/main.js' %}" defer></script>
+  {% if user.is_authenticated %}
+    <script src="{% static 'js/interactions.js' %}" defer></script>
+  {% endif %}
+  <script src="{% static 'js/search.js' %}" defer></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

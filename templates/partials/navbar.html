@@ -1,0 +1,132 @@
+{% load static %}
+<header class="nav" id="navbar">
+  <div class="container nav__inner">
+
+    {# --- Logo --- #}
+    <a class="logo" href="{% url 'core:home' %}" aria-label="{{ SITE_NAME }} — bosh sahifa">
+      <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="140" height="38">
+    </a>
+
+    {# --- Markaziy menyu (desktop) --- #}
+    <nav class="nav__menu" aria-label="Asosiy menyu">
+      <a class="nav__link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}"
+         href="{% url 'core:home' %}">Home</a>
+      <a class="nav__link {% if request.resolver_match.url_name == 'movie_list' %}is-active{% endif %}"
+         href="{% url 'movies:movie_list' %}">Movies</a>
+      <a class="nav__link {% if request.resolver_match.url_name == 'genre_list' or request.resolver_match.url_name == 'genre_detail' %}is-active{% endif %}"
+         href="{% url 'movies:genre_list' %}">Genres</a>
+      <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
+      <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
+    </nav>
+
+    {# --- O'ng tomondagi harakatlar --- #}
+    <div class="nav__actions">
+
+      {# Qidiruv: tugma bosilganda maydon ochiladi, yozilganda AJAX natijalar chiqadi #}
+      <div class="nav-search" id="nav-search">
+        <button class="btn-icon" type="button" id="search-toggle"
+                aria-label="Qidiruv" aria-expanded="false">
+          {% include "partials/icon.html" with name="search" %}
+        </button>
+        <form class="nav-search__box" action="{% url 'movies:search' %}" method="get" role="search">
+          <label class="sr-only" for="search-input">Film qidirish</label>
+          <input class="nav-search__input" type="search" name="q" id="search-input"
+                 placeholder="Search movies..." autocomplete="off"
+                 value="{{ request.GET.q|default:'' }}">
+        </form>
+        <div class="nav-search__results" id="search-results" role="listbox" aria-label="Qidiruv natijalari"></div>
+      </div>
+
+      {% if user.is_authenticated %}
+        <a class="btn-icon" href="{% url 'users:favorites' %}" aria-label="Sevimlilar" title="Favorites">
+          {% include "partials/icon.html" with name="heart" %}
+        </a>
+        <a class="btn-icon" href="{% url 'users:watchlist' %}" aria-label="Watchlist" title="Watchlist">
+          {% include "partials/icon.html" with name="bookmark" %}
+        </a>
+
+        {# Foydalanuvchi menyusi #}
+        <div class="user-menu" id="user-menu">
+          <button class="avatar" type="button" id="user-menu-toggle"
+                  aria-label="Foydalanuvchi menyusi" aria-expanded="false" aria-haspopup="true">
+            {% if user.profile.avatar_url %}
+              <img src="{{ user.profile.avatar_url }}" alt="" width="38" height="38">
+            {% else %}{{ user.initials }}{% endif %}
+          </button>
+
+          <div class="user-menu__panel" role="menu">
+            <div class="user-menu__head">
+              <div class="user-menu__name">{{ user.display_name }}</div>
+              <div class="user-menu__email">{{ user.email }}</div>
+            </div>
+
+            <a class="user-menu__item" href="{% url 'users:profile' %}" role="menuitem">
+              {% include "partials/icon.html" with name="user" %} Profil
+            </a>
+            <a class="user-menu__item" href="{% url 'users:watchlist' %}" role="menuitem">
+              {% include "partials/icon.html" with name="bookmark" %} Watchlist
+            </a>
+            <a class="user-menu__item" href="{% url 'users:favorites' %}" role="menuitem">
+              {% include "partials/icon.html" with name="heart" %} Favorites
+            </a>
+            <a class="user-menu__item" href="{% url 'users:profile_edit' %}" role="menuitem">
+              {% include "partials/icon.html" with name="settings" %} Sozlamalar
+            </a>
+            {% if user.is_staff %}
+              <a class="user-menu__item" href="{% url 'dashboard:index' %}" role="menuitem">
+                {% include "partials/icon.html" with name="grid" %} Dashboard
+              </a>
+            {% endif %}
+
+            {# Chiqish POST orqali — CSRF himoyasi bilan #}
+            <form action="{% url 'users:logout' %}" method="post">
+              {% csrf_token %}
+              <button class="user-menu__item user-menu__item--danger" type="submit" role="menuitem">
+                {% include "partials/icon.html" with name="logout" %} Chiqish
+              </button>
+            </form>
+          </div>
+        </div>
+
+      {% else %}
+        <a class="btn btn--ghost btn--sm" href="{% url 'users:login' %}">Login</a>
+        <a class="btn btn--primary btn--sm" href="{% url 'users:register' %}">Register</a>
+      {% endif %}
+
+      {# Mobil menyu tugmasi #}
+      <button class="nav__burger" type="button" id="burger"
+              aria-label="Menyu" aria-expanded="false" aria-controls="drawer">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+{# --- Mobil chekma menyu --- #}
+<div class="drawer" id="drawer">
+  <nav class="container" aria-label="Mobil menyu">
+    <a class="drawer__link" href="{% url 'core:home' %}">Home</a>
+    <a class="drawer__link" href="{% url 'movies:movie_list' %}">Movies</a>
+    <a class="drawer__link" href="{% url 'movies:genre_list' %}">Genres</a>
+    <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
+    <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
+
+    {% if user.is_authenticated %}
+      <a class="drawer__link" href="{% url 'users:watchlist' %}">Watchlist</a>
+      <a class="drawer__link" href="{% url 'users:favorites' %}">Favorites</a>
+      <a class="drawer__link" href="{% url 'users:profile' %}">Profil</a>
+      {% if user.is_staff %}
+        <a class="drawer__link" href="{% url 'dashboard:index' %}">Dashboard</a>
+      {% endif %}
+      <form action="{% url 'users:logout' %}" method="post" style="margin-top: var(--s-5)">
+        {% csrf_token %}
+        <button class="btn btn--ghost btn--block" type="submit">Chiqish</button>
+      </form>
+    {% else %}
+      <div class="stack" style="margin-top: var(--s-5)">
+        <a class="btn btn--primary btn--block" href="{% url 'users:register' %}">Ro'yxatdan o'tish</a>
+        <a class="btn btn--ghost btn--block" href="{% url 'users:login' %}">Kirish</a>
+      </div>
+    {% endif %}
+  </nav>
+</div>

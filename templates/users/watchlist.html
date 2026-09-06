@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Watchlist — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Keyinroq ko'rish uchun saqlangan filmlaringiz.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--s-6); padding-bottom: var(--s-8)">
+
+  <div class="page-head" style="text-align: left; padding-top: 0">
+    <h1 class="page-head__title" style="margin-bottom: var(--s-2)">Watchlist</h1>
+    <p class="muted">{{ page_obj.paginator.count }} ta film keyinroq ko'rish uchun saqlangan.</p>
+  </div>
+
+  {% if entries %}
+    <div class="grid">
+      {% for entry in entries %}
+        {# data-entry — JS o'chirilgan kartani topishi uchun #}
+        <div data-entry style="position: relative">
+          {% include "partials/movie_card.html" with movie=entry.movie %}
+
+          <button class="btn-icon js-remove-entry"
+                  type="button" data-movie="{{ entry.movie.id }}" data-kind="watchlist"
+                  aria-label="Ro'yxatdan olib tashlash"
+                  style="position: absolute; top: var(--s-3); right: var(--s-3); z-index: 3">
+            {% include "partials/icon.html" with name="x" %}
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="bookmark" %}
+      <h2 class="empty__title">Watchlist bo'sh</h2>
+      <p>Filmlar katalogini ko'rib chiqing va yoqqanlarini bu yerga qo'shing.</p>
+      <a class="btn btn--primary" href="{% url 'movies:movie_list' %}">Filmlarni ko'rish</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

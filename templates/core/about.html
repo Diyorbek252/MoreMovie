@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Biz haqimizda — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} — qonuniy va litsenziyalangan kino platformasi haqida.{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <h1 class="page-head__title">Biz haqimizda</h1>
+    <p class="page-head__text">{{ SITE_TAGLINE }}</p>
+  </div>
+
+  <div class="prose" style="margin-inline: auto; padding-bottom: var(--s-8)">
+    <p>
+      <strong>{{ SITE_NAME }}</strong> — kino muxlislari uchun yaratilgan zamonaviy
+      onlayn platforma. Maqsadimiz — sifatli kinoni qulay, tez va
+      <strong>qonuniy</strong> tarzda taqdim etish.
+    </p>
+
+    <h2>Nima taklif qilamiz</h2>
+    <ul>
+      <li>Public domain va Creative Commons litsenziyasidagi filmlarni to'liq tomosha qilish</li>
+      <li>Shaxsiy Watchlist va Sevimlilar ro'yxati</li>
+      <li>To'xtagan joyingizdan davom ettirish imkoniyati</li>
+      <li>Reyting va sharhlar orqali jamoaviy tanlov</li>
+      <li>Janr, yil, til va davlat bo'yicha kuchli filtrlash</li>
+    </ul>
+
+    <h2>Mualliflik huquqiga munosabatimiz</h2>
+    <p>
+      Bu platforma <strong>faqat qonuniy tarqatiladigan kontent</strong> uchun
+      mo'ljallangan. Har bir film yozuvida uning huquqiy holati aniq belgilanadi:
+    </p>
+    <ul>
+      <li><strong>Public domain / Creative Commons</strong> — erkin tarqatiladi, to'liq ko'rish va yuklab olish mumkin</li>
+      <li><strong>Litsenziyalangan</strong> — huquq egasi ruxsat bergan</li>
+      <li><strong>Faqat treyler</strong> — bizda namoyish huquqi yo'q, faqat rasmiy treyler ko'rsatiladi</li>
+    </ul>
+    <p>
+      Biz hech qachon pirat nusxalarni joylashtirmaymiz. Agar huquqingiz buzilgan
+      deb hisoblasangiz,
+      <a href="{% url 'core:contact' %}" style="color: var(--red)">biz bilan bog'laning</a> —
+      murojaatingiz tez ko'rib chiqiladi.
+    </p>
+
+    <h2>Texnologiya</h2>
+    <p>
+      Platforma Django asosida qurilgan. Interfeys tezkor va qurilmaga moslashuvchan —
+      telefon, planshet va kompyuterda bir xil qulay ishlaydi.
+    </p>
+  </div>
+</div>
+{% endblock %}

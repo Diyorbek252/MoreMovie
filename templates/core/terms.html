@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Foydalanish shartlari — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} platformasidan foydalanish shartlari va qoidalari.{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <h1 class="page-head__title">Foydalanish shartlari</h1>
+    <p class="page-head__text">Oxirgi yangilanish: {% now "d.m.Y" %}</p>
+  </div>
+
+  <div class="prose" style="margin-inline: auto; padding-bottom: var(--s-8)">
+    <h2>1. Umumiy qoidalar</h2>
+    <p>
+      {{ SITE_NAME }} dan foydalanish orqali siz quyidagi shartlarga rozilik
+      bildirasiz. Rozi bo'lmasangiz, iltimos, saytdan foydalanmang.
+    </p>
+
+    <h2>2. Kontent va mualliflik huquqi</h2>
+    <p>
+      Platformada faqat public domain, Creative Commons yoki huquq egasi ruxsat
+      bergan kontent namoyish etiladi. Har bir film sahifasida uning huquqiy
+      holati ko'rsatilgan.
+    </p>
+    <ul>
+      <li>Kontentni ruxsatsiz nusxalash va qayta tarqatish taqiqlanadi</li>
+      <li>Yuklab olish faqat litsenziya ochiq ruxsat bergan filmlar uchun mavjud</li>
+      <li>Pirat kontent joylash yoki uni talab qilish qat'iyan man etiladi</li>
+    </ul>
+
+    <h2>3. Hisob</h2>
+    <ul>
+      <li>Bitta shaxs uchun bitta hisob</li>
+      <li>Parolingiz xavfsizligi uchun siz javobgarsiz</li>
+      <li>Qoidalarni buzgan hisoblar administrator tomonidan bloklanadi</li>
+    </ul>
+
+    <h2>4. Sharhlar va moderatsiya</h2>
+    <p>
+      Sharhlar chop etilishdan oldin moderatsiyadan o'tadi. Haqorat, spam,
+      reklama yoki noqonuniy havolalar o'chiriladi.
+    </p>
+
+    <h2>5. Javobgarlik</h2>
+    <p>
+      Xizmat "bor holicha" taqdim etiladi. Texnik uzilishlar yoki kontentning
+      vaqtincha mavjud emasligi uchun kompensatsiya berilmaydi.
+    </p>
+
+    <h2>6. O'zgarishlar</h2>
+    <p>
+      Ushbu shartlar yangilanishi mumkin. Muhim o'zgarishlar haqida saytda
+      xabar beriladi.
+    </p>
+  </div>
+</div>
+{% endblock %}

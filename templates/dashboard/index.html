@@ -1,0 +1,186 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block dash_title %}Umumiy ko'rinish{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Umumiy ko'rinish</h1>
+      <p class="dash-head__sub">Platformaning joriy holati</p>
+    </div>
+    <a class="btn btn--primary" href="{% url 'dashboard:movie_add' %}">
+      {% include "partials/icon.html" with name="plus" %} Film qo'shish
+    </a>
+  </div>
+
+  {# ==================== STATISTIKA ==================== #}
+  <div class="dash-stats">
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ stats.movies_total }}</div>
+      <div class="dash-stat__label">Jami film</div>
+      <div class="dash-stat__hint">
+        {{ stats.movies_published }} chop etilgan · {{ stats.movies_draft }} qoralama
+      </div>
+    </div>
+
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ stats.users_total }}</div>
+      <div class="dash-stat__label">Foydalanuvchi</div>
+      <div class="dash-stat__hint">{{ stats.users_blocked }} bloklangan</div>
+    </div>
+
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ stats.views_total|intcomma }}</div>
+      <div class="dash-stat__label">Jami ko'rish</div>
+      <div class="dash-stat__hint">Barcha filmlar bo'yicha</div>
+    </div>
+
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ stats.favorites_total }}</div>
+      <div class="dash-stat__label">Sevimlilar</div>
+      <div class="dash-stat__hint">{{ stats.watchlist_total }} watchlist yozuvi</div>
+    </div>
+
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ stats.avg_rating }}</div>
+      <div class="dash-stat__label">O'rtacha reyting</div>
+      <div class="dash-stat__hint">5 ballik shkalada</div>
+    </div>
+
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ stats.reviews_pending }}</div>
+      <div class="dash-stat__label">Moderatsiyada</div>
+      <div class="dash-stat__hint">
+        <a href="{% url 'dashboard:review_list' %}" style="color: var(--red)">Ko'rib chiqish →</a>
+      </div>
+    </div>
+  </div>
+
+  {# ==================== GRAFIK ==================== #}
+  <div class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Oxirgi 14 kunlik ko'rishlar</h2>
+    </div>
+    {# Grafik JS tomonidan data-chart dagi JSON asosida chiziladi #}
+    <div id="views-chart" data-chart="{{ chart_data }}"></div>
+  </div>
+
+  {# ==================== MASHHUR FILMLAR ==================== #}
+  <div class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Eng mashhur filmlar</h2>
+      <a class="section__link" href="{% url 'dashboard:movie_list' %}">Barchasi →</a>
+    </div>
+
+    {% if popular_movies %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Film</th>
+              <th>Yil</th>
+              <th>Ko'rishlar</th>
+              <th>Sevimli</th>
+              <th>Reyting</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movie in popular_movies %}
+              <tr>
+                <td class="table__title">
+                  <a href="{{ movie.get_absolute_url }}">{{ movie.title }}</a>
+                </td>
+                <td class="muted">{{ movie.release_year }}</td>
+                <td>{{ movie.views_count|intcomma }}</td>
+                <td class="muted">{{ movie.fav_count }}</td>
+                <td>
+                  {% if movie.rating_count %}
+                    {{ movie.avg_rating }}/5 <span class="dim">({{ movie.rating_count }})</span>
+                  {% else %}<span class="dim">—</span>{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Hali film qo'shilmagan.</p>
+    {% endif %}
+  </div>
+
+  {# ==================== KUTILAYOTGAN SHARHLAR ==================== #}
+  {% if pending_reviews %}
+    <div class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">Moderatsiya kutayotgan sharhlar</h2>
+        <a class="section__link" href="{% url 'dashboard:review_list' %}">Barchasi →</a>
+      </div>
+
+      {% for review in pending_reviews %}
+        <div class="mod-card" data-review="{{ review.id }}">
+          <div class="mod-card__head">
+            <strong>{{ review.user.username }}</strong>
+            <span class="muted">→</span>
+            <a href="{{ review.movie.get_absolute_url }}">{{ review.movie.title }}</a>
+            <span class="dim" style="font-size: var(--fs-xs)">{{ review.created_at|date:"d.m.Y H:i" }}</span>
+          </div>
+
+          <p class="mod-card__text">{{ review.comment }}</p>
+
+          <div class="mod-card__actions">
+            <button class="btn btn--sm btn--primary js-moderate"
+                    data-review="{{ review.id }}" data-action="approve">Tasdiqlash</button>
+            <button class="btn btn--sm btn--ghost js-moderate"
+                    data-review="{{ review.id }}" data-action="reject">Rad etish</button>
+            <button class="btn btn--sm btn--danger js-moderate"
+                    data-review="{{ review.id }}" data-action="delete">O'chirish</button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {# ==================== YANGI FOYDALANUVCHILAR ==================== #}
+  <div class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">Yangi foydalanuvchilar</h2>
+      <a class="section__link" href="{% url 'dashboard:user_list' %}">Barchasi →</a>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th></th><th>Foydalanuvchi</th><th>Email</th><th>Ro'yxatdan o'tgan</th><th>Holat</th></tr>
+        </thead>
+        <tbody>
+          {% for u in recent_users %}
+            <tr>
+              <td>
+                <div class="avatar avatar--sm">
+                  {% if u.profile.avatar_url %}
+                    <img src="{{ u.profile.avatar_url }}" alt="" width="32" height="32">
+                  {% else %}{{ u.initials }}{% endif %}
+                </div>
+              </td>
+              <td><strong>{{ u.username }}</strong></td>
+              <td class="muted">{{ u.email }}</td>
+              <td class="muted">{{ u.date_joined|date:"d.m.Y" }}</td>
+              <td>
+                {% if u.is_blocked %}
+                  <span class="badge" style="color: var(--danger)">Bloklangan</span>
+                {% elif u.is_staff %}
+                  <span class="badge badge--red">Xodim</span>
+                {% else %}
+                  <span class="badge badge--success">Faol</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock %}

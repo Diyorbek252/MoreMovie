@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.display_name }} — profil | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Shaxsiy profil sahifasi.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--s-6); padding-bottom: var(--s-8)">
+
+  {# ==================== PROFIL SARLAVHASI ==================== #}
+  <div class="profile-head">
+    <div class="avatar avatar--lg">
+      {% if user.profile.avatar_url %}
+        <img src="{{ user.profile.avatar_url }}" alt="{{ user.display_name }}" width="108" height="108">
+      {% else %}{{ user.initials }}{% endif %}
+    </div>
+
+    <div style="flex: 1">
+      <h1 class="profile-head__name">{{ user.display_name }}</h1>
+      <p class="profile-head__meta">{{ user.email }}</p>
+      <p class="profile-head__meta">
+        A'zo bo'lgan sana: {{ user.date_joined|date:"d.m.Y" }}
+      </p>
+      {% if user.profile.bio %}
+        <p class="muted" style="margin-top: var(--s-3); max-width: 560px">{{ user.profile.bio }}</p>
+      {% endif %}
+    </div>
+
+    <a class="btn btn--ghost" href="{% url 'users:profile_edit' %}">
+      {% include "partials/icon.html" with name="settings" %} Tahrirlash
+    </a>
+  </div>
+
+  {# ==================== STATISTIKA ==================== #}
+  <div class="stats">
+    <a class="stat" href="{% url 'users:watchlist' %}">
+      <div class="stat__value">{{ watchlist_count }}</div>
+      <div class="stat__label">Watchlist</div>
+    </a>
+    <a class="stat" href="{% url 'users:favorites' %}">
+      <div class="stat__value">{{ favorite_count }}</div>
+      <div class="stat__label">Sevimlilar</div>
+    </a>
+    <div class="stat">
+      <div class="stat__value">{{ watched_count }}</div>
+      <div class="stat__label">Ko'rilgan</div>
+    </div>
+    <div class="stat">
+      <div class="stat__value">{{ review_count }}</div>
+      <div class="stat__label">Sharhlar</div>
+    </div>
+  </div>
+
+  {# ==================== KO'RISH TARIXI ==================== #}
+  {% if recent_history %}
+    <section class="section" style="padding-top: 0">
+      <div class="section__head"><h2 class="section__title">Oxirgi ko'rilganlar</h2></div>
+      <div class="grid">
+        {% for entry in recent_history %}
+          {% include "partials/movie_card.html" with movie=entry.movie progress=entry.progress_percent %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {# ==================== MENING SHARHLARIM ==================== #}
+  {% if my_reviews %}
+    <section class="section" style="padding-bottom: 0">
+      <div class="section__head"><h2 class="section__title">Mening sharhlarim</h2></div>
+
+      {% for review in my_reviews %}
+        <article class="review">
+          <div style="flex: 1">
+            <div class="review__head">
+              <a class="review__author" href="{{ review.movie.get_absolute_url }}">{{ review.movie.title }}</a>
+
+              {% if review.status == "approved" %}
+                <span class="badge badge--success">Tasdiqlangan</span>
+              {% elif review.status == "pending" %}
+                <span class="badge badge--warning">Moderatsiyada</span>
+              {% else %}
+                <span class="badge" style="color: var(--danger)">Rad etilgan</span>
+              {% endif %}
+
+              <span class="review__date">{{ review.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <p class="review__text">{{ review.comment }}</p>
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

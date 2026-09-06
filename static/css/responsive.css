@@ -1,0 +1,286 @@
+/* ==========================================================================
+   MORE-MOVIE — Responsive
+   Mobile-first emas: asosiy uslub desktop uchun, bu yerda kichraytiriladi.
+   Breakpointlar: 1280 / 1024 / 768 / 480
+   ========================================================================== */
+
+/* --- Katta noutbuk --- */
+@media (max-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  /* .rail uchun "1fr" ishlatilmaydi — sabab: components.css dagi
+     .rail qoidasidagi izohga qarang (kam elementda kartalar cho'zilib
+     ketmasligi uchun). */
+  .rail {
+    grid-auto-columns: 150px;
+  }
+
+  .rail--sm {
+    grid-auto-columns: 116px;
+  }
+
+  .rail-btn--prev { left: 0; }
+  .rail-btn--next { right: 0; }
+}
+
+/* --- Planshet (landshaft) --- */
+@media (max-width: 1024px) {
+  :root {
+    --nav-h: 64px;
+  }
+
+  .container {
+    padding-inline: var(--s-4);
+  }
+
+  /* Navbar markazidagi menyu chekma menyuga o'tadi */
+  .nav__menu {
+    display: none;
+  }
+
+  .nav__burger {
+    display: flex;
+  }
+
+  .nav-search.is-open .nav-search__box {
+    width: 210px;
+  }
+
+  .detail__grid {
+    grid-template-columns: 240px 1fr;
+    gap: var(--s-5);
+  }
+
+  .footer__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-5);
+  }
+
+  .hero {
+    min-height: 74vh;
+  }
+
+  .section {
+    padding-block: var(--s-6);
+  }
+}
+
+/* --- Planshet (portret) va katta telefon --- */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: var(--s-3);
+  }
+
+  .rail {
+    grid-auto-columns: 132px;
+    gap: var(--s-3);
+  }
+
+  .rail--sm {
+    grid-auto-columns: 104px;
+  }
+
+  /* Auth sahifasida chap dekorativ panel yashiriladi */
+  .auth {
+    grid-template-columns: 1fr;
+  }
+
+  .auth__aside {
+    display: none;
+  }
+
+  /* Poster tepada, ma'lumot ostida */
+  .detail__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail__poster {
+    width: 190px;
+    margin-inline: auto;
+  }
+
+  .detail__actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .hero {
+    min-height: 66vh;
+  }
+
+  .hero__content {
+    padding-block: var(--s-6);
+  }
+
+  .hero__desc {
+    font-size: var(--fs-base);
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .hero__actions .btn {
+    flex: 1 1 140px;
+  }
+
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: var(--s-5);
+  }
+
+  .footer__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer__bottom {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .toasts {
+    right: var(--s-3);
+    left: var(--s-3);
+    bottom: var(--s-3);
+  }
+
+  .toast {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .review {
+    gap: var(--s-3);
+  }
+
+  .player__volume input {
+    display: none;
+  }
+}
+
+/* --- Telefon --- */
+@media (max-width: 480px) {
+  :root {
+    --nav-h: 58px;
+  }
+
+  .container {
+    padding-inline: var(--s-3);
+  }
+
+  /* Mobilda aniq 2 ustun — auto-fill emas */
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3);
+  }
+
+  .rail {
+    grid-auto-columns: 46vw;
+  }
+
+  .rail--sm {
+    grid-auto-columns: 38vw;
+  }
+
+  /* Kichik ekranda hover overlay foydasiz — o'chiriladi */
+  .card__overlay {
+    display: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+
+  .logo img,
+  .logo svg {
+    height: 30px;
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .genre-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .genre-tile {
+    min-height: 92px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .profile-head {
+    flex-direction: column;
+    text-align: center;
+    padding: var(--s-5) var(--s-4);
+  }
+
+  .section__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-2);
+  }
+
+  .section__title {
+    font-size: var(--fs-xl);
+  }
+
+  .shots {
+    grid-template-columns: 1fr;
+  }
+
+  .rail-btn {
+    display: none;
+  }
+
+  .cta {
+    padding: var(--s-7) var(--s-4);
+  }
+
+  .modal__panel {
+    padding: var(--s-5) var(--s-4);
+  }
+
+  /* Katta ekranga mo'ljallangan qidiruv oynasi butun enni egallaydi */
+  .nav-search.is-open .nav-search__box {
+    position: fixed;
+    top: calc(var(--nav-h) + var(--s-2));
+    left: var(--s-3);
+    right: var(--s-3);
+    width: auto;
+    z-index: var(--z-nav);
+  }
+
+  .nav-search__results {
+    position: fixed;
+    top: calc(var(--nav-h) + 60px);
+    left: var(--s-3);
+    right: var(--s-3);
+    width: auto;
+  }
+}
+
+/* --- Chop etish uchun --- */
+@media print {
+  .nav,
+  .footer,
+  .loader,
+  .toasts,
+  .hero__actions,
+  .detail__actions,
+  .rail-btn {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

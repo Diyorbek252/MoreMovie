@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ movie.title }} ({{ movie.release_year }}) — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ movie.meta_description_text }}{% endblock %}
+
+{% block og_type %}video.movie{% endblock %}
+{% block og_title %}{{ movie.title }} ({{ movie.release_year }}){% endblock %}
+{% block og_description %}{{ movie.meta_description_text }}{% endblock %}
+{% block og_image %}{% if movie.backdrop %}{{ request.scheme }}://{{ request.get_host }}{{ movie.backdrop.url }}{% elif movie.poster %}{{ request.scheme }}://{{ request.get_host }}{{ movie.poster.url }}{% endif %}{% endblock %}
+
+{% block extra_head %}
+  {# Qidiruv tizimlari uchun strukturalangan ma'lumot #}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Movie",
+    "name": "{{ movie.title|escapejs }}",
+    "description": "{{ movie.meta_description_text|escapejs }}",
+    "datePublished": "{{ movie.release_year }}",
+    {% if movie.poster %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ movie.poster.url }}",{% endif %}
+    {% if movie.director %}"director": {"@type": "Person", "name": "{{ movie.director.full_name|escapejs }}"},{% endif %}
+    {% if movie.rating_count %}"aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "{{ movie.avg_rating }}",
+      "ratingCount": "{{ movie.rating_count }}",
+      "bestRating": "5"
+    },{% endif %}
+    "genre": [{% for genre in movie.genres.all %}"{{ genre.name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}]
+  }
+  </script>
+{% endblock %}
+
+{% block content %}
+
+{# ==================== ASOSIY QISM ==================== #}
+<section class="detail">
+  {% if movie.backdrop %}
+    <div class="detail__bg"><img src="{{ movie.backdrop.url }}" alt="" width="1600" height="900"></div>
+  {% endif %}
+  <div class="detail__scrim"></div>
+
+  <div class="container">
+    <div class="detail__grid">
+
+      {# --- Poster --- #}
+      <div class="detail__poster">
+        {% if movie.poster %}
+          <img src="{{ movie.poster.url }}" alt="{{ movie.title }} posteri" width="300" height="450">
+        {% else %}
+          <div class="card__fallback">{{ movie.title }}</div>
+        {% endif %}
+      </div>
+
+      {# --- Ma'lumot --- #}
+      <div>
+        <h1 class="detail__title">{{ movie.title }}</h1>
+        {% if movie.original_title %}
+          <p class="detail__original">{{ movie.original_title }}</p>
+        {% endif %}
+
+        <div class="detail__meta">
+          {% if movie.rating_count %}
+            <span class="badge badge--rating">
+              {% include "partials/icon.html" with name="star" %}
+              <span class="js-avg-rating">{{ movie.display_rating }}</span>
+            </span>
+            <span class="muted" style="font-size: var(--fs-sm)">
+              (<span class="js-rating-count">{{ movie.rating_count }}</span> baho)
+            </span>
+          {% elif movie.imdb_rating %}
+            <span class="badge badge--rating">
+              {% include "partials/icon.html" with name="star" %} {{ movie.imdb_rating }}
+            </span>
+          {% endif %}
+
+          <span class="badge badge--quality">{{ movie.get_quality_display }}</span>
+          <span class="badge">{{ movie.release_year }}</span>
+          <span class="badge">{{ movie.duration_display }}</span>
+
+          {% for genre in movie.genres.all %}
+            <a class="chip" href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
+          {% endfor %}
+        </div>
+
+        <p class="detail__desc">{{ movie.description|linebreaksbr }}</p>
+
+        {# --- Litsenziya holati --- #}
+        {% if movie.license_note or not movie.can_watch %}
+          <div class="license-note">
+            {% include "partials/icon.html" with name="shield" %}
+            <div>
+              {% if movie.can_watch %}
+                <strong>Qonuniy kontent.</strong>
+                Bu film {{ movie.get_license_type_display|lower }} sifatida tarqatiladi.
+                {% if movie.license_note %}<br>{{ movie.license_note }}{% endif %}
+              {% else %}
+                <strong>To'liq versiya mavjud emas.</strong>
+                Bu yozuv uchun bizda tomosha qilish huquqi yo'q — faqat rasmiy
+                treylerni ko'rishingiz mumkin.
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        {# --- Harakat tugmalari --- #}
+        <div class="detail__actions">
+          {% if movie.can_watch %}
+            <a class="btn btn--primary btn--lg" href="{{ movie.get_watch_url }}">
+              {% include "partials/icon.html" with name="play" %} Watch Now
+            </a>
+          {% elif movie.trailer_url %}
+            <a class="btn btn--primary btn--lg" href="#trailer">
+              {% include "partials/icon.html" with name="play" %} Treylerni ko'rish
+            </a>
+          {% endif %}
+
+          {% if user.is_authenticated %}
+            <button class="btn btn--ghost btn--lg js-watchlist {% if movie.id in user_watchlist_ids %}is-active{% endif %}"
+                    type="button" data-movie="{{ movie.id }}"
+                    aria-pressed="{% if movie.id in user_watchlist_ids %}true{% else %}false{% endif %}">
+              {% include "partials/icon.html" with name="bookmark" %} Watchlist
+            </button>
+            <button class="btn-icon js-favorite {% if movie.id in user_favorite_ids %}is-active{% endif %}"
+                    type="button" data-movie="{{ movie.id }}" aria-label="Sevimlilarga qo'shish"
+                    aria-pressed="{% if movie.id in user_favorite_ids %}true{% else %}false{% endif %}">
+              {% include "partials/icon.html" with name="heart" %}
+            </button>
+          {% else %}
+            <a class="btn btn--ghost btn--lg" href="{% url 'users:login' %}?next={{ request.path }}">
+              {% include "partials/icon.html" with name="bookmark" %} Watchlist
+            </a>
+          {% endif %}
+
+          {# Download tugmasi FAQAT can_download True bo'lganda #}
+          {% if movie.can_download %}
+            <a class="btn btn--outline btn--lg" href="{{ movie.download_url }}"
+               target="_blank" rel="noopener noreferrer" download>
+              {% include "partials/icon.html" with name="download" %} Download
+            </a>
+          {% endif %}
+        </div>
+
+        {# --- Ma'lumotlar jadvali --- #}
+        <div class="facts">
+          {% if movie.director %}
+            <div class="fact">
+              <div class="fact__label">Rejissyor</div>
+              <div class="fact__value">{{ movie.director.full_name }}</div>
+            </div>
+          {% endif %}
+          {% if movie.country %}
+            <div class="fact">
+              <div class="fact__label">Davlat</div>
+              <div class="fact__value">{{ movie.country.name }}</div>
+            </div>
+          {% endif %}
+          {% if movie.language %}
+            <div class="fact">
+              <div class="fact__label">Til</div>
+              <div class="fact__value">{{ movie.language.name }}</div>
+            </div>
+          {% endif %}
+          <div class="fact">
+            <div class="fact__label">Davomiyligi</div>
+            <div class="fact__value">{{ movie.duration_display }}</div>
+          </div>
+          <div class="fact">
+            <div class="fact__label">Ko'rishlar</div>
+            <div class="fact__value">{{ movie.views_count|intcomma }}</div>
+          </div>
+          <div class="fact">
+            <div class="fact__label">Litsenziya</div>
+            <div class="fact__value">{{ movie.get_license_type_display }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+
+  {# ==================== AKTYORLAR ==================== #}
+  {% if movie.cast_members.all %}
+    <section class="section">
+      <div class="section__head"><h2 class="section__title">Aktyorlar</h2></div>
+      <div class="cast-rail">
+        {% for member in movie.cast_members.all %}
+          <div class="cast-card">
+            {% if member.person.photo %}
+              <img class="cast-card__photo" src="{{ member.person.photo.url }}"
+                   alt="{{ member.person.full_name }}" loading="lazy" width="132" height="132">
+            {% else %}
+              <div class="cast-card__photo cast-card__photo--initials">{{ member.person.initials }}</div>
+            {% endif %}
+            <div class="cast-card__name">{{ member.person.full_name }}</div>
+            {% if member.character_name %}
+              <div class="cast-card__role">{{ member.character_name }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {# ==================== TREYLER ==================== #}
+  {% if movie.trailer_url %}
+    <section class="section" id="trailer">
+      <div class="section__head"><h2 class="section__title">Treyler</h2></div>
+      <div class="video-frame">
+        <iframe src="{{ movie.trailer_url }}" title="{{ movie.title }} treyleri"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen loading="lazy"></iframe>
+      </div>
+    </section>
+  {% endif %}
+
+  {# ==================== KADRLAR ==================== #}
+  {% if movie.screenshots.all %}
+    <section class="section">
+      <div class="section__head"><h2 class="section__title">Kadrlar</h2></div>
+      <div class="shots">
+        {% for shot in movie.screenshots.all %}
+          <img src="{{ shot.image.url }}" alt="{{ shot.caption|default:movie.title }}"
+               loading="lazy" width="480" height="270">
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {# ==================== REYTING VA SHARHLAR ==================== #}
+  <section class="section">
+    <div class="section__head"><h2 class="section__title">Sharhlar</h2></div>
+
+    {% if user.is_authenticated %}
+      <div class="rate-box" style="margin-bottom: var(--s-5)">
+        <h3 style="margin-bottom: var(--s-3); font-size: var(--fs-lg)">Filmni baholang</h3>
+
+        <div class="row" style="margin-bottom: var(--s-5)">
+          <div class="stars stars--input js-rating"
+               data-movie="{{ movie.id }}" data-score="{{ user_rating }}"
+               role="group" aria-label="1 dan 5 gacha baho">
+            {% for star in star_range %}
+              <button type="button" aria-label="{{ star }} yulduz">
+                {% include "partials/icon.html" with name="star" %}
+              </button>
+            {% endfor %}
+          </div>
+          <span class="muted" style="font-size: var(--fs-sm)">
+            {% if user_rating %}Sizning bahoyingiz: {{ user_rating }}/5{% else %}Hali baholamagansiz{% endif %}
+          </span>
+        </div>
+
+        <form class="js-review-form stack" data-movie="{{ movie.id }}">
+          <label class="field__label" for="review-text">Sharhingiz</label>
+          <textarea class="textarea" id="review-text" name="comment" rows="4"
+                    placeholder="Film haqidagi fikringizni yozing (kamida 10 ta belgi)..."
+                    maxlength="2000">{% if user_review %}{{ user_review.comment }}{% endif %}</textarea>
+
+          <div class="row" style="justify-content: space-between">
+            <p class="field__help">Sharhlar moderatsiyadan o'tgach chop etiladi.</p>
+            <button class="btn btn--primary" type="submit">
+              {% if user_review %}Sharhni yangilash{% else %}Yuborish{% endif %}
+            </button>
+          </div>
+
+          <div class="alert alert--info js-review-notice" hidden>
+            {% include "partials/icon.html" with name="info" %}
+            Sharhingiz moderatsiyaga yuborildi. Tasdiqlangach shu yerda paydo bo'ladi.
+          </div>
+        </form>
+
+        {% if user_review and user_review.status == "pending" %}
+          <div class="alert alert--info" style="margin-top: var(--s-4)">
+            {% include "partials/icon.html" with name="clock" %}
+            Sharhingiz hozirda moderatsiyada.
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="alert alert--info">
+        {% include "partials/icon.html" with name="info" %}
+        Baho berish va sharh yozish uchun
+        <a href="{% url 'users:login' %}?next={{ request.path }}" style="color: var(--red); font-weight: 600">tizimga kiring</a>.
+      </div>
+    {% endif %}
+
+    {% if reviews %}
+      <div>
+        {% for review in reviews %}
+          <article class="review">
+            <div class="avatar">
+              {% if review.user.profile.avatar_url %}
+                <img src="{{ review.user.profile.avatar_url }}" alt="" loading="lazy" width="38" height="38">
+              {% else %}{{ review.user.initials }}{% endif %}
+            </div>
+            <div style="flex: 1">
+              <div class="review__head">
+                <span class="review__author">{{ review.user.display_name }}</span>
+                {% if review.user_score %}
+                  <span class="badge badge--rating">
+                    {% include "partials/icon.html" with name="star" %} {{ review.user_score }}/5
+                  </span>
+                {% endif %}
+                <span class="review__date">{{ review.created_at|date:"d.m.Y" }}</span>
+              </div>
+              <p class="review__text">{{ review.comment }}</p>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">Hozircha sharhlar yo'q. Birinchi bo'lib fikr bildiring!</p>
+    {% endif %}
+  </section>
+</div>
+
+{# ==================== O'XSHASH FILMLAR ==================== #}
+{% include "partials/movie_row.html" with title="Similar Movies" movies=similar_movies %}
+
+{% endblock %}

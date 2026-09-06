@@ -1,0 +1,130 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block dash_title %}Filmlar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Filmlar</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta yozuv</p>
+    </div>
+    <a class="btn btn--primary" href="{% url 'dashboard:movie_add' %}">
+      {% include "partials/icon.html" with name="plus" %} Film qo'shish
+    </a>
+  </div>
+
+  {# --- Qidiruv va holat filtri --- #}
+  <form class="row row--wrap" method="get" style="margin-bottom: var(--s-4)">
+    <input class="input" type="search" name="q" value="{{ current_q }}"
+           placeholder="Sarlavha yoki rejissyor..." style="max-width: 320px">
+
+    <select class="select" name="status" style="max-width: 200px">
+      <option value="">Barchasi</option>
+      <option value="published" {% if current_status == "published" %}selected{% endif %}>Chop etilgan</option>
+      <option value="draft" {% if current_status == "draft" %}selected{% endif %}>Qoralama</option>
+      <option value="featured" {% if current_status == "featured" %}selected{% endif %}>Tanlangan</option>
+    </select>
+
+    <button class="btn btn--primary" type="submit">Qidirish</button>
+    {% if current_q or current_status %}
+      <a class="btn btn--ghost" href="{% url 'dashboard:movie_list' %}">Tozalash</a>
+    {% endif %}
+  </form>
+
+  <div class="panel">
+    {% if movies %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Sarlavha</th>
+              <th>Yil</th>
+              <th>Litsenziya</th>
+              <th>Ko'rish</th>
+              <th>Chop etilgan</th>
+              <th>Tanlangan</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movie in movies %}
+              <tr>
+                <td>
+                  {% if movie.poster %}
+                    <img class="table__poster" src="{{ movie.poster.url }}" alt="" loading="lazy">
+                  {% else %}
+                    <div class="table__poster"></div>
+                  {% endif %}
+                </td>
+
+                <td class="table__title">
+                  <a href="{{ movie.get_absolute_url }}">{{ movie.title }}</a>
+                  {% if movie.director %}
+                    <div class="dim" style="font-size: var(--fs-xs); font-weight: 400">
+                      {{ movie.director.full_name }}
+                    </div>
+                  {% endif %}
+                </td>
+
+                <td class="muted">{{ movie.release_year }}</td>
+
+                <td>
+                  {% if movie.license_type == "public_domain" %}
+                    <span class="badge badge--success">Public domain</span>
+                  {% elif movie.license_type == "licensed" %}
+                    <span class="badge">Litsenziyali</span>
+                  {% else %}
+                    <span class="badge badge--warning">Treyler</span>
+                  {% endif %}
+                </td>
+
+                <td>{{ movie.views_count|intcomma }}</td>
+
+                <td>
+                  <button class="switch js-toggle {% if movie.is_published %}is-on{% endif %}"
+                          type="button" role="switch"
+                          aria-checked="{% if movie.is_published %}true{% else %}false{% endif %}"
+                          aria-label="Chop etish holati"
+                          data-url="{% url 'dashboard:api_toggle_publish' movie.pk %}"></button>
+                </td>
+
+                <td>
+                  <button class="switch js-toggle {% if movie.is_featured %}is-on{% endif %}"
+                          type="button" role="switch"
+                          aria-checked="{% if movie.is_featured %}true{% else %}false{% endif %}"
+                          aria-label="Tanlangan holati"
+                          data-url="{% url 'dashboard:api_toggle_featured' movie.pk %}"></button>
+                </td>
+
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:movie_edit' movie.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:movie_delete' movie.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="film" %}
+        <h2 class="empty__title">Film topilmadi</h2>
+        <a class="btn btn--primary" href="{% url 'dashboard:movie_add' %}">Birinchi filmni qo'shish</a>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

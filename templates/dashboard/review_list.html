@@ -1,0 +1,81 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Sharhlar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Sharhlar moderatsiyasi</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta sharh</p>
+    </div>
+  </div>
+
+  {# --- Holat bo'yicha tablar --- #}
+  <div class="tabs">
+    <a class="chip {% if current_status == 'pending' %}is-active{% endif %}"
+       href="?status=pending">Moderatsiyada ({{ counts.pending }})</a>
+    <a class="chip {% if current_status == 'approved' %}is-active{% endif %}"
+       href="?status=approved">Tasdiqlangan ({{ counts.approved }})</a>
+    <a class="chip {% if current_status == 'rejected' %}is-active{% endif %}"
+       href="?status=rejected">Rad etilgan ({{ counts.rejected }})</a>
+  </div>
+
+  <div class="panel">
+    {% if reviews %}
+      {% for review in reviews %}
+        <div class="mod-card" data-review="{{ review.id }}">
+          <div class="mod-card__head">
+            <div class="avatar avatar--sm">
+              {% if review.user.profile.avatar_url %}
+                <img src="{{ review.user.profile.avatar_url }}" alt="" width="32" height="32" loading="lazy">
+              {% else %}{{ review.user.initials }}{% endif %}
+            </div>
+
+            <strong>{{ review.user.username }}</strong>
+            <span class="dim">→</span>
+            <a href="{{ review.movie.get_absolute_url }}">{{ review.movie.title }}</a>
+
+            {% if review.user_score %}
+              <span class="badge badge--rating">
+                {% include "partials/icon.html" with name="star" %} {{ review.user_score }}/5
+              </span>
+            {% endif %}
+
+            <span class="dim" style="font-size: var(--fs-xs); margin-left: auto">
+              {{ review.created_at|date:"d.m.Y H:i" }}
+            </span>
+          </div>
+
+          <p class="mod-card__text">{{ review.comment }}</p>
+
+          <div class="mod-card__actions">
+            {% if review.status != "approved" %}
+              <button class="btn btn--sm btn--primary js-moderate"
+                      data-review="{{ review.id }}" data-action="approve">
+                {% include "partials/icon.html" with name="check" %} Tasdiqlash
+              </button>
+            {% endif %}
+            {% if review.status != "rejected" %}
+              <button class="btn btn--sm btn--ghost js-moderate"
+                      data-review="{{ review.id }}" data-action="reject">Rad etish</button>
+            {% endif %}
+            <button class="btn btn--sm btn--danger js-moderate"
+                    data-review="{{ review.id }}" data-action="delete">
+              {% include "partials/icon.html" with name="trash" %} O'chirish
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="check" %}
+        <h2 class="empty__title">Bu bo'limda sharh yo'q</h2>
+        <p>Hammasi ko'rib chiqilgan.</p>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

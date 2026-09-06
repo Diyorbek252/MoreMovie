@@ -1,0 +1,43 @@
+{% comment %}
+Sarlavhali gorizontal karusel.
+
+Ishlatish:
+    {% include "partials/movie_row.html" with title="Trending" movies=trending link=url %}
+
+Kontekst:
+    title   — bo'lim sarlavhasi
+    movies  — filmlar ro'yxati
+    link    — ixtiyoriy "Barchasi" havolasi
+    icon    — ixtiyoriy sarlavha oldidagi ikonka nomi
+    compact — ixtiyoriy, True bo'lsa kartalar biroz kichikroq chiqadi
+{% endcomment %}
+
+{% if movies %}
+<section class="section reveal">
+  <div class="container">
+
+    <div class="section__head">
+      <h2 class="section__title">{{ title }}</h2>
+      {% if link %}
+        <a class="section__link" href="{{ link }}">Barchasini ko'rish →</a>
+      {% endif %}
+    </div>
+
+    <div class="rail-wrap">
+      <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
+        {% include "partials/icon.html" with name="chevron-left" %}
+      </button>
+
+      <div class="rail {% if compact %}rail--sm{% endif %}">
+        {% for movie in movies %}
+          {% include "partials/movie_card.html" with movie=movie %}
+        {% endfor %}
+      </div>
+
+      <button class="rail-btn rail-btn--next" type="button" aria-label="Oldinga" data-rail="next">
+        {% include "partials/icon.html" with name="chevron-right" %}
+      </button>
+    </div>
+  </div>
+</section>
+{% endif %}

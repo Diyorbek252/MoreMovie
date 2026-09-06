@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Shaxsiy va boshqaruv bo'limlari indekslanmaydi
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /profile/
+Disallow: /watchlist/
+Disallow: /favorites/
+Disallow: /password-reset/
+
+Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ro'yxatdan o'tish — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} da bepul hisob oching — watchlist, sevimlilar va ko'rish tarixi.{% endblock %}
+
+{% block content %}
+<div class="auth">
+
+  <aside class="auth__aside">
+    <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="220" height="60">
+    <p class="auth__tagline">{{ SITE_TAGLINE }}</p>
+
+    <ul class="auth__points">
+      <li>{% include "partials/icon.html" with name="check" %} Bepul va tez ro'yxatdan o'tish</li>
+      <li>{% include "partials/icon.html" with name="check" %} Shaxsiy watchlist va sevimlilar</li>
+      <li>{% include "partials/icon.html" with name="check" %} Ko'rish tarixi saqlanadi</li>
+      <li>{% include "partials/icon.html" with name="check" %} Reklama yo'q, faqat kino</li>
+    </ul>
+  </aside>
+
+  <div class="auth__main">
+    <div class="auth__form">
+      <h1 class="auth__title">Hisob yarating</h1>
+      <p class="auth__subtitle">Bir daqiqada ro'yxatdan o'ting va tomoshani boshlang.</p>
+
+      <form method="post" class="stack" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert--error">
+            {% include "partials/icon.html" with name="alert" %}
+            <div>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
+          </div>
+        {% endif %}
+
+        {% for field in form %}
+          <div class="field">
+            <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <p class="field__error">{{ field.errors|first }}</p>
+            {% elif field.help_text %}
+              <p class="field__help">{{ field.help_text }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <button class="btn btn--primary btn--lg btn--block" type="submit">Ro'yxatdan o'tish</button>
+
+        <p class="field__help" style="text-align: center">
+          Ro'yxatdan o'tish orqali
+          <a href="{% url 'core:terms' %}" style="color: var(--text-muted)">foydalanish shartlari</a>
+          va
+          <a href="{% url 'core:privacy' %}" style="color: var(--text-muted)">maxfiylik siyosati</a>ga
+          rozilik bildirasiz.
+        </p>
+      </form>
+
+      <p class="auth__foot">
+        Hisobingiz bormi? <a href="{% url 'users:login' %}">Kirish</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% comment %}
+Sahifalash. Joriy filtrlarni saqlab qoladi (querystring kontekst
+o'zgaruvchisi view'dan keladi — `page` parametri olib tashlangan holda).
+
+Ishlatish:
+    {% include "partials/pagination.html" %}
+{% endcomment %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pagination" aria-label="Sahifalar">
+
+  {% if page_obj.has_previous %}
+    <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}"
+       aria-label="Oldingi sahifa" rel="prev">
+      {% include "partials/icon.html" with name="chevron-left" %}
+    </a>
+  {% else %}
+    <span class="is-disabled" aria-hidden="true">
+      {% include "partials/icon.html" with name="chevron-left" %}
+    </span>
+  {% endif %}
+
+  {# Joriy sahifa atrofidagi 2 ta raqam ko'rsatiladi, qolgani "..." bilan qisqartiriladi #}
+  {% for num in page_obj.paginator.page_range %}
+    {% if num == page_obj.number %}
+      <span class="is-current" aria-current="page">{{ num }}</span>
+    {% elif num == 1 or num == page_obj.paginator.num_pages %}
+      <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+    {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+      <span class="is-disabled">…</span>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}"
+       aria-label="Keyingi sahifa" rel="next">
+      {% include "partials/icon.html" with name="chevron-right" %}
+    </a>
+  {% else %}
+    <span class="is-disabled" aria-hidden="true">
+      {% include "partials/icon.html" with name="chevron-right" %}
+    </span>
+  {% endif %}
+</nav>
+{% endif %}

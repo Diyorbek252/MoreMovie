@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Kirish — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} hisobingizga kiring va sevimli filmlaringizni davom ettiring.{% endblock %}
+
+{% block content %}
+<div class="auth">
+
+  {# --- Chap dekorativ panel --- #}
+  <aside class="auth__aside">
+    <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="220" height="60">
+    <p class="auth__tagline">{{ SITE_TAGLINE }}</p>
+
+    <ul class="auth__points">
+      <li>{% include "partials/icon.html" with name="check" %} Watchlist va sevimlilar ro'yxati</li>
+      <li>{% include "partials/icon.html" with name="check" %} To'xtagan joyingizdan davom ettirish</li>
+      <li>{% include "partials/icon.html" with name="check" %} Reyting va sharh qoldirish</li>
+      <li>{% include "partials/icon.html" with name="check" %} Faqat qonuniy, litsenziyalangan kontent</li>
+    </ul>
+  </aside>
+
+  {# --- Forma --- #}
+  <div class="auth__main">
+    <div class="auth__form">
+      <h1 class="auth__title">Xush kelibsiz</h1>
+      <p class="auth__subtitle">Hisobingizga kiring va tomoshani davom ettiring.</p>
+
+      <form method="post" class="stack" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert--error">
+            {% include "partials/icon.html" with name="alert" %}
+            <div>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
+          </div>
+        {% endif %}
+
+        <div class="field">
+          <label class="field__label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <p class="field__error">{{ form.username.errors|first }}</p>
+          {% endif %}
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+          {{ form.password }}
+          {% if form.password.errors %}
+            <p class="field__error">{{ form.password.errors|first }}</p>
+          {% endif %}
+        </div>
+
+        <div class="row" style="justify-content: space-between">
+          <label class="checkbox">
+            {{ form.remember_me }} {{ form.remember_me.label }}
+          </label>
+          <a href="{% url 'users:password_reset' %}" style="font-size: var(--fs-sm); color: var(--text-muted)">
+            Parolni unutdingizmi?
+          </a>
+        </div>
+
+        {# LoginRequiredMixin yo'naltirgan manzilni saqlab qolamiz #}
+        {% if request.GET.next %}
+          <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% endif %}
+
+        <button class="btn btn--primary btn--lg btn--block" type="submit">Kirish</button>
+      </form>
+
+      <p class="auth__foot">
+        Hisobingiz yo'qmi? <a href="{% url 'users:register' %}">Ro'yxatdan o'ting</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

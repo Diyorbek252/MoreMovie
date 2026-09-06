@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}«{{ query }}» qidiruvi — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} da «{{ query }}» bo'yicha qidiruv natijalari.{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head" style="text-align: left">
+    <h1 class="page-head__title" style="margin-bottom: var(--s-2)">Qidiruv natijalari</h1>
+    {% if query %}
+      <p class="muted">
+        «<strong>{{ query }}</strong>» bo'yicha {{ page_obj.paginator.count }} ta natija
+      </p>
+    {% endif %}
+  </div>
+
+  {# Qidiruvni sahifada ham davom ettirish uchun forma #}
+  <form class="row" method="get" action="{% url 'movies:search' %}" style="margin-bottom: var(--s-5)">
+    <input class="input" type="search" name="q" value="{{ query }}"
+           placeholder="Film, janr, aktyor yoki rejissyor nomi..." style="max-width: 480px">
+    <button class="btn btn--primary" type="submit">Qidirish</button>
+  </form>
+
+  {% if movies %}
+    <div class="grid">
+      {% for movie in movies %}
+        {% include "partials/movie_card.html" with movie=movie %}
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" %}
+  {% elif query %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="search" %}
+      <h2 class="empty__title">«{{ query }}» topilmadi</h2>
+      <p>Boshqa so'z bilan urinib ko'ring yoki katalogni ko'zdan kechiring.</p>
+      <a class="btn btn--primary" href="{% url 'movies:movie_list' %}">Barcha filmlar</a>
+    </div>
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="search" %}
+      <h2 class="empty__title">Nimani qidiramiz?</h2>
+      <p>Film nomi, janr, aktyor yoki rejissyor nomini kiriting.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

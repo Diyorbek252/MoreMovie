@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}
+
+{% block meta_description %}{{ SITE_NAME }} — public domain va litsenziyalangan filmlarni HD sifatda onlayn tomosha qiling. Trending, mashhur va yuqori reytingli filmlar.{% endblock %}
+
+{% block content %}
+
+  {# ==================== HERO ==================== #}
+  {% if hero %}
+    <section class="hero">
+      <div class="hero__bg">
+        {% if hero.backdrop %}
+          <img src="{{ hero.backdrop.url }}" alt="" fetchpriority="high" width="1600" height="900">
+        {% elif hero.poster %}
+          <img src="{{ hero.poster.url }}" alt="" fetchpriority="high">
+        {% endif %}
+      </div>
+      <div class="hero__scrim"></div>
+
+      <div class="container hero__content">
+        <p class="hero__eyebrow">
+          {% include "partials/icon.html" with name="trending" %}
+          Bugungi tanlov
+        </p>
+
+        <h1 class="hero__title">{{ hero.title }}</h1>
+
+        <div class="hero__meta">
+          {% if hero.display_rating %}
+            <span class="badge badge--rating">
+              {% include "partials/icon.html" with name="star" %} {{ hero.display_rating }}
+            </span>
+          {% endif %}
+          <span class="badge badge--quality">{{ hero.get_quality_display }}</span>
+          <span>{{ hero.release_year }}</span>
+          <span>{{ hero.duration_display }}</span>
+          {% for genre in hero.genres.all|slice:":3" %}
+            <span>{{ genre.name }}</span>
+          {% endfor %}
+        </div>
+
+        <p class="hero__desc">{{ hero.short_description }}</p>
+
+        <div class="hero__actions">
+          {% if hero.can_watch %}
+            <a class="btn btn--primary btn--lg" href="{{ hero.get_watch_url }}">
+              {% include "partials/icon.html" with name="play" %} Watch Now
+            </a>
+          {% endif %}
+          <a class="btn btn--ghost btn--lg" href="{{ hero.get_absolute_url }}">
+            {% include "partials/icon.html" with name="info" %} More Info
+          </a>
+          {% if user.is_authenticated %}
+            <button class="btn btn--ghost btn--lg js-watchlist {% if hero.id in user_watchlist_ids %}is-active{% endif %}"
+                    type="button" data-movie="{{ hero.id }}">
+              {% include "partials/icon.html" with name="plus" %} Add to Watchlist
+            </button>
+          {% else %}
+            <a class="btn btn--ghost btn--lg" href="{% url 'users:register' %}">
+              {% include "partials/icon.html" with name="plus" %} Add to Watchlist
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {# ==================== DAVOM ETTIRISH ==================== #}
+  {% if continue_watching %}
+    <section class="section reveal">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Davom ettirish</h2>
+        </div>
+        <div class="rail-wrap">
+          <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
+            {% include "partials/icon.html" with name="chevron-left" %}
+          </button>
+          <div class="rail">
+            {% for entry in continue_watching %}
+              {% include "partials/movie_card.html" with movie=entry.movie progress=entry.progress_percent %}
+            {% endfor %}
+          </div>
+          <button class="rail-btn rail-btn--next" type="button" aria-label="Oldinga" data-rail="next">
+            {% include "partials/icon.html" with name="chevron-right" %}
+          </button>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {# ==================== KARUSEL BO'LIMLARI ==================== #}
+  {% url 'movies:movie_list' as movies_url %}
+
+  {% include "partials/movie_row.html" with title="Trending" movies=trending link=movies_url|add:"?sort=popular" %}
+  {% include "partials/movie_row.html" with title="Popular Movies" movies=popular link=movies_url|add:"?sort=popular" %}
+  {% include "partials/movie_row.html" with title="New Releases" movies=new_releases link=movies_url|add:"?sort=latest" %}
+  {% include "partials/movie_row.html" with title="Top Rated" movies=top_rated link=movies_url|add:"?sort=rating" %}
+
+  {# ==================== JANRLAR ==================== #}
+  {% if genres %}
+    <section class="section reveal">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Janrlar</h2>
+          <a class="section__link" href="{% url 'movies:genre_list' %}">Barchasini ko'rish →</a>
+        </div>
+
+        <div class="genre-grid">
+          {% for genre in genres %}
+            <a class="genre-tile" href="{{ genre.get_absolute_url }}">
+              <span class="genre-tile__count">{{ genre.movie_total }}</span>
+              <span class="genre-tile__name">{{ genre.name }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {# ==================== TANLANGANLAR ==================== #}
+  {% include "partials/movie_row.html" with title="Featured" movies=featured link=movies_url %}
+
+  {# ==================== CALL TO ACTION ==================== #}
+  {% if not user.is_authenticated %}
+    <section class="section reveal">
+      <div class="container">
+        <div class="cta">
+          <h2 class="cta__title">{{ SITE_TAGLINE }}</h2>
+          <p class="cta__text">
+            Bepul ro'yxatdan o'ting — sevimli filmlaringizni saqlang,
+            watchlist tuzing va to'xtagan joyingizdan davom ettiring.
+          </p>
+          <a class="btn btn--primary btn--lg" href="{% url 'users:register' %}">
+            Hoziroq boshlash
+          </a>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+{% endblock %}

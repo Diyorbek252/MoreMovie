@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% comment %}
+Dashboard sahifalari uchun umumiy karkas: yon menyu + kontent maydoni.
+Har bir dashboard sahifasi shundan meros oladi va `dash_content` blokini to'ldiradi.
+{% endcomment %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block title %}{% block dash_title %}Dashboard{% endblock %} — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container dash">
+
+  {# --- Yon menyu --- #}
+  <nav class="dash-nav" aria-label="Boshqaruv menyusi">
+    <span class="dash-nav__title">Boshqaruv</span>
+
+    {% url 'dashboard:index' as u_index %}
+    {% url 'dashboard:movie_list' as u_movies %}
+    {% url 'dashboard:genre_list' as u_genres %}
+    {% url 'dashboard:user_list' as u_users %}
+    {% url 'dashboard:review_list' as u_reviews %}
+    {% url 'dashboard:message_list' as u_messages %}
+
+    <a class="dash-nav__link {% if request.path == u_index %}is-active{% endif %}" href="{{ u_index }}">
+      {% include "partials/icon.html" with name="grid" %} Umumiy
+    </a>
+    <a class="dash-nav__link {% if request.path == u_movies %}is-active{% endif %}" href="{{ u_movies }}">
+      {% include "partials/icon.html" with name="film" %} Filmlar
+    </a>
+    <a class="dash-nav__link {% if request.path == u_genres %}is-active{% endif %}" href="{{ u_genres }}">
+      {% include "partials/icon.html" with name="trending" %} Janrlar
+    </a>
+    <a class="dash-nav__link {% if request.path == u_users %}is-active{% endif %}" href="{{ u_users }}">
+      {% include "partials/icon.html" with name="users" %} Foydalanuvchilar
+    </a>
+    <a class="dash-nav__link {% if request.path == u_reviews %}is-active{% endif %}" href="{{ u_reviews }}">
+      {% include "partials/icon.html" with name="message" %} Sharhlar
+      {% if nav_counts.reviews_pending %}
+        <span class="dash-nav__count">{{ nav_counts.reviews_pending }}</span>
+      {% endif %}
+    </a>
+    <a class="dash-nav__link {% if request.path == u_messages %}is-active{% endif %}" href="{{ u_messages }}">
+      {% include "partials/icon.html" with name="mail" %} Murojaatlar
+      {% if nav_counts.messages_unread %}
+        <span class="dash-nav__count">{{ nav_counts.messages_unread }}</span>
+      {% endif %}
+    </a>
+
+    <span class="dash-nav__title" style="margin-top: var(--s-4)">Boshqa</span>
+
+    <a class="dash-nav__link" href="/admin/">
+      {% include "partials/icon.html" with name="settings" %} Django admin
+    </a>
+    <a class="dash-nav__link" href="{% url 'core:home' %}">
+      {% include "partials/icon.html" with name="eye" %} Saytni ko'rish
+    </a>
+  </nav>
+
+  {# --- Kontent --- #}
+  <div>
+    {% block dash_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/dashboard.js' %}" defer></script>
+  {% block dash_js %}{% endblock %}
+{% endblock %}

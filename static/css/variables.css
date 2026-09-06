@@ -1,0 +1,115 @@
+/* ==========================================================================
+   MORE-MOVIE — Design tokens
+   Butun saytdagi ranglar, oraliqlar va animatsiyalar shu yerdan boshqariladi.
+   Shablonlarda hardcoded hex rang yozilmaydi.
+   ========================================================================== */
+
+:root {
+  /* --- Fon qatlamlari (eng qorong'idan yorug'iga) --- */
+  --bg:            #000000;
+  --bg-2:          #0B0B0B;
+  --bg-3:          #121212;
+  --surface:       #1A1A1A;
+  --surface-2:     #232323;
+  --surface-hover: #2A2A2A;
+
+  /* --- Accent: qizil --- */
+  --red:        #E50914;  /* asosiy harakat rangi */
+  --red-hot:    #FF2A00;  /* logo va urg'u */
+  --red-bright: #FF0000;
+  --red-dark:   #B20710;
+  --red-soft:   rgba(229, 9, 20, 0.14);
+  --red-glow:   rgba(229, 9, 20, 0.45);
+
+  /* --- Matn --- */
+  --text:        #FFFFFF;
+  --text-muted:  #B3B3B3;
+  --text-dim:    #808080;
+  --text-faint:  #575757;
+
+  /* --- Chegaralar --- */
+  --border:        rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* --- Holat ranglari --- */
+  --success: #2ECC71;
+  --warning: #F5A623;
+  --danger:  #E50914;
+  --info:    #3498DB;
+
+  /* --- Radiuslar --- */
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   16px;
+  --r-xl:   24px;
+  --r-full: 999px;
+
+  /* --- Soyalar --- */
+  --shadow-sm:   0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md:   0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-cine: 0 18px 48px rgba(0, 0, 0, 0.75);
+  --shadow-red:  0 8px 28px var(--red-glow);
+
+  /* --- Oraliqlar (4px shkalasi) --- */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  24px;
+  --s-6:  32px;
+  --s-7:  48px;
+  --s-8:  64px;
+  --s-9:  96px;
+
+  /* --- Tipografiya --- */
+  --font: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Arial, sans-serif;
+  --font-display: "Poppins", "Montserrat", var(--font);
+
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.875rem;
+  --fs-base: 1rem;
+  --fs-lg:   1.125rem;
+  --fs-xl:   1.375rem;
+  --fs-2xl:  1.75rem;
+  --fs-3xl:  2.25rem;
+  --fs-hero: clamp(2rem, 5.5vw, 4.25rem);
+
+  /* --- Animatsiya --- */
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
+  --ease:     cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* --- Layout --- */
+  --nav-h:      72px;
+  --container:  1440px;
+  --container-narrow: 900px;
+
+  /* --- Qatlamlar --- */
+  --z-nav:    100;
+  --z-drawer: 200;
+  --z-modal:  300;
+  --z-toast:  400;
+  --z-loader: 500;
+}
+
+/* Harakatni kamaytirishni so'ragan foydalanuvchilar uchun — barcha
+   animatsiyalar deyarli o'chiriladi (foydalanish qulayligi talabi). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0.01ms;
+    --dur-base: 0.01ms;
+    --dur-slow: 0.01ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

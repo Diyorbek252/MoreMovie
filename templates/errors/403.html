@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}403 — Ruxsat yo'q | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Bu sahifaga kirish uchun ruxsatingiz yo'q.{% endblock %}
+
+{% block content %}
+<div class="container error-page">
+  <div>
+    <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}"
+         width="180" height="48" style="margin: 0 auto var(--s-5)">
+
+    <div class="error-page__code">403</div>
+
+    <h1 class="error-page__title">Bu yerga kirish yopiq</h1>
+    <p class="error-page__text">
+      Bu sahifa yoki kontent uchun sizda ruxsat yo'q. Ba'zi filmlar litsenziya
+      cheklovlari sababli faqat treyler ko'rinishida mavjud.
+    </p>
+
+    <div class="row" style="justify-content: center">
+      <a class="btn btn--primary btn--lg" href="{% url 'core:home' %}">Bosh sahifa</a>
+      {% if not user.is_authenticated %}
+        <a class="btn btn--ghost btn--lg" href="{% url 'users:login' %}">Tizimga kirish</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

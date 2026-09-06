@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Profilni tahrirlash — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container container--narrow" style="padding-top: var(--s-6); padding-bottom: var(--s-8)">
+
+  <div class="page-head" style="text-align: left; padding-top: 0">
+    <h1 class="page-head__title" style="margin-bottom: var(--s-2)">Profilni tahrirlash</h1>
+    <p class="muted">Ma'lumotlaringizni yangilang.</p>
+  </div>
+
+  {# enctype — avatar yuklash uchun majburiy #}
+  <form method="post" enctype="multipart/form-data" class="stack" novalidate>
+    {% csrf_token %}
+
+    <div class="rate-box stack">
+      <h2 style="font-size: var(--fs-lg)">Shaxsiy ma'lumotlar</h2>
+
+      {% for field in user_form %}
+        <div class="field">
+          <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="rate-box stack">
+      <h2 style="font-size: var(--fs-lg)">Profil</h2>
+
+      {# Joriy avatarni ko'rsatamiz #}
+      <div class="row">
+        <div class="avatar avatar--lg">
+          {% if user.profile.avatar_url %}
+            <img src="{{ user.profile.avatar_url }}" alt="" width="108" height="108">
+          {% else %}{{ user.initials }}{% endif %}
+        </div>
+        <p class="field__help">Kvadrat rasm tavsiya etiladi (masalan 400x400), 10 MB gacha.</p>
+      </div>
+
+      {% for field in profile_form %}
+        <div class="field">
+          <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="row">
+      <button class="btn btn--primary btn--lg" type="submit">Saqlash</button>
+      <a class="btn btn--ghost btn--lg" href="{% url 'users:profile' %}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

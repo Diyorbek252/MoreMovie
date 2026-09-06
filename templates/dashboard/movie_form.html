@@ -1,0 +1,189 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}{% if object %}Filmni tahrirlash{% else %}Yangi film{% endif %}{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">
+        {% if object %}{{ object.title }}{% else %}Yangi film{% endif %}
+      </h1>
+      <p class="dash-head__sub">
+        {% if object %}Mavjud yozuvni tahrirlash{% else %}Katalogga yangi film qo'shish{% endif %}
+      </p>
+    </div>
+    <a class="btn btn--ghost" href="{% url 'dashboard:movie_list' %}">← Ro'yxatga qaytish</a>
+  </div>
+
+  {# enctype — poster/backdrop/video yuklash uchun majburiy #}
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert--error">
+        {% include "partials/icon.html" with name="alert" %}
+        <div>{{ form.non_field_errors }}</div>
+      </div>
+    {% endif %}
+
+    {# ==================== ASOSIY MA'LUMOT ==================== #}
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Asosiy ma'lumot</h2></div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "title" or field.name == "original_title" or field.name == "slug" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
+              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="form-grid form-grid--full" style="margin-top: var(--s-4)">
+        {% for field in form %}
+          {% if field.name == "description" or field.name == "short_description" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
+              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ==================== MEDIA ==================== #}
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Media</h2></div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "poster" or field.name == "backdrop" or field.name == "video_file" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
+              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
+
+              {# Tahrirlashda joriy rasmni ko'rsatamiz #}
+              {% if object %}
+                {% if field.name == "poster" and object.poster %}
+                  <div class="preview"><img src="{{ object.poster.url }}" alt="Joriy poster"></div>
+                {% elif field.name == "backdrop" and object.backdrop %}
+                  <div class="preview"><img src="{{ object.backdrop.url }}" alt="Joriy backdrop"></div>
+                {% endif %}
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="form-grid" style="margin-top: var(--s-4)">
+        {% for field in form %}
+          {% if field.name == "trailer_url" or field.name == "video_url" or field.name == "download_url" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
+              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ==================== TASNIF ==================== #}
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Tasnif</h2></div>
+
+      <div class="field" style="margin-bottom: var(--s-4)">
+        <label class="field__label">{{ form.genres.label }}</label>
+        <ul class="checks">{{ form.genres }}</ul>
+        {% if form.genres.errors %}<p class="field__error">{{ form.genres.errors|first }}</p>{% endif %}
+      </div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "country" or field.name == "language" or field.name == "director" or field.name == "release_year" or field.name == "duration_minutes" or field.name == "quality" or field.name == "imdb_rating" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
+              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ==================== HUQUQIY HOLAT ==================== #}
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Huquqiy holat</h2></div>
+
+      <div class="license-note" style="margin-bottom: var(--s-4)">
+        {% include "partials/icon.html" with name="shield" %}
+        <div>
+          <strong>Diqqat.</strong> To'liq filmni ko'rish va yuklab olish faqat
+          <em>public domain</em> yoki <em>litsenziyalangan</em> kontent uchun ochiladi.
+          «Faqat treyler» tanlansa, saytda video player ko'rsatilmaydi.
+        </div>
+      </div>
+
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name == "license_type" or field.name == "license_note" %}
+            <div class="field">
+              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
+              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <label class="checkbox" style="margin-top: var(--s-4)">
+        {{ form.is_download_allowed }} {{ form.is_download_allowed.label }}
+      </label>
+      {% if form.is_download_allowed.errors %}
+        <p class="field__error">{{ form.is_download_allowed.errors|first }}</p>
+      {% endif %}
+    </div>
+
+    {# ==================== CHOP ETISH VA SEO ==================== #}
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Chop etish va SEO</h2></div>
+
+      <div class="row row--wrap" style="gap: var(--s-5); margin-bottom: var(--s-4)">
+        <label class="checkbox">{{ form.is_published }} {{ form.is_published.label }}</label>
+        <label class="checkbox">{{ form.is_featured }} {{ form.is_featured.label }}</label>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="{{ form.meta_description.id_for_label }}">
+          {{ form.meta_description.label }}
+        </label>
+        {{ form.meta_description }}
+        {% if form.meta_description.errors %}
+          <p class="field__error">{{ form.meta_description.errors|first }}</p>
+        {% else %}
+          <p class="field__help">{{ form.meta_description.help_text }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn btn--primary btn--lg" type="submit">
+        {% if object %}O'zgarishlarni saqlash{% else %}Filmni qo'shish{% endif %}
+      </button>
+      <a class="btn btn--ghost btn--lg" href="{% url 'dashboard:movie_list' %}">Bekor qilish</a>
+    </div>
+  </form>
+
+{% endblock %}

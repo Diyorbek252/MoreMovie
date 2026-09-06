@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}404 — Sahifa topilmadi | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}So'ralgan sahifa topilmadi.{% endblock %}
+
+{% block content %}
+<div class="container error-page">
+  <div>
+    <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}"
+         width="180" height="48" style="margin: 0 auto var(--s-5)">
+
+    <div class="error-page__code">404</div>
+
+    <h1 class="error-page__title">Bu sahifa kadrdan tushib qolibdi</h1>
+    <p class="error-page__text">
+      Siz izlagan sahifa mavjud emas, ko'chirilgan yoki havola noto'g'ri yozilgan.
+    </p>
+
+    <div class="row" style="justify-content: center">
+      <a class="btn btn--primary btn--lg" href="{% url 'core:home' %}">Bosh sahifa</a>
+      <a class="btn btn--ghost btn--lg" href="{% url 'movies:movie_list' %}">Filmlarni ko'rish</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

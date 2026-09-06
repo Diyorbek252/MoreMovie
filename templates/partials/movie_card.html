@@ -1,0 +1,80 @@
+{% comment %}
+Film kartasi — butun saytdagi YAGONA variant.
+
+Ishlatish:
+    {% include "partials/movie_card.html" with movie=movie %}
+    {% include "partials/movie_card.html" with movie=movie progress=entry.progress_percent %}
+
+Kutiladigan kontekst:
+    movie    — Movie obyekti (with_relations() bilan olingan bo'lsin!)
+    progress — ixtiyoriy, 0-100: "davom ettirish" chizig'i uchun
+
+Watchlist/Favorite holati context_processor bergan to'plamlardan olinadi —
+har karta uchun alohida so'rov qilinmaydi.
+{% endcomment %}
+
+<article class="card {% if progress %}continue-card{% endif %}">
+
+  <div class="card__media">
+    <a href="{{ movie.get_absolute_url }}" aria-label="{{ movie.title }} sahifasi">
+      {% if movie.poster %}
+        <img class="card__poster" src="{{ movie.poster.url }}" alt="{{ movie.title }} posteri"
+             loading="lazy" width="300" height="450">
+      {% else %}
+        <div class="card__fallback">{{ movie.title }}</div>
+      {% endif %}
+    </a>
+
+    {# Yuqori burchaklar: sifat va reyting #}
+    <div class="card__tags">
+      <span class="badge badge--quality">{{ movie.get_quality_display }}</span>
+      {% if movie.display_rating %}
+        <span class="badge badge--rating">
+          {% include "partials/icon.html" with name="star" %}
+          {{ movie.display_rating }}
+        </span>
+      {% endif %}
+    </div>
+
+    {# Hover overlay — tezkor harakatlar. Karta ustiga bosilganda (play
+       tugmasi orqali emas) doim film sahifasiga o'tadi — pastdagi
+       .card__media va .card__title havolalariga qarang. #}
+    <div class="card__overlay">
+      {% if user.is_authenticated %}
+        <div class="card__actions">
+          <button class="btn-icon js-watchlist {% if movie.id in user_watchlist_ids %}is-active{% endif %}"
+                  type="button" data-movie="{{ movie.id }}"
+                  aria-label="Watchlist'ga qo'shish"
+                  aria-pressed="{% if movie.id in user_watchlist_ids %}true{% else %}false{% endif %}">
+            {% include "partials/icon.html" with name="bookmark" %}
+          </button>
+          <button class="btn-icon js-favorite {% if movie.id in user_favorite_ids %}is-active{% endif %}"
+                  type="button" data-movie="{{ movie.id }}"
+                  aria-label="Sevimlilarga qo'shish"
+                  aria-pressed="{% if movie.id in user_favorite_ids %}true{% else %}false{% endif %}">
+            {% include "partials/icon.html" with name="heart" %}
+          </button>
+        </div>
+      {% endif %}
+    </div>
+
+    {# "Davom ettirish" progress chizig'i #}
+    {% if progress %}
+      <div class="continue-card__bar">
+        <div class="continue-card__fill" style="width: {{ progress }}%"></div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card__body">
+    <h3 class="card__title">
+      <a href="{{ movie.get_absolute_url }}">{{ movie.title }}</a>
+    </h3>
+    <div class="card__meta">
+      <span>{{ movie.release_year }}</span>
+      {% with genre=movie.genres.all|first %}
+        {% if genre %}<span>{{ genre.name }}</span>{% endif %}
+      {% endwith %}
+    </div>
+  </div>
+</article>

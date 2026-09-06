@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Janrlar — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} dagi barcha film janrlari: action, drama, animatsiya, fantastika va boshqalar.{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <h1 class="page-head__title">Janrlar</h1>
+    <p class="page-head__text">O'zingizga yoqqan janrni tanlang va shu turdagi barcha filmlarni ko'ring.</p>
+  </div>
+
+  {% if genres %}
+    <div class="genre-grid" style="padding-bottom: var(--s-8)">
+      {% for genre in genres %}
+        <a class="genre-tile" href="{{ genre.get_absolute_url }}">
+          <span class="genre-tile__count">{{ genre.movie_total }} ta</span>
+          <span class="genre-tile__name">{{ genre.name }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="grid" %}
+      <h2 class="empty__title">Janrlar hali qo'shilmagan</h2>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

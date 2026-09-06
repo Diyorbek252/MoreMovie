@@ -1,0 +1,76 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Janrlar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Janrlar</h1>
+      <p class="dash-head__sub">{{ genres|length }} ta janr</p>
+    </div>
+  </div>
+
+  {# --- Yangi janr qo'shish --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Yangi janr</h2></div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-grid">
+        {% for field in form %}
+          <div class="field">
+            <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn--primary" type="submit" style="margin-top: var(--s-4)">
+        {% include "partials/icon.html" with name="plus" %} Qo'shish
+      </button>
+    </form>
+  </div>
+
+  {# --- Mavjud janrlar --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Mavjud janrlar</h2></div>
+
+    {% if genres %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Nomi</th><th>Slug</th><th>Tartib</th><th>Filmlar</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for genre in genres %}
+              <tr>
+                <td><strong>{{ genre.name }}</strong></td>
+                <td class="dim">{{ genre.slug }}</td>
+                <td class="muted">{{ genre.order }}</td>
+                <td>
+                  <a href="{{ genre.get_absolute_url }}">{{ genre.movie_total }} ta</a>
+                </td>
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:genre_edit' genre.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:genre_delete' genre.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Hali janr qo'shilmagan.</p>
+    {% endif %}
+  </div>
+
+{% endblock %}
