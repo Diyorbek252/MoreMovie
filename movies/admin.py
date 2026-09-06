@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
+    Category,
     Country,
     Favorite,
     Genre,
@@ -34,6 +35,18 @@ class ScreenshotInline(admin.TabularInline):
 class GenreAdmin(admin.ModelAdmin):
     list_display = ["name", "slug", "movie_count", "order"]
     list_editable = ["order"]
+    search_fields = ["name"]
+    prepopulated_fields = {"slug": ("name",)}
+
+    @admin.display(description="filmlar")
+    def movie_count(self, obj):
+        return obj.movies.count()
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ["name", "slug", "movie_count", "order", "is_active"]
+    list_editable = ["order", "is_active"]
     search_fields = ["name"]
     prepopulated_fields = {"slug": ("name",)}
 
@@ -81,17 +94,22 @@ class MovieAdmin(admin.ModelAdmin):
         "license_badge",
         "is_published",
         "is_featured",
+        "is_trending",
         "views_count",
         "avg_rating",
     ]
     list_display_links = ["poster_thumb", "title"]
-    list_editable = ["is_published", "is_featured"]
+    list_editable = ["is_published", "is_featured", "is_trending"]
     list_filter = [
         "is_published",
         "is_featured",
+        "is_trending",
+        "is_premium",
         "license_type",
         "quality",
+        "age_rating",
         "genres",
+        "categories",
         "release_year",
         "country",
         "language",
@@ -99,9 +117,12 @@ class MovieAdmin(admin.ModelAdmin):
     search_fields = ["title", "original_title", "description", "director__full_name"]
     prepopulated_fields = {"slug": ("title",)}
     autocomplete_fields = ["director", "country", "language"]
-    filter_horizontal = ["genres"]
+    filter_horizontal = ["genres", "categories"]
     inlines = [MovieCastInline, ScreenshotInline]
-    readonly_fields = ["views_count", "avg_rating", "rating_count", "created_at", "updated_at"]
+    readonly_fields = [
+        "views_count", "downloads_count", "avg_rating", "rating_count",
+        "created_at", "updated_at",
+    ]
     date_hierarchy = "created_at"
     actions = ["publish_movies", "unpublish_movies"]
 
@@ -136,12 +157,15 @@ class MovieAdmin(admin.ModelAdmin):
             {
                 "fields": [
                     "genres",
+                    "categories",
                     "country",
                     "language",
                     "director",
                     "release_year",
+                    "release_date",
                     "duration_minutes",
                     "quality",
+                    "age_rating",
                     "imdb_rating",
                 ]
             },
@@ -156,13 +180,14 @@ class MovieAdmin(admin.ModelAdmin):
                 "fields": ["license_type", "license_note", "is_download_allowed"],
             },
         ),
-        ("Chop etish", {"fields": ["is_published", "is_featured"]}),
+        ("Chop etish", {"fields": ["is_published", "is_featured", "is_trending", "is_premium"]}),
         (
             "Statistika (avtomatik)",
             {
                 "classes": ["collapse"],
                 "fields": [
                     "views_count",
+                    "downloads_count",
                     "avg_rating",
                     "rating_count",
                     "created_at",

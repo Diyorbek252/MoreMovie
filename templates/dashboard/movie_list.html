@@ -46,6 +46,7 @@
               <th>Ko'rish</th>
               <th>Chop etilgan</th>
               <th>Tanlangan</th>
+              <th>Trendda</th>
               <th></th>
             </tr>
           </thead>
@@ -97,6 +98,14 @@
                           aria-checked="{% if movie.is_featured %}true{% else %}false{% endif %}"
                           aria-label="Tanlangan holati"
                           data-url="{% url 'dashboard:api_toggle_featured' movie.pk %}"></button>
+                </td>
+
+                <td>
+                  <button class="switch js-toggle {% if movie.is_trending %}is-on{% endif %}"
+                          type="button" role="switch"
+                          aria-checked="{% if movie.is_trending %}true{% else %}false{% endif %}"
+                          aria-label="Trendda holati"
+                          data-url="{% url 'dashboard:api_toggle_trending' movie.pk %}"></button>
                 </td>
 
                 <td>

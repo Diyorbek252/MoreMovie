@@ -56,6 +56,8 @@ class Review(models.Model):
         PENDING = "pending", "Moderatsiyada"
         APPROVED = "approved", "Tasdiqlangan"
         REJECTED = "rejected", "Rad etilgan"
+        REPORTED = "reported", "Shikoyat qilingan"
+        SPAM = "spam", "Spam"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,

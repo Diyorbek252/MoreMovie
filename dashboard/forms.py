@@ -2,7 +2,7 @@
 
 from django import forms
 
-from movies.models import Genre, Movie
+from movies.models import Category, Genre, Movie
 
 
 class MovieForm(forms.ModelForm):
@@ -18,10 +18,11 @@ class MovieForm(forms.ModelForm):
             "description", "short_description", "meta_description",
             "poster", "backdrop",
             "trailer_url", "video_url", "video_file", "download_url",
-            "release_year", "duration_minutes", "quality", "imdb_rating",
-            "genres", "country", "language", "director",
+            "release_year", "release_date", "duration_minutes", "quality",
+            "age_rating", "imdb_rating",
+            "genres", "categories", "country", "language", "director",
             "license_type", "license_note", "is_download_allowed",
-            "is_featured", "is_published",
+            "is_featured", "is_trending", "is_premium", "is_published",
         ]
         widgets = {
             "title": forms.TextInput(attrs={"class": "input", "placeholder": "Film nomi"}),
@@ -46,12 +47,15 @@ class MovieForm(forms.ModelForm):
             "release_year": forms.NumberInput(
                 attrs={"class": "input", "min": 1888, "max": 2100}
             ),
+            "release_date": forms.DateInput(attrs={"class": "input", "type": "date"}),
             "duration_minutes": forms.NumberInput(attrs={"class": "input", "min": 0}),
             "quality": forms.Select(attrs={"class": "select"}),
+            "age_rating": forms.Select(attrs={"class": "select"}),
             "imdb_rating": forms.NumberInput(
                 attrs={"class": "input", "step": "0.1", "min": 0, "max": 10}
             ),
             "genres": forms.CheckboxSelectMultiple(),
+            "categories": forms.CheckboxSelectMultiple(),
             "country": forms.Select(attrs={"class": "select"}),
             "language": forms.Select(attrs={"class": "select"}),
             "director": forms.Select(attrs={"class": "select"}),
@@ -108,4 +112,15 @@ class GenreForm(forms.ModelForm):
             "icon": forms.TextInput(attrs={"class": "input", "placeholder": "ikonka kaliti"}),
             "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
             "description": forms.Textarea(attrs={"class": "textarea", "rows": 2}),
+        }
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ["name", "description", "image", "order", "is_active"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "input", "placeholder": "Kategoriya nomi"}),
+            "description": forms.Textarea(attrs={"class": "textarea", "rows": 2}),
+            "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
         }

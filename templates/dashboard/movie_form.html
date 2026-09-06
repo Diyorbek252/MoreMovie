@@ -108,9 +108,15 @@
         {% if form.genres.errors %}<p class="field__error">{{ form.genres.errors|first }}</p>{% endif %}
       </div>
 
+      <div class="field" style="margin-bottom: var(--s-4)">
+        <label class="field__label">{{ form.categories.label }}</label>
+        <ul class="checks">{{ form.categories }}</ul>
+        {% if form.categories.errors %}<p class="field__error">{{ form.categories.errors|first }}</p>{% endif %}
+      </div>
+
       <div class="form-grid">
         {% for field in form %}
-          {% if field.name == "country" or field.name == "language" or field.name == "director" or field.name == "release_year" or field.name == "duration_minutes" or field.name == "quality" or field.name == "imdb_rating" %}
+          {% if field.name == "country" or field.name == "language" or field.name == "director" or field.name == "release_year" or field.name == "release_date" or field.name == "duration_minutes" or field.name == "quality" or field.name == "age_rating" or field.name == "imdb_rating" %}
             <div class="field">
               <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
               {{ field }}
@@ -163,6 +169,8 @@
       <div class="row row--wrap" style="gap: var(--s-5); margin-bottom: var(--s-4)">
         <label class="checkbox">{{ form.is_published }} {{ form.is_published.label }}</label>
         <label class="checkbox">{{ form.is_featured }} {{ form.is_featured.label }}</label>
+        <label class="checkbox">{{ form.is_trending }} {{ form.is_trending.label }}</label>
+        <label class="checkbox">{{ form.is_premium }} {{ form.is_premium.label }}</label>
       </div>
 
       <div class="field">

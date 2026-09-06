@@ -1,0 +1,82 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Kategoriyalar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Kategoriyalar</h1>
+      <p class="dash-head__sub">{{ categories|length }} ta kategoriya</p>
+    </div>
+  </div>
+
+  {# --- Yangi kategoriya qo'shish --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Yangi kategoriya</h2></div>
+
+    {# enctype -- rasm yuklash uchun majburiy #}
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-grid">
+        {% for field in form %}
+          <div class="field">
+            <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn--primary" type="submit" style="margin-top: var(--s-4)">
+        {% include "partials/icon.html" with name="plus" %} Qo'shish
+      </button>
+    </form>
+  </div>
+
+  {# --- Mavjud kategoriyalar --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Mavjud kategoriyalar</h2></div>
+
+    {% if categories %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Nomi</th><th>Slug</th><th>Tartib</th><th>Filmlar</th><th>Faol</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for category in categories %}
+              <tr>
+                <td><strong>{{ category.name }}</strong></td>
+                <td class="dim">{{ category.slug }}</td>
+                <td class="muted">{{ category.order }}</td>
+                <td class="muted">{{ category.movie_total }} ta</td>
+                <td>
+                  {% if category.is_active %}
+                    <span class="badge badge--success">Faol</span>
+                  {% else %}
+                    <span class="dim">O'chirilgan</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:category_edit' category.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:category_delete' category.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Hali kategoriya qo'shilmagan.</p>
+    {% endif %}
+  </div>
+
+{% endblock %}

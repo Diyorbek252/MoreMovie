@@ -45,6 +45,16 @@ def unique_slugify(instance, value, slug_field="slug"):
     return slug
 
 
+class AgeRating(models.TextChoices):
+    """Yosh chegarasi belgisi — Movie va (keyinchalik) Series uchun umumiy."""
+
+    ALL = "0+", "0+ (barcha uchun)"
+    SIX = "6+", "6+"
+    TWELVE = "12+", "12+"
+    SIXTEEN = "16+", "16+"
+    EIGHTEEN = "18+", "18+ (faqat kattalar)"
+
+
 # ---------------------------------------------------------------------------
 # Ma'lumotnoma modellari (janr, davlat, til, shaxs)
 # ---------------------------------------------------------------------------
@@ -80,6 +90,44 @@ class Genre(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse("movies:genre_detail", kwargs={"slug": self.slug})
+
+
+class CategoryQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(is_active=True)
+
+
+class Category(TimeStampedModel):
+    """Janrdan alohida taksonomiya — masalan "Yangi filmlar", "Premyeralar",
+    "Koreys filmlari". `Movie` va (keyinchalik) `Series` ikkalasi ham
+    ishlatadi. Hozircha public sahifasi yo'q — faqat admin panelida
+    boshqariladi va bosh sahifa bo'limlarini belgilash uchun ishlatiladi.
+    """
+
+    name = models.CharField("nomi", max_length=80, unique=True)
+    slug = models.SlugField("slug", max_length=90, unique=True, blank=True)
+    description = models.TextField("tavsif", blank=True)
+    image = models.ImageField(
+        "rasm", upload_to="categories/", blank=True, null=True
+    )
+    order = models.PositiveSmallIntegerField("tartib", default=0)
+    is_active = models.BooleanField("faol", default=True)
+
+    objects = CategoryQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = "kategoriya"
+        verbose_name_plural = "kategoriyalar"
+        ordering = ["order", "name"]
+        indexes = [models.Index(fields=["is_active", "order"])]
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = unique_slugify(self, self.name)
+        super().save(*args, **kwargs)
 
 
 class Country(TimeStampedModel):
@@ -195,6 +243,16 @@ class MovieQuerySet(models.QuerySet):
     def featured(self):
         return self.published().with_relations().filter(is_featured=True)
 
+    def trending_flagged(self):
+        """Admin qo'lda "trendda" deb belgilagan filmlar.
+
+        `trending()` dan ATAYLAB alohida — `trending()` bosh sahifadagi
+        "Trending"/"Popular" bo'limlarini ko'rishlar soni bo'yicha quradi
+        va shu holicha qoladi. Bu metod kelajakda admin tanlovi bilan
+        ishlaydigan alohida bo'lim uchun (masalan qo'shimcha bo'lim).
+        """
+        return self.published().with_relations().filter(is_trending=True)
+
 
 class Movie(TimeStampedModel):
     """Katalogdagi bitta film."""
@@ -261,9 +319,16 @@ class Movie(TimeStampedModel):
         "chiqarilgan yil",
         validators=[MinValueValidator(1888), MaxValueValidator(2100)],
     )
+    release_date = models.DateField(
+        "chiqarilgan sana", null=True, blank=True,
+        help_text="Aniq sana ma'lum bo'lsa. Yil maydoni asosiy bo'lib qoladi.",
+    )
     duration_minutes = models.PositiveSmallIntegerField("davomiyligi (daqiqa)", default=0)
     quality = models.CharField(
         "sifat", max_length=4, choices=Quality.choices, default=Quality.HD
+    )
+    age_rating = models.CharField(
+        "yosh chegarasi", max_length=4, choices=AgeRating.choices, blank=True, default="",
     )
     imdb_rating = models.DecimalField(
         "IMDb reytingi",
@@ -274,6 +339,9 @@ class Movie(TimeStampedModel):
 
     # --- Aloqalar ---
     genres = models.ManyToManyField(Genre, related_name="movies", verbose_name="janrlar")
+    categories = models.ManyToManyField(
+        Category, related_name="movies", blank=True, verbose_name="kategoriyalar",
+    )
     country = models.ForeignKey(
         Country, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="movies", verbose_name="davlat",
@@ -313,11 +381,22 @@ class Movie(TimeStampedModel):
         "tanlangan", default=False,
         help_text="Bosh sahifadagi hero va 'Featured' bo'limida ko'rsatiladi.",
     )
+    is_trending = models.BooleanField(
+        "trendda", default=False,
+        help_text="Bosh sahifadagi «Trend» bo'limiga qo'lda qo'shish.",
+    )
+    is_premium = models.BooleanField(
+        "premium", default=False,
+        help_text="Faqat premium foydalanuvchilar uchun (hozircha belgi sifatida).",
+    )
     is_published = models.BooleanField(
         "chop etilgan", default=False,
         help_text="Belgilanmagan bo'lsa film saytda ko'rinmaydi.",
     )
     views_count = models.PositiveIntegerField("ko'rishlar soni", default=0, editable=False)
+    downloads_count = models.PositiveIntegerField(
+        "yuklab olishlar soni", default=0, editable=False,
+    )
 
     # --- Denormalizatsiya ---
     # Har detail sahifada AVG() hisoblamaslik uchun Rating saqlanganda yangilanadi.
@@ -337,6 +416,8 @@ class Movie(TimeStampedModel):
             models.Index(fields=["is_published", "-views_count"]),
             models.Index(fields=["is_published", "-avg_rating"]),
             models.Index(fields=["is_published", "is_featured"]),
+            models.Index(fields=["is_published", "is_trending"]),
+            models.Index(fields=["is_published", "is_premium"]),
             models.Index(fields=["release_year"]),
             models.Index(fields=["title"]),
         ]
@@ -400,6 +481,11 @@ class Movie(TimeStampedModel):
         return self.video_url or ""
 
     # --- Ko'rsatish uchun yordamchilar ---
+
+    @property
+    def release_display(self):
+        """Aniq sana bo'lsa uni, aks holda yilni qaytaradi."""
+        return self.release_date or self.release_year
 
     @property
     def duration_display(self):

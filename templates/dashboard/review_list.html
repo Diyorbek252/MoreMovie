@@ -19,6 +19,10 @@
        href="?status=approved">Tasdiqlangan ({{ counts.approved }})</a>
     <a class="chip {% if current_status == 'rejected' %}is-active{% endif %}"
        href="?status=rejected">Rad etilgan ({{ counts.rejected }})</a>
+    <a class="chip {% if current_status == 'reported' %}is-active{% endif %}"
+       href="?status=reported">Shikoyat qilingan ({{ counts.reported }})</a>
+    <a class="chip {% if current_status == 'spam' %}is-active{% endif %}"
+       href="?status=spam">Spam ({{ counts.spam }})</a>
   </div>
 
   <div class="panel">
@@ -61,6 +65,16 @@
               <button class="btn btn--sm btn--ghost js-moderate"
                       data-review="{{ review.id }}" data-action="reject"
                       data-url="{% url 'dashboard:api_moderate_review' review.pk 'reject' %}">Rad etish</button>
+            {% endif %}
+            {% if review.status != "reported" %}
+              <button class="btn btn--sm btn--ghost js-moderate"
+                      data-review="{{ review.id }}" data-action="report"
+                      data-url="{% url 'dashboard:api_moderate_review' review.pk 'report' %}">Shikoyat</button>
+            {% endif %}
+            {% if review.status != "spam" %}
+              <button class="btn btn--sm btn--ghost js-moderate"
+                      data-review="{{ review.id }}" data-action="spam"
+                      data-url="{% url 'dashboard:api_moderate_review' review.pk 'spam' %}">Spam</button>
             {% endif %}
             <button class="btn btn--sm btn--danger js-moderate"
                     data-review="{{ review.id }}" data-action="delete"

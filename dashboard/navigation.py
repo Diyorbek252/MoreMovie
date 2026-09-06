@@ -103,7 +103,17 @@ def build_nav(request):
                 continue
 
             match = item.match_prefix or url
-            is_active = request.path.startswith(match)
+            # "dashboard:index" ning o'zi "/dashboard/" bo'lib, bu barcha
+            # boshqa dashboard sahifalarining prefiksi hamdir — shuning
+            # uchun uni startswith bilan solishtirsak, u DOIM faol bo'lib
+            # ko'rinib qolardi. Faqat aynan shu sahifada ekanimizda,
+            # ya'ni prefiks berilmagan (match == url) holatda, aniq
+            # tenglik bilan tekshiramiz; boshqa bandlar uchun prefiks
+            # solishtiruvi (sub-sahifalarni ham yoritish uchun) davom etadi.
+            if item.match_prefix:
+                is_active = request.path.startswith(match)
+            else:
+                is_active = request.path == match
             count = counts.get(item.count_key, 0) if item.count_key else 0
 
             visible_items.append({

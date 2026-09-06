@@ -25,10 +25,10 @@ from django.views.generic import (
 )
 
 from core.models import ContactMessage
-from movies.models import Favorite, Genre, Movie, ViewHistory, Watchlist
+from movies.models import Category, Favorite, Genre, Movie, ViewHistory, Watchlist
 from reviews.models import Review
 
-from .forms import GenreForm, MovieForm
+from .forms import CategoryForm, GenreForm, MovieForm
 from .mixins import DashboardPermissionMixin, StaffRequiredMixin, dashboard_perm_required
 
 User = get_user_model()
@@ -243,6 +243,60 @@ class GenreDeleteView(DashboardPermissionMixin, DeleteView):
 
 
 # ---------------------------------------------------------------------------
+# Kategoriyalar
+# ---------------------------------------------------------------------------
+
+
+class CategoryManageView(DashboardPermissionMixin, ListView):
+    """Kategoriyalar ro'yxati + qo'shish formasi bir sahifada (Genre bilan bir xil naqsh)."""
+
+    required_perms = ["movies.view_category"]
+    model = Category
+    template_name = "dashboard/category_list.html"
+    context_object_name = "categories"
+
+    def get_queryset(self):
+        return Category.objects.annotate(movie_total=Count("movies")).order_by("order", "name")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = CategoryForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = CategoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"«{form.instance.name}» kategoriyasi qo'shildi.")
+        else:
+            messages.error(request, "Kategoriya qo'shilmadi — nom takrorlanmasligi kerak.")
+        return redirect("dashboard:category_list")
+
+
+class CategoryUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["movies.change_category"]
+    model = Category
+    form_class = CategoryForm
+    template_name = "dashboard/category_form.html"
+    success_url = reverse_lazy("dashboard:category_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Kategoriya yangilandi.")
+        return super().form_valid(form)
+
+
+class CategoryDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["movies.delete_category"]
+    model = Category
+    template_name = "dashboard/category_confirm_delete.html"
+    success_url = reverse_lazy("dashboard:category_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{self.object.name}» kategoriyasi o'chirildi.")
+        return super().form_valid(form)
+
+
+# ---------------------------------------------------------------------------
 # Foydalanuvchilar
 # ---------------------------------------------------------------------------
 
@@ -306,11 +360,14 @@ class ReviewManageListView(DashboardPermissionMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["current_status"] = self.request.GET.get("status", "pending")
         context["status_choices"] = Review.Status.choices
-        context["counts"] = {
-            "pending": Review.objects.filter(status=Review.Status.PENDING).count(),
-            "approved": Review.objects.filter(status=Review.Status.APPROVED).count(),
-            "rejected": Review.objects.filter(status=Review.Status.REJECTED).count(),
-        }
+
+        # Bitta so'rov bilan barcha holatlar bo'yicha son — status qo'shilsa
+        # ham (masalan kelajakda) kodni o'zgartirish shart emas.
+        rows = Review.objects.values("status").annotate(total=Count("id"))
+        counts = {value: 0 for value, _ in Review.Status.choices}
+        counts.update({row["status"]: row["total"] for row in rows})
+        context["counts"] = counts
+
         params = self.request.GET.copy()
         params.pop("page", None)
         context["querystring"] = params.urlencode()
@@ -363,6 +420,22 @@ def toggle_featured(request, pk):
 
 
 @require_POST
+@dashboard_perm_required("movies.change_movie")
+def toggle_trending(request, pk):
+    """Filmni "trendda" qilish / bekor qilish (AJAX).
+
+    Yangi toggle sifatida generik "state" kalitini qaytaradi —
+    `dashboard.js` dagi `.js-toggle` uni birinchi navbatda tekshiradi.
+    """
+    movie = get_object_or_404(Movie, pk=pk)
+    movie.is_trending = not movie.is_trending
+    movie.save(update_fields=["is_trending", "updated_at"])
+
+    trend_note = "trendga qo'shildi" if movie.is_trending else "trenddan olib tashlandi"
+    return JsonResponse({"state": movie.is_trending, "message": f"«{movie.title}» {trend_note}"})
+
+
+@require_POST
 @dashboard_perm_required("users.change_user")
 def toggle_block(request, pk):
     """Foydalanuvchini bloklash / blokdan chiqarish (AJAX)."""
@@ -388,18 +461,21 @@ def toggle_block(request, pk):
 @require_POST
 @dashboard_perm_required("reviews.change_review")
 def moderate_review(request, pk, action):
-    """Sharhni tasdiqlash / rad etish / o'chirish (AJAX)."""
+    """Sharhni tasdiqlash / rad etish / shikoyat / spam / o'chirish (AJAX)."""
     review = get_object_or_404(Review, pk=pk)
 
-    if action == "approve":
-        review.status = Review.Status.APPROVED
-        review.save(update_fields=["status", "updated_at"])
-        return JsonResponse({"status": "approved", "message": "Sharh tasdiqlandi"})
+    status_map = {
+        "approve": (Review.Status.APPROVED, "Sharh tasdiqlandi"),
+        "reject": (Review.Status.REJECTED, "Sharh rad etildi"),
+        "report": (Review.Status.REPORTED, "Sharh shikoyat qilingan deb belgilandi"),
+        "spam": (Review.Status.SPAM, "Sharh spam deb belgilandi"),
+    }
 
-    if action == "reject":
-        review.status = Review.Status.REJECTED
+    if action in status_map:
+        new_status, message = status_map[action]
+        review.status = new_status
         review.save(update_fields=["status", "updated_at"])
-        return JsonResponse({"status": "rejected", "message": "Sharh rad etildi"})
+        return JsonResponse({"status": new_status, "message": message})
 
     if action == "delete":
         review.delete()
