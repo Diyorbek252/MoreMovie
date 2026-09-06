@@ -19,6 +19,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
     DeleteView,
+    DetailView,
     ListView,
     TemplateView,
     UpdateView,
@@ -29,7 +30,7 @@ from movies.models import Category, Favorite, Genre, Movie, ViewHistory, Watchli
 from series.models import Episode, Season, Series
 from reviews.models import Review
 
-from siteconfig.models import Banner, HomepageSection, SiteSettings
+from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
 
 from .forms import (
     BannerForm,
@@ -38,6 +39,7 @@ from .forms import (
     GenreForm,
     HomepageSectionForm,
     MovieForm,
+    NotificationForm,
     SeasonForm,
     SeriesForm,
     SiteSettingsForm,
@@ -751,6 +753,65 @@ class HomepageSectionUpdateView(DashboardPermissionMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, f"«{form.instance.title}» bo'limi yangilandi.")
         return super().form_valid(form)
+
+
+# ---------------------------------------------------------------------------
+# Bildirishnomalar
+# ---------------------------------------------------------------------------
+
+
+class NotificationListView(DashboardPermissionMixin, ListView):
+    """Yuborilgan bildirishnomalar tarixi -- yetkazish statistikasi bilan."""
+
+    required_perms = ["dashboard.send_notifications"]
+    model = Notification
+    template_name = "dashboard/notification_list.html"
+    context_object_name = "notifications"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Notification.objects.select_related("created_by").order_by("-created_at")
+
+
+class NotificationCreateView(DashboardPermissionMixin, CreateView):
+    """Bildirishnoma yaratish -- saqlangan zahoti yuboriladi (dispatch())."""
+
+    required_perms = ["dashboard.send_notifications"]
+    model = Notification
+    form_class = NotificationForm
+    template_name = "dashboard/notification_form.html"
+    success_url = reverse_lazy("dashboard:notification_list")
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        response = super().form_valid(form)
+        # M2M (target_users) super().form_valid() ichida saqlangandan keyin
+        # mavjud bo'ladi, shuning uchun dispatch() shu yerda chaqiriladi.
+        sent_count = self.object.dispatch()
+        messages.success(
+            self.request,
+            f"«{self.object.title}» {sent_count} ta foydalanuvchiga yuborildi.",
+        )
+        return response
+
+
+class NotificationDetailView(DashboardPermissionMixin, DetailView):
+    """Bitta bildirishnomaning yetkazish/o'qilish statistikasi."""
+
+    required_perms = ["dashboard.send_notifications"]
+    model = Notification
+    template_name = "dashboard/notification_detail.html"
+    context_object_name = "notification"
+
+    def get_queryset(self):
+        return Notification.objects.select_related("created_by")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["recipients"] = (
+            self.object.recipients.select_related("user").order_by("-is_read", "-created_at")[:200]
+        )
+        return context
 
 
 

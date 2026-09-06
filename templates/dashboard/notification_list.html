@@ -1,0 +1,68 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Bildirishnomalar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Bildirishnomalar</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta yuborilgan</p>
+    </div>
+    <a class="btn btn--primary" href="{% url 'dashboard:notification_add' %}">
+      {% include "partials/icon.html" with name="plus" %} Yangi bildirishnoma
+    </a>
+  </div>
+
+  <div class="panel">
+    {% if notifications %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Sarlavha</th>
+              <th>Turi</th>
+              <th>Qamrov</th>
+              <th>Qabul qiluvchilar</th>
+              <th>O'qilgan</th>
+              <th>Yuborilgan</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for notification in notifications %}
+              <tr>
+                <td class="table__title">{{ notification.title }}</td>
+                <td class="muted">{{ notification.get_notification_type_display }}</td>
+                <td class="muted">{{ notification.get_target_display }}</td>
+                <td>{{ notification.recipient_count }}</td>
+                <td>{{ notification.read_count }} ({{ notification.read_rate }}%)</td>
+                <td class="dim" style="font-size: var(--fs-xs)">
+                  {% if notification.sent_at %}
+                    {{ notification.sent_at|date:"d.m.Y H:i" }}
+                  {% else %}
+                    <span class="badge badge--warning">Yuborilmagan</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:notification_detail' notification.pk %}">
+                    Statistika
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="message" %}
+        <h2 class="empty__title">Bildirishnoma hali yuborilmagan</h2>
+        <a class="btn btn--primary" href="{% url 'dashboard:notification_add' %}">Birinchisini yuborish</a>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

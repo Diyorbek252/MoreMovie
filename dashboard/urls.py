@@ -72,6 +72,14 @@ urlpatterns = [
         views.HomepageSectionUpdateView.as_view(), name="homepage_section_edit",
     ),
 
+    # --- Bildirishnomalar ---
+    path("notifications/", views.NotificationListView.as_view(), name="notification_list"),
+    path("notifications/add/", views.NotificationCreateView.as_view(), name="notification_add"),
+    path(
+        "notifications/<int:pk>/",
+        views.NotificationDetailView.as_view(), name="notification_detail",
+    ),
+
     # --- AJAX ---
     path("api/movie/<int:pk>/publish/", views.toggle_publish, name="api_toggle_publish"),
     path("api/movie/<int:pk>/featured/", views.toggle_featured, name="api_toggle_featured"),

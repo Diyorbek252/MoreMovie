@@ -1,0 +1,76 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}{{ notification.title }}{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">{{ notification.title }}</h1>
+      <p class="dash-head__sub">
+        {{ notification.get_notification_type_display }} · {{ notification.get_target_display }}
+        {% if notification.sent_at %} · {{ notification.sent_at|date:"d.m.Y H:i" }} yuborilgan{% endif %}
+      </p>
+    </div>
+    <a class="btn btn--ghost" href="{% url 'dashboard:notification_list' %}">← Ro'yxatga qaytish</a>
+  </div>
+
+  <div class="dash-stats">
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ notification.recipient_count }}</div>
+      <div class="dash-stat__label">Qabul qiluvchilar</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ notification.read_count }}</div>
+      <div class="dash-stat__label">O'qilgan</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat__value">{{ notification.read_rate }}%</div>
+      <div class="dash-stat__label">O'qilish darajasi</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Xabar matni</h2></div>
+    <p class="mod-card__text">{{ notification.message }}</p>
+    {% if notification.link %}
+      <p style="margin-top: var(--s-3)">
+        <a href="{{ notification.link }}" target="_blank" rel="noopener noreferrer">{{ notification.link }}</a>
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Qabul qiluvchilar (dastlabki 200 ta)</h2></div>
+
+    {% if recipients %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Foydalanuvchi</th><th>Holat</th><th>O'qilgan vaqti</th></tr>
+          </thead>
+          <tbody>
+            {% for recipient in recipients %}
+              <tr>
+                <td><strong>{{ recipient.user.username }}</strong></td>
+                <td>
+                  {% if recipient.is_read %}
+                    <span class="badge badge--success">O'qilgan</span>
+                  {% else %}
+                    <span class="badge">Yetkazilgan</span>
+                  {% endif %}
+                </td>
+                <td class="muted">
+                  {% if recipient.read_at %}{{ recipient.read_at|date:"d.m.Y H:i" }}{% else %}—{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Hali hech kimga yetkazilmagan.</p>
+    {% endif %}
+  </div>
+
+{% endblock %}

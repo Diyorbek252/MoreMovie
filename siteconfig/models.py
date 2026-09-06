@@ -7,6 +7,7 @@ orqali o'qiladi — kelajakda public sahifalarga ulanganda har so'rovda
 bazaga murojaat qilinmasligi uchun.
 """
 
+from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 
@@ -221,3 +222,145 @@ class Banner(models.Model):
         if self.end_date and self.end_date < now:
             return False
         return True
+
+
+class Notification(models.Model):
+    """Admin tomonidan foydalanuvchilarga yuboriladigan bildirishnoma.
+
+    Yaratilishi bilan avtomatik yuborilmaydi -- ``dispatch()`` chaqirilgach
+    ``target`` bo'yicha qabul qiluvchilar ro'yxati ``NotificationRecipient``
+    sifatida yaratiladi va ``sent_at`` belgilanadi. Shu bilan "qoralama"
+    holatida saqlab, keyin yuborish imkoniyati ham qoladi (hozircha
+    dashboard formasi darhol yuboradi, lekin model buni cheklamaydi).
+    """
+
+    class NotificationType(models.TextChoices):
+        INFO = "info", "Ma'lumot"
+        PROMO = "promo", "Aksiya"
+        UPDATE = "update", "Yangilanish"
+
+    class Target(models.TextChoices):
+        ALL = "all", "Barcha foydalanuvchilar"
+        ACTIVE = "active", "Faol foydalanuvchilar"
+        SELECTED = "selected", "Tanlangan foydalanuvchilar"
+
+    title = models.CharField("sarlavha", max_length=150)
+    message = models.TextField("xabar matni", max_length=2000)
+    image = models.ImageField(
+        "rasm", upload_to="notifications/%Y/%m/", blank=True, null=True
+    )
+    notification_type = models.CharField(
+        "turi", max_length=10, choices=NotificationType.choices,
+        default=NotificationType.INFO,
+    )
+    link = models.URLField(
+        "havola", blank=True,
+        help_text="Ixtiyoriy -- bosilganda ochiladigan sahifa.",
+    )
+    target = models.CharField(
+        "qamrov", max_length=10, choices=Target.choices, default=Target.ALL,
+    )
+    target_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name="direct_notifications",
+        verbose_name="tanlangan foydalanuvchilar",
+        help_text="Faqat qamrov 'Tanlangan foydalanuvchilar' bo'lganda ishlatiladi.",
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name="sent_notifications", verbose_name="yuboruvchi",
+    )
+    created_at = models.DateTimeField("yaratilgan", auto_now_add=True)
+    sent_at = models.DateTimeField("yuborilgan", null=True, blank=True, editable=False)
+
+    class Meta:
+        verbose_name = "bildirishnoma"
+        verbose_name_plural = "bildirishnomalar"
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["-created_at"])]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def is_sent(self):
+        return self.sent_at is not None
+
+    @property
+    def recipient_count(self):
+        return self.recipients.count()
+
+    @property
+    def read_count(self):
+        return self.recipients.filter(is_read=True).count()
+
+    @property
+    def read_rate(self):
+        """O'qilganlar foizi -- yetkazish statistikasi uchun."""
+        total = self.recipient_count
+        if not total:
+            return 0.0
+        return round(self.read_count / total * 100, 1)
+
+    def resolve_recipients(self):
+        """``target`` maydoniga qarab qabul qiluvchi foydalanuvchilar QuerySet'i."""
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+
+        if self.target == self.Target.SELECTED:
+            return self.target_users.all()
+        if self.target == self.Target.ACTIVE:
+            return User.objects.filter(is_active=True)
+        return User.objects.all()
+
+    def dispatch(self):
+        """Qabul qiluvchilarni yaratadi va ``sent_at`` ni belgilaydi.
+
+        Idempotent -- ikkinchi marta chaqirilsa hech narsa qilmaydi (allaqachon
+        yuborilgan bildirishnomani qayta yubormaslik uchun).
+        """
+        if self.is_sent:
+            return 0
+
+        recipients = [
+            NotificationRecipient(notification=self, user=user)
+            for user in self.resolve_recipients()
+        ]
+        NotificationRecipient.objects.bulk_create(recipients, ignore_conflicts=True)
+
+        from django.utils import timezone
+
+        self.sent_at = timezone.now()
+        self.save(update_fields=["sent_at"])
+        return len(recipients)
+
+
+class NotificationRecipient(models.Model):
+    """Bitta foydalanuvchiga yetkazilgan bildirishnoma -- o'qilgan/o'qilmagan holati."""
+
+    notification = models.ForeignKey(
+        Notification, on_delete=models.CASCADE, related_name="recipients",
+        verbose_name="bildirishnoma",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications",
+        verbose_name="foydalanuvchi",
+    )
+    is_read = models.BooleanField("o'qilgan", default=False)
+    read_at = models.DateTimeField("o'qilgan vaqti", null=True, blank=True)
+    created_at = models.DateTimeField("yetkazilgan", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "bildirishnoma qabul qiluvchisi"
+        verbose_name_plural = "bildirishnoma qabul qiluvchilari"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["notification", "user"], name="unique_notification_recipient"
+            )
+        ]
+        indexes = [models.Index(fields=["user", "is_read"])]
+
+    def __str__(self):
+        return f"{self.notification} -> {self.user}"

@@ -4,7 +4,7 @@ from django import forms
 
 from movies.models import Category, Genre, Movie
 from series.models import Episode, Season, Series
-from siteconfig.models import Banner, HomepageSection, SiteSettings
+from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
 
 
 class MovieForm(forms.ModelForm):
@@ -320,3 +320,40 @@ class HomepageSectionForm(forms.ModelForm):
             "category": forms.Select(attrs={"class": "select"}),
             "movie": forms.Select(attrs={"class": "select"}),
         }
+
+
+class NotificationForm(forms.ModelForm):
+    """Bildirishnoma yaratish formasi.
+
+    ``target_users`` faqat qamrov "Tanlangan foydalanuvchilar" bo'lganda
+    ma'noga ega -- boshqa holatlarda forma darajasida talab qilinmaydi,
+    ``Notification.resolve_recipients()`` uni e'tiborsiz qoldiradi.
+    """
+
+    class Meta:
+        model = Notification
+        fields = [
+            "title", "message", "image", "notification_type",
+            "link", "target", "target_users",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "input", "placeholder": "Bildirishnoma sarlavhasi"}),
+            "message": forms.Textarea(attrs={"class": "textarea", "rows": 4}),
+            "notification_type": forms.Select(attrs={"class": "select"}),
+            "link": forms.URLInput(attrs={"class": "input", "placeholder": "https://..."}),
+            "target": forms.Select(attrs={"class": "select"}),
+            "target_users": forms.SelectMultiple(attrs={"class": "select", "size": 8}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["target_users"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("target") == Notification.Target.SELECTED and not cleaned.get("target_users"):
+            self.add_error(
+                "target_users",
+                "«Tanlangan foydalanuvchilar» qamrovi uchun kamida bitta foydalanuvchi tanlang.",
+            )
+        return cleaned
