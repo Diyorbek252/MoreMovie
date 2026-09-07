@@ -36,9 +36,11 @@ har karta uchun alohida so'rov qilinmaydi.
       {% endif %}
     </div>
 
-    {# Hover overlay — tezkor harakatlar. Karta ustiga bosilganda (play
-       tugmasi orqali emas) doim film sahifasiga o'tadi — pastdagi
-       .card__media va .card__title havolalariga qarang. #}
+    {% comment %}
+      Hover overlay — tezkor harakatlar. Karta ustiga bosilganda (play
+      tugmasi orqali emas) doim film sahifasiga o'tadi — pastdagi
+      .card__media va .card__title havolalariga qarang.
+    {% endcomment %}
     <div class="card__overlay">
       {% if user.is_authenticated %}
         <div class="card__actions">

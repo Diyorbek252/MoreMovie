@@ -6,27 +6,47 @@
       {# --- Brend --- #}
       <div>
         <a class="logo" href="{% url 'core:home' %}" aria-label="{{ SITE_NAME }}">
-          <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="150" height="40" loading="lazy">
+          {% if site_settings.logo %}
+            <img src="{{ site_settings.logo.url }}" alt="{{ SITE_NAME }}" width="150" height="40" loading="lazy">
+          {% else %}
+            <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="150" height="40" loading="lazy">
+          {% endif %}
         </a>
         <p class="footer__tagline">
-          {{ SITE_TAGLINE }} — litsenziyalangan va public domain filmlarni
-          yuqori sifatda, qonuniy tarzda tomosha qiling.
+          {{ site_settings.site_description|default:SITE_TAGLINE }}
+          {% if not site_settings.site_description %} — litsenziyalangan va public domain filmlarni
+          yuqori sifatda, qonuniy tarzda tomosha qiling.{% endif %}
         </p>
 
-        <div class="socials">
-          <a class="social" href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            {% include "partials/icon.html" with name="instagram" %}
-          </a>
-          <a class="social" href="https://t.me" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
-            {% include "partials/icon.html" with name="telegram" %}
-          </a>
-          <a class="social" href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-            {% include "partials/icon.html" with name="youtube" %}
-          </a>
-          <a class="social" href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            {% include "partials/icon.html" with name="facebook" %}
-          </a>
-        </div>
+        {% comment %}
+          Ijtimoiy tarmoq havolalari admin panelidan (Sozlamalar) sozlanadi
+          -- sozlanmagan bo'lsa o'sha tugma umuman ko'rsatilmaydi (avval
+          bu yerda barchasi qattiq kodlangan, ishlamaydigan havolalar edi).
+        {% endcomment %}
+        {% if site_settings.instagram or site_settings.telegram or site_settings.youtube or site_settings.facebook %}
+          <div class="socials">
+            {% if site_settings.instagram %}
+              <a class="social" href="{{ site_settings.instagram }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                {% include "partials/icon.html" with name="instagram" %}
+              </a>
+            {% endif %}
+            {% if site_settings.telegram %}
+              <a class="social" href="{{ site_settings.telegram }}" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                {% include "partials/icon.html" with name="telegram" %}
+              </a>
+            {% endif %}
+            {% if site_settings.youtube %}
+              <a class="social" href="{{ site_settings.youtube }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                {% include "partials/icon.html" with name="youtube" %}
+              </a>
+            {% endif %}
+            {% if site_settings.facebook %}
+              <a class="social" href="{{ site_settings.facebook }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                {% include "partials/icon.html" with name="facebook" %}
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
 
       {# --- Navigatsiya --- #}
@@ -63,7 +83,11 @@
     </div>
 
     <div class="footer__bottom">
-      <p>&copy; {% now "Y" %} {{ SITE_NAME }}. Barcha huquqlar himoyalangan.</p>
+      {% if site_settings.copyright_text %}
+        <p>{{ site_settings.copyright_text }}</p>
+      {% else %}
+        <p>&copy; {% now "Y" %} {{ SITE_NAME }}. Barcha huquqlar himoyalangan.</p>
+      {% endif %}
       <p class="footer__legal">
         Platformada faqat public domain, Creative Commons yoki huquq egasi
         ruxsat bergan kontent namoyish etiladi.

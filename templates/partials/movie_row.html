@@ -5,11 +5,12 @@ Ishlatish:
     {% include "partials/movie_row.html" with title="Trending" movies=trending link=url %}
 
 Kontekst:
-    title   — bo'lim sarlavhasi
-    movies  — filmlar ro'yxati
-    link    — ixtiyoriy "Barchasi" havolasi
-    icon    — ixtiyoriy sarlavha oldidagi ikonka nomi
-    compact — ixtiyoriy, True bo'lsa kartalar biroz kichikroq chiqadi
+    title    — bo'lim sarlavhasi
+    movies   — filmlar ro'yxati
+    link     — ixtiyoriy "Barchasi" havolasi
+    icon     — ixtiyoriy sarlavha oldidagi ikonka nomi
+    compact  — ixtiyoriy, True bo'lsa kartalar biroz kichikroq chiqadi
+    subtitle — ixtiyoriy, sarlavha ostida kichik matn (admin panelidan)
 {% endcomment %}
 
 {% if movies %}
@@ -17,7 +18,10 @@ Kontekst:
   <div class="container">
 
     <div class="section__head">
-      <h2 class="section__title">{{ title }}</h2>
+      <div>
+        <h2 class="section__title">{{ title }}</h2>
+        {% if subtitle %}<p class="muted" style="margin-top: var(--s-1)">{{ subtitle }}</p>{% endif %}
+      </div>
       {% if link %}
         <a class="section__link" href="{{ link }}">Barchasini ko'rish →</a>
       {% endif %}

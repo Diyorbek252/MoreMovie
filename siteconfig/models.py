@@ -74,11 +74,17 @@ class SiteSettings(models.Model):
 
         Qator hali mavjud bo'lmasa (masalan yangi o'rnatilgan loyihada)
         avtomatik yaratadi — chaqiruvchi hech qachon ``DoesNotExist``
-        bilan ishlashi shart emas.
+        bilan ishlashi shart emas. Birinchi yaratilishda ``site_name``
+        `.env` dagi ``SITE_NAME`` qiymatidan olinadi (modelning o'z
+        ``default="MORE-MOVIE"`` qiymati emas) — shu bilan kimdir
+        `.env` da saytni boshqacha nomlagan bo'lsa, bu qator uni
+        "MORE-MOVIE" bilan bosib qo'ymaydi.
         """
         settings_obj = cache.get(SITE_SETTINGS_CACHE_KEY)
         if settings_obj is None:
-            settings_obj, _ = cls.objects.get_or_create(pk=1)
+            settings_obj, _ = cls.objects.get_or_create(
+                pk=1, defaults={"site_name": settings.SITE_NAME}
+            )
             cache.set(SITE_SETTINGS_CACHE_KEY, settings_obj, SITE_SETTINGS_CACHE_TTL)
         return settings_obj
 

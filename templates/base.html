@@ -5,10 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#000000">
 
-  {# --- SEO --- #}
-  <title>{% block title %}{{ SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}{{ SITE_NAME }} — litsenziyalangan va public domain filmlarni onlayn tomosha qiling. {{ SITE_TAGLINE }}{% endblock %}">
+  {% comment %}
+    SEO -- har bir sahifa o'z `title`/`meta_description` blokini berishi
+    mumkin (masalan film detali) — shunda ular ustun turadi. Faqat standart
+    (override qilinmagan) holatda `site_settings.seo_title`/
+    `seo_description` (admin panelida sozlanadi) ishlatiladi, ular ham
+    bo'sh bo'lsa — asl qattiq kodlangan matn.
+  {% endcomment %}
+  <title>{% block title %}{{ site_settings.seo_title|default:SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{{ site_settings.seo_description|default:SITE_NAME }} — litsenziyalangan va public domain filmlarni onlayn tomosha qiling. {{ SITE_TAGLINE }}{% endblock %}">
   <link rel="canonical" href="{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}">
+  {% if site_settings.seo_keywords %}<meta name="keywords" content="{{ site_settings.seo_keywords }}">{% endif %}
 
   {# --- Open Graph / Twitter --- #}
   <meta property="og:site_name" content="{{ SITE_NAME }}">
@@ -20,7 +27,11 @@
   <meta name="twitter:card" content="summary_large_image">
 
   {# --- Ikonkalar --- #}
-  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+  {% if site_settings.favicon %}
+    <link rel="icon" href="{{ site_settings.favicon.url }}">
+  {% else %}
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+  {% endif %}
 
   {# --- Shriftlar --- #}
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,6 +45,21 @@
   <link rel="stylesheet" href="{% static 'css/pages.css' %}">
   <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
   {% block extra_css %}{% endblock %}
+
+  {% if site_settings.google_analytics_id %}
+    {% comment %}
+      Admin panel "Sozlamalar" bo'limida sozlanadi — bo'sh bo'lsa umuman
+      qo'shilmaydi. |escapejs va |urlencode -- maydonni faqat ishonchli
+      xodim to'ldirsa ham, JS satr ichiga xom qiymat qo'yilmaydi.
+    {% endcomment %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.google_analytics_id|urlencode }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ site_settings.google_analytics_id|escapejs }}');
+    </script>
+  {% endif %}
 
   {% block extra_head %}{% endblock %}
 </head>
@@ -49,7 +75,7 @@
   {# --- Yuklanish ekrani. JS uni birinchi bo'yashdan keyin yashiradi. --- #}
   <div class="loader" id="loader" aria-hidden="true">
     <div class="loader__inner">
-      <img class="loader__logo" src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="240" height="72">
+      <img class="loader__logo" src="{% if site_settings.logo %}{{ site_settings.logo.url }}{% else %}{% static 'img/logo.svg' %}{% endif %}" alt="{{ SITE_NAME }}" width="240" height="72">
       <div class="loader__bar"></div>
     </div>
   </div>

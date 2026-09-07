@@ -16,14 +16,22 @@
       <div class="info-card">
         {% include "partials/icon.html" with name="mail" %}
         <h3>Email</h3>
-        <p class="muted">info@more-movie.uz</p>
+        <p class="muted">{{ site_settings.contact_email|default:"info@more-movie.uz" }}</p>
       </div>
 
-      <div class="info-card">
-        {% include "partials/icon.html" with name="message" %}
-        <h3>Telegram</h3>
-        <p class="muted">@more_movie</p>
-      </div>
+      {% if site_settings.telegram %}
+        <div class="info-card">
+          {% include "partials/icon.html" with name="message" %}
+          <h3>Telegram</h3>
+          <p class="muted"><a href="{{ site_settings.telegram }}" target="_blank" rel="noopener noreferrer">{{ site_settings.telegram }}</a></p>
+        </div>
+      {% else %}
+        <div class="info-card">
+          {% include "partials/icon.html" with name="message" %}
+          <h3>Telegram</h3>
+          <p class="muted">@more_movie</p>
+        </div>
+      {% endif %}
 
       <div class="info-card">
         {% include "partials/icon.html" with name="shield" %}

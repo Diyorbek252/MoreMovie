@@ -4,7 +4,11 @@
 
     {# --- Logo --- #}
     <a class="logo" href="{% url 'core:home' %}" aria-label="{{ SITE_NAME }} — bosh sahifa">
-      <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="140" height="38">
+      {% if site_settings.logo %}
+        <img src="{{ site_settings.logo.url }}" alt="{{ SITE_NAME }}" width="140" height="38">
+      {% else %}
+        <img src="{% static 'img/logo.svg' %}" alt="{{ SITE_NAME }}" width="140" height="38">
+      {% endif %}
     </a>
 
     {# --- Markaziy menyu (desktop) --- #}

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}
+{% block title %}{{ site_settings.seo_title|default:SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}
 
-{% block meta_description %}{{ SITE_NAME }} — public domain va litsenziyalangan filmlarni HD sifatda onlayn tomosha qiling. Trending, mashhur va yuqori reytingli filmlar.{% endblock %}
+{% block meta_description %}{{ site_settings.seo_description|default:SITE_NAME }} — public domain va litsenziyalangan filmlarni HD sifatda onlayn tomosha qiling. Trending, mashhur va yuqori reytingli filmlar.{% endblock %}
 
 {% block content %}
 
@@ -91,37 +91,41 @@
     </section>
   {% endif %}
 
-  {# ==================== KARUSEL BO'LIMLARI ==================== #}
-  {% url 'movies:movie_list' as movies_url %}
+  {% comment %}
+    KARUSEL BO'LIMLARI — admin panelidan (HomepageSection) tartiblanadi.
+    "Janrlar" ham shu ro'yxatning bir a'zosi (bir xil tarzda
+    yoqilib/o'chirilib, joyi o'zgartirilishi mumkin), lekin o'zining
+    maxsus (tile-grid) chizilishiga ega — shuning uchun key bo'yicha
+    ajratiladi.
+  {% endcomment %}
+  {% for section in rail_sections %}
+    {% if section.key == "genres" %}
+      {% if section.movies %}
+        <section class="section reveal">
+          <div class="container">
+            <div class="section__head">
+              <div>
+                <h2 class="section__title">{{ section.title }}</h2>
+                {% if section.subtitle %}<p class="muted" style="margin-top: var(--s-1)">{{ section.subtitle }}</p>{% endif %}
+              </div>
+              <a class="section__link" href="{{ section.link }}">Barchasini ko'rish →</a>
+            </div>
 
-  {% include "partials/movie_row.html" with title="Trending" movies=trending link=movies_url|add:"?sort=popular" %}
-  {% include "partials/movie_row.html" with title="Popular Movies" movies=popular link=movies_url|add:"?sort=popular" %}
-  {% include "partials/movie_row.html" with title="New Releases" movies=new_releases link=movies_url|add:"?sort=latest" %}
-  {% include "partials/movie_row.html" with title="Top Rated" movies=top_rated link=movies_url|add:"?sort=rating" %}
-
-  {# ==================== JANRLAR ==================== #}
-  {% if genres %}
-    <section class="section reveal">
-      <div class="container">
-        <div class="section__head">
-          <h2 class="section__title">Janrlar</h2>
-          <a class="section__link" href="{% url 'movies:genre_list' %}">Barchasini ko'rish →</a>
-        </div>
-
-        <div class="genre-grid">
-          {% for genre in genres %}
-            <a class="genre-tile" href="{{ genre.get_absolute_url }}">
-              <span class="genre-tile__count">{{ genre.movie_total }}</span>
-              <span class="genre-tile__name">{{ genre.name }}</span>
-            </a>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
-  {% endif %}
-
-  {# ==================== TANLANGANLAR ==================== #}
-  {% include "partials/movie_row.html" with title="Featured" movies=featured link=movies_url %}
+            <div class="genre-grid">
+              {% for genre in section.movies %}
+                <a class="genre-tile" href="{{ genre.get_absolute_url }}">
+                  <span class="genre-tile__count">{{ genre.movie_total }}</span>
+                  <span class="genre-tile__name">{{ genre.name }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+      {% endif %}
+    {% else %}
+      {% include "partials/movie_row.html" with title=section.title subtitle=section.subtitle movies=section.movies link=section.link %}
+    {% endif %}
+  {% endfor %}
 
   {# ==================== CALL TO ACTION ==================== #}
   {% if not user.is_authenticated %}
