@@ -21,6 +21,53 @@
     {% endif %}
   </div>
 
+  {# ==================== FILTR PANELI ==================== #}
+  <form class="filters" method="get" action="{% url 'shop:product_list' %}">
+    <div class="field">
+      <label class="field__label" for="f-q">Qidiruv</label>
+      <input class="input" type="search" name="q" id="f-q"
+             placeholder="Mahsulot qidirish..." value="{{ current.q }}">
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="f-availability">Mavjudlik</label>
+      <select class="select" name="availability" id="f-availability">
+        <option value="">Barchasi</option>
+        <option value="in_stock" {% if current.availability == "in_stock" %}selected{% endif %}>
+          Faqat mavjudlari
+        </option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="f-sort">Saralash</label>
+      <select class="select" name="sort" id="f-sort">
+        {% for key, option in sort_options.items %}
+          <option value="{{ key }}" {% if current.sort == key %}selected{% endif %}>
+            {{ option.1 }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filters__actions">
+      <button class="btn btn--primary" type="submit">Qo'llash</button>
+      {% if has_filters %}
+        <a class="btn btn--ghost" href="{% url 'shop:product_list' %}">Tozalash</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <div class="results-bar">
+    <span>
+      <strong>{{ page_obj.paginator.count }}</strong> ta mahsulot topildi
+      {% if current.q %} — «{{ current.q }}» so'rovi bo'yicha{% endif %}
+    </span>
+    {% if page_obj.paginator.num_pages > 1 %}
+      <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }} sahifa</span>
+    {% endif %}
+  </div>
+
   {% if products %}
     <div class="shop-grid">
       {% for product in products %}
@@ -75,11 +122,19 @@
         </article>
       {% endfor %}
     </div>
+
+    {% include "partials/pagination.html" %}
   {% else %}
     <div class="empty">
       {% include "partials/icon.html" with name="coin" %}
-      <h2 class="empty__title">Hozircha mahsulot yo'q</h2>
-      <p>Tez orada yangi mahsulotlar qo'shiladi.</p>
+      {% if has_filters %}
+        <h2 class="empty__title">Hech narsa topilmadi</h2>
+        <p>Filtrlarni o'zgartirib yoki boshqa so'z bilan qidirib ko'ring.</p>
+        <a class="btn btn--primary" href="{% url 'shop:product_list' %}">Filtrlarni tozalash</a>
+      {% else %}
+        <h2 class="empty__title">Hozircha mahsulot yo'q</h2>
+        <p>Tez orada yangi mahsulotlar qo'shiladi.</p>
+      {% endif %}
     </div>
   {% endif %}
 

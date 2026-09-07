@@ -1,20 +1,64 @@
 """Do'kon — public sahifalar: mahsulotlar ro'yxati va xaridlar tarixi."""
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.views.generic import ListView
+
+from movies.views import QueryStringMixin
 
 from .models import Order, Product
 
 
-class ProductListView(ListView):
-    """Do'kon vitrinasi — barcha faol mahsulotlar."""
+class ProductListView(QueryStringMixin, ListView):
+    """Do'kon vitrinasi — qidiruv, mavjudlik filtri va saralash bilan."""
 
     model = Product
     template_name = "shop/product_list.html"
     context_object_name = "products"
+    paginate_by = 24
+
+    # movies.views.MovieListView bilan bir xil naqsh — foydalanuvchi
+    # qiymati to'g'ridan-to'g'ri order_by() ga uzatilmaydi.
+    SORT_OPTIONS = {
+        "default": ("order", "Standart"),
+        "price_asc": ("price", "Narx: arzondan qimmatga"),
+        "price_desc": ("-price", "Narx: qimmatdan arzonga"),
+        "newest": ("-created_at", "Eng yangi"),
+        "az": ("name", "A-Z"),
+    }
 
     def get_queryset(self):
-        return Product.objects.filter(is_active=True)
+        queryset = Product.objects.filter(is_active=True)
+        params = self.request.GET
+
+        if query := params.get("q", "").strip():
+            queryset = queryset.filter(
+                Q(name__icontains=query) | Q(description__icontains=query)
+            )
+
+        if params.get("availability") == "in_stock":
+            queryset = queryset.filter(Q(stock__isnull=True) | Q(stock__gt=0))
+
+        sort = params.get("sort", "default")
+        order_field = self.SORT_OPTIONS.get(sort, self.SORT_OPTIONS["default"])[0]
+        return queryset.order_by(order_field)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        params = self.request.GET
+
+        context.update(
+            {
+                "sort_options": self.SORT_OPTIONS,
+                "current": {
+                    "q": params.get("q", ""),
+                    "availability": params.get("availability", ""),
+                    "sort": params.get("sort", "default"),
+                },
+                "has_filters": any(params.get(key) for key in ("q", "availability")),
+            }
+        )
+        return context
 
 
 class OrderHistoryView(LoginRequiredMixin, ListView):
