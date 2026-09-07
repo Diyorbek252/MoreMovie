@@ -63,8 +63,13 @@ def notify_admins_new_order(order):
     ``siteconfig.Notification`` ning mavjud fan-out mexanizmidan
     foydalanadi (``dispatch()`` -> har bir xodim uchun
     ``NotificationRecipient`` yaratadi) — navbar qo'ng'iroq ikonkasida
-    darhol ko'rinadi.
+    darhol ko'rinadi. ``link`` dashboard'dagi "Buyurtmalar" sahifasiga
+    ishora qiladi — xodim bildirishnoma ustiga bosganda to'g'ridan-to'g'ri
+    shu yerga o'tadi (``static/js/notifications.js`` ``item.link``ni
+    o'qib ``window.location.href`` ga qo'yadi).
     """
+    from django.urls import reverse
+
     from siteconfig.models import Notification
 
     notification = Notification.objects.create(
@@ -75,6 +80,7 @@ def notify_admins_new_order(order):
         ),
         notification_type=Notification.NotificationType.INFO,
         target=Notification.Target.STAFF,
+        link=reverse("dashboard:shop_order_list"),
     )
     notification.dispatch()
     return notification
