@@ -72,17 +72,17 @@
           </div>
         </div>
 
-        <a class="btn-icon cinepoint-chip" href="{% url 'shop:product_list' %}"
-           aria-label="Cinepoint balansi" title="Cinepoint">
-          {% include "partials/icon.html" with name="coin" %}
-          <span id="cinepoint-balance">{{ cinepoint_balance }}</span>
-        </a>
-
         <a class="btn-icon" href="{% url 'users:favorites' %}" aria-label="Sevimlilar" title="Favorites">
           {% include "partials/icon.html" with name="heart" %}
         </a>
         <a class="btn-icon" href="{% url 'users:watchlist' %}" aria-label="Watchlist" title="Watchlist">
           {% include "partials/icon.html" with name="bookmark" %}
+        </a>
+
+        <a class="btn-icon cinepoint-chip" href="{% url 'shop:product_list' %}"
+           aria-label="Cinepoint balansi" title="Cinepoint">
+          {% include "partials/icon.html" with name="coin" %}
+          <span id="cinepoint-balance">{{ cinepoint_balance }}</span>
         </a>
 
         {# Foydalanuvchi menyusi #}
