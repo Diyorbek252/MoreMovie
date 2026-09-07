@@ -114,6 +114,7 @@
      -------------------------------------------------------------------- */
 
   const starsInput = document.querySelector(".js-rating");
+  let paintStars = function () {};
 
   if (starsInput) {
     const buttons = Array.prototype.slice.call(starsInput.querySelectorAll("button"));
@@ -125,6 +126,7 @@
         if (icon) icon.classList.toggle("is-filled", index < score);
       });
     };
+    paintStars = paint;
 
     const current = parseInt(starsInput.dataset.score || "0", 10);
     paint(current);
@@ -203,6 +205,15 @@
 
         const notice = reviewForm.querySelector(".js-review-notice");
         if (notice) notice.hidden = false;
+
+        // Yulduz bahosi ko'rsatkichini vizual ravishda tozalaymiz — baza
+        // o'zgarmaydi, faqat sahifada eski baho ko'rinib turmasligi uchun.
+        if (starsInput) {
+          starsInput.dataset.score = "0";
+          paintStars(0);
+        }
+        const ratingStatus = document.querySelector(".js-rating-status");
+        if (ratingStatus) ratingStatus.textContent = "Hali baholamagansiz";
       } catch (error) {
         MM.toast(error.message, "error");
       } finally {
