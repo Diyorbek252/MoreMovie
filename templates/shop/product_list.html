@@ -21,23 +21,17 @@
     {% endif %}
   </div>
 
-  {# ==================== FILTR PANELI ==================== #}
-  <form class="filters" method="get" action="{% url 'shop:product_list' %}">
+  {% comment %}
+    ==================== FILTR PANELI ====================
+    Submit tugmasi yo'q — istalgan maydon o'zgarganda static/js/shop.js
+    formani avtomatik yuboradi (qidiruvda qisqa kutish bilan).
+  {% endcomment %}
+  <form class="filters js-auto-filter" method="get" action="{% url 'shop:product_list' %}">
     <div class="field">
       <label class="field__label" for="f-q">Qidiruv</label>
       <input class="input" type="search" name="q" id="f-q"
              placeholder="Mahsulot qidirish..." value="{{ current.q }}">
     </div>
-
-    {% if user.is_authenticated %}
-      <div class="field">
-        <label class="field__label">&nbsp;</label>
-        <label class="checkbox">
-          <input type="checkbox" name="affordable" value="1" {% if current.affordable == "1" %}checked{% endif %}>
-          Faqat balansim yetadigan mahsulotlar
-        </label>
-      </div>
-    {% endif %}
 
     <div class="field">
       <label class="field__label" for="f-sort">Saralash</label>
@@ -50,12 +44,23 @@
       </select>
     </div>
 
-    <div class="filters__actions">
-      <button class="btn btn--primary" type="submit">Qo'llash</button>
-      {% if has_filters %}
+    {% if user.is_authenticated %}
+      <div class="field">
+        <label class="field__label">&nbsp;</label>
+        <label class="toggle">
+          <input type="checkbox" name="affordable" value="1" class="toggle__input"
+                 {% if current.affordable == "1" %}checked{% endif %}>
+          <span class="toggle__track"></span>
+          Cinepointlarim yetadi
+        </label>
+      </div>
+    {% endif %}
+
+    {% if has_filters %}
+      <div class="filters__actions">
         <a class="btn btn--ghost" href="{% url 'shop:product_list' %}">Tozalash</a>
-      {% endif %}
-    </div>
+      </div>
+    {% endif %}
   </form>
 
   <div class="results-bar">

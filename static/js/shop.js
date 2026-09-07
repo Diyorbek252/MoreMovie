@@ -1,18 +1,48 @@
 /* ==========================================================================
-   MORE-MOVIE — Do'kon: mahsulot xaridi (miqdor tanlash modali + AJAX)
+   MORE-MOVIE — Do'kon: filtr paneli (avtomatik yuborish) va mahsulot xaridi
+   (miqdor tanlash modali + AJAX)
    ========================================================================== */
 
 (function () {
   "use strict";
 
+  /* --------------------------------------------------------------------
+     Filtr paneli — submit tugmasi yo'q, maydon o'zgarishi bilan formani
+     o'zi yuboradi. Anonim foydalanuvchi ham qidiruv/saralashdan
+     foydalanadi, shuning uchun bu blok MM/autentifikatsiyaga bog'liq emas.
+     -------------------------------------------------------------------- */
+
+  const filterForm = document.querySelector(".js-auto-filter");
+
+  if (filterForm) {
+    // Select va toggle — o'zgarishi bilanoq (kutishsiz) yuboriladi.
+    filterForm.querySelectorAll("select, input[type=checkbox]").forEach(function (field) {
+      field.addEventListener("change", function () { filterForm.submit(); });
+    });
+
+    // Qidiruv matni — har harfda yubormasdan, yozish to'xtaganda (debounce).
+    const searchInput = filterForm.querySelector('input[name="q"]');
+    if (searchInput) {
+      let debounceTimer;
+      searchInput.addEventListener("input", function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () { filterForm.submit(); }, 600);
+      });
+    }
+  }
+
+  /* --------------------------------------------------------------------
+     Mahsulot xaridi — miqdor tanlash modali
+     -------------------------------------------------------------------- */
+
   const MM = window.MM;
   if (!MM) return;
 
-  const config = document.body.dataset;
-  const ENDPOINTS = { purchase: config.urlPurchase || "/api/shop/purchase/" };
-
   const modal = document.getElementById("buy-modal");
   if (!modal) return;
+
+  const config = document.body.dataset;
+  const ENDPOINTS = { purchase: config.urlPurchase || "/api/shop/purchase/" };
 
   const form = document.getElementById("buy-form");
   const nameEl = document.getElementById("buy-modal-name");

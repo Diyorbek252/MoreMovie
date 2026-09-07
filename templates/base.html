@@ -114,8 +114,12 @@
   {% if user.is_authenticated %}
     <script src="{% static 'js/interactions.js' %}" defer></script>
     <script src="{% static 'js/notifications.js' %}" defer></script>
-    <script src="{% static 'js/shop.js' %}" defer></script>
   {% endif %}
+  {% comment %}
+    Do'kon filtri (qidiruv/saralash) anonim foydalanuvchiga ham kerak —
+    shuning uchun shop.js autentifikatsiyaga bog'liq blokdan tashqarida.
+  {% endcomment %}
+  <script src="{% static 'js/shop.js' %}" defer></script>
   <script src="{% static 'js/search.js' %}" defer></script>
   {% block extra_js %}{% endblock %}
 </body>
