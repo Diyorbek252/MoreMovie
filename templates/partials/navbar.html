@@ -42,6 +42,34 @@
       </div>
 
       {% if user.is_authenticated %}
+        {% comment %}
+          Bildirishnomalar — .user-menu bilan bir xil dropdown VIZUAL
+          naqshi (CSS qayta ishlatiladi), lekin ochish/yopish/tashqariga
+          bosish JS'i alohida `static/js/notifications.js` da — main.js
+          faqat "#user-menu"/"#user-menu-toggle" ID'larini bilvosita
+          bilmasdan qidiradi, shuning uchun bu yerga umuman tegmaydi.
+          Ro'yxat va "o'qilmagan" belgisi AJAX bilan to'ldiriladi.
+        {% endcomment %}
+        <div class="user-menu notif-menu" id="notif-menu">
+          <button class="btn-icon" type="button" id="notif-toggle"
+                  aria-label="Bildirishnomalar" aria-expanded="false" aria-haspopup="true">
+            {% include "partials/icon.html" with name="bell" %}
+            <span class="notif-badge" id="notif-badge" {% if not unread_notifications_count %}hidden{% endif %}>
+              {{ unread_notifications_count }}
+            </span>
+          </button>
+
+          <div class="user-menu__panel notif-panel" role="menu" id="notif-panel">
+            <div class="notif-panel__head">
+              <span class="user-menu__name">Bildirishnomalar</span>
+              <button type="button" class="notif-mark-all" id="notif-mark-all">Barchasini o'qish</button>
+            </div>
+            <div class="notif-list" id="notif-list">
+              <p class="notif-empty">Yuklanmoqda...</p>
+            </div>
+          </div>
+        </div>
+
         <a class="btn-icon" href="{% url 'users:favorites' %}" aria-label="Sevimlilar" title="Favorites">
           {% include "partials/icon.html" with name="heart" %}
         </a>

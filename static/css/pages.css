@@ -326,6 +326,124 @@
 
 .user-menu__item--danger:hover { color: var(--red); }
 
+/* --- Bildirishnomalar ---
+   `.notif-menu`/`.notif-panel` `.user-menu`/`.user-menu__panel` bilan bir
+   xil ochish/yopish CSS qoidasidan (`.user-menu.is-open .user-menu__panel`)
+   foydalanadi — shu sabab ikkalasi ham shu klasslarni oladi, bu yerda
+   faqat qo'shimcha/farqlanuvchi qismlar. */
+
+#notif-toggle {
+  position: relative;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--r-full);
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border: 2px solid var(--bg);
+}
+
+.notif-panel {
+  width: min(360px, calc(100vw - var(--s-6)));
+  padding: 0;
+}
+
+.notif-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.notif-mark-all {
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.notif-mark-all:hover {
+  color: var(--red);
+}
+
+.notif-list {
+  max-height: 380px;
+  overflow-y: auto;
+  padding: var(--s-2);
+}
+
+.notif-item {
+  display: flex;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  text-align: left;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.notif-item:hover {
+  background: var(--surface);
+}
+
+/* O'qilmagan bildirishnoma — chapdan qizil chiziq + biroz yorqinroq matn. */
+.notif-item--unread {
+  background: var(--red-soft);
+  border-left: 2px solid var(--red);
+}
+
+.notif-item--unread:hover {
+  background: var(--red-soft);
+}
+
+.notif-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-item__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notif-item__message {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-item__time {
+  margin-top: 4px;
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.notif-empty {
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
 /* --- Hamburger --- */
 
 .nav__burger {

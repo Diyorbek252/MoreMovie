@@ -3,6 +3,7 @@
 from django.conf import settings
 
 from movies.models import Favorite, Genre, Watchlist
+from siteconfig.models import NotificationRecipient
 
 
 def site_globals(request):
@@ -11,6 +12,8 @@ def site_globals(request):
     `user_watchlist_ids` / `user_favorite_ids` — kartalardagi yurak va bookmark
     tugmalarini to'g'ri holatda chizish uchun. Har karta uchun alohida so'rov
     qilmaslik maqsadida bir marta set sifatida olinadi.
+
+    `unread_notifications_count` — navbar qo'ng'iroq ikonkasidagi belgi uchun.
     """
     context = {
         "SITE_NAME": settings.SITE_NAME,
@@ -19,6 +22,7 @@ def site_globals(request):
         "nav_genres": Genre.objects.all()[:12],
         "user_watchlist_ids": set(),
         "user_favorite_ids": set(),
+        "unread_notifications_count": 0,
     }
 
     user = getattr(request, "user", None)
@@ -29,5 +33,8 @@ def site_globals(request):
         context["user_favorite_ids"] = set(
             Favorite.objects.filter(user=user).values_list("movie_id", flat=True)
         )
+        context["unread_notifications_count"] = NotificationRecipient.objects.filter(
+            user=user, is_read=False
+        ).count()
 
     return context

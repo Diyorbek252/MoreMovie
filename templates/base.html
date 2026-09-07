@@ -70,7 +70,11 @@
   data-url-favorite="{% url 'movies:api_favorite_toggle' %}"
   data-url-progress="{% url 'movies:api_progress' %}"
   data-url-rate="{% url 'reviews:api_rate' %}"
-  data-url-review="{% url 'reviews:api_review' %}">
+  data-url-review="{% url 'reviews:api_review' %}"
+  {% if user.is_authenticated %}
+  data-url-notifications="{% url 'siteconfig:api_notifications' %}"
+  data-url-notifications-read-all="{% url 'siteconfig:api_notifications_read_all' %}"
+  {% endif %}>
 
   {# --- Yuklanish ekrani. JS uni birinchi bo'yashdan keyin yashiradi. --- #}
   <div class="loader" id="loader" aria-hidden="true">
@@ -108,6 +112,7 @@
   <script src="{% static 'js/main.js' %}" defer></script>
   {% if user.is_authenticated %}
     <script src="{% static 'js/interactions.js' %}" defer></script>
+    <script src="{% static 'js/notifications.js' %}" defer></script>
   {% endif %}
   <script src="{% static 'js/search.js' %}" defer></script>
   {% block extra_js %}{% endblock %}
