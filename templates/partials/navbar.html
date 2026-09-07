@@ -2,8 +2,17 @@
 <header class="nav" id="navbar">
   <div class="container nav__inner">
 
+    {% comment %}
+      Dashboard'da bo'lganda "asosiy sayt tugmasi" (logo) va yuqori
+      menyu ataylab saytga emas, dashboard'ning o'ziga ishora qiladi —
+      admin tasodifan saytga chiqib ketmasin. Saytga o'tishning yagona
+      yo'li — profil menyusidagi aniq "Saytga o'tish" havolasi (pastda).
+    {% endcomment %}
+
     {# --- Logo --- #}
-    <a class="logo" href="{% url 'core:home' %}" aria-label="{{ SITE_NAME }} — bosh sahifa">
+    <a class="logo"
+       href="{% if request.resolver_match.app_name == 'dashboard' %}{% url 'dashboard:index' %}{% else %}{% url 'core:home' %}{% endif %}"
+       aria-label="{{ SITE_NAME }} — bosh sahifa">
       {% if site_settings.logo %}
         <img src="{{ site_settings.logo.url }}" alt="{{ SITE_NAME }}" width="140" height="38">
       {% else %}
@@ -11,19 +20,21 @@
       {% endif %}
     </a>
 
-    {# --- Markaziy menyu (desktop) --- #}
-    <nav class="nav__menu" aria-label="Asosiy menyu">
-      <a class="nav__link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}"
-         href="{% url 'core:home' %}">Home</a>
-      <a class="nav__link {% if request.resolver_match.url_name == 'movie_list' %}is-active{% endif %}"
-         href="{% url 'movies:movie_list' %}">Movies</a>
-      <a class="nav__link {% if request.resolver_match.url_name == 'genre_list' or request.resolver_match.url_name == 'genre_detail' %}is-active{% endif %}"
-         href="{% url 'movies:genre_list' %}">Genres</a>
-      <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
-      <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
-      <a class="nav__link {% if request.resolver_match.url_name == 'product_list' %}is-active{% endif %}"
-         href="{% url 'shop:product_list' %}">Do'kon</a>
-    </nav>
+    {# --- Markaziy menyu (desktop) — dashboard'da yashiriladi --- #}
+    {% if request.resolver_match.app_name != "dashboard" %}
+      <nav class="nav__menu" aria-label="Asosiy menyu">
+        <a class="nav__link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}"
+           href="{% url 'core:home' %}">Home</a>
+        <a class="nav__link {% if request.resolver_match.url_name == 'movie_list' %}is-active{% endif %}"
+           href="{% url 'movies:movie_list' %}">Movies</a>
+        <a class="nav__link {% if request.resolver_match.url_name == 'genre_list' or request.resolver_match.url_name == 'genre_detail' %}is-active{% endif %}"
+           href="{% url 'movies:genre_list' %}">Genres</a>
+        <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
+        <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
+        <a class="nav__link {% if request.resolver_match.url_name == 'product_list' %}is-active{% endif %}"
+           href="{% url 'shop:product_list' %}">Do'kon</a>
+      </nav>
+    {% endif %}
 
     {# --- O'ng tomondagi harakatlar --- #}
     <div class="nav__actions">
@@ -154,12 +165,14 @@
 {# --- Mobil chekma menyu --- #}
 <div class="drawer" id="drawer">
   <nav class="container" aria-label="Mobil menyu">
-    <a class="drawer__link" href="{% url 'core:home' %}">Home</a>
-    <a class="drawer__link" href="{% url 'movies:movie_list' %}">Movies</a>
-    <a class="drawer__link" href="{% url 'movies:genre_list' %}">Genres</a>
-    <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
-    <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
-    <a class="drawer__link" href="{% url 'shop:product_list' %}">Do'kon</a>
+    {% if request.resolver_match.app_name != "dashboard" %}
+      <a class="drawer__link" href="{% url 'core:home' %}">Home</a>
+      <a class="drawer__link" href="{% url 'movies:movie_list' %}">Movies</a>
+      <a class="drawer__link" href="{% url 'movies:genre_list' %}">Genres</a>
+      <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
+      <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
+      <a class="drawer__link" href="{% url 'shop:product_list' %}">Do'kon</a>
+    {% endif %}
 
     {% if user.is_authenticated %}
       <a class="drawer__link" href="{% url 'users:watchlist' %}">Watchlist</a>
