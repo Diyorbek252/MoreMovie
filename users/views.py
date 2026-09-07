@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView
 
 from movies.models import Favorite, ViewHistory, Watchlist
@@ -55,6 +55,18 @@ class LoginView(BaseLoginView):
         response = super().form_valid(form)
         messages.success(self.request, f"Xush kelibsiz, {self.request.user.username}!")
         return response
+
+    def get_success_url(self):
+        """Xodim (staff) kirsa to'g'ridan-to'g'ri boshqaruv paneliga o'tadi.
+
+        Oddiy foydalanuvchilar uchun xatti-harakat o'zgarmaydi (LOGIN_REDIRECT_URL
+        — bosh sahifa). Xodim istalgan vaqt sidebar'dagi "Saytni ko'rish"
+        havolasi orqali public tomonga o'tishi mumkin — bu yerda faqat
+        LOGIN paytidagi boshlang'ich manzil o'zgartiriladi.
+        """
+        if self.request.user.is_staff:
+            return reverse("dashboard:index")
+        return super().get_success_url()
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
