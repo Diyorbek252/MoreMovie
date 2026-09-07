@@ -88,6 +88,7 @@ urlpatterns = [
     path("api/series/<int:pk>/publish/", views.toggle_series_publish, name="api_toggle_series_publish"),
     path("api/episode/<int:pk>/publish/", views.toggle_episode_publish, name="api_toggle_episode_publish"),
     path("api/user/<int:pk>/block/", views.toggle_block, name="api_toggle_block"),
+    path("api/user/<int:pk>/admin/", views.toggle_admin, name="api_toggle_admin"),
     path("api/review/<int:pk>/<str:action>/", views.moderate_review, name="api_moderate_review"),
     path("api/banner/<int:pk>/toggle/", views.toggle_banner, name="api_toggle_banner"),
     path("api/homepage/<int:pk>/toggle/", views.toggle_section, name="api_toggle_section"),

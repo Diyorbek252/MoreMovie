@@ -902,6 +902,38 @@ def toggle_block(request, pk):
 
 
 @require_POST
+@dashboard_perm_required("users.change_user")
+def toggle_admin(request, pk):
+    """Foydalanuvchini admin (superuser) qilish / bekor qilish (AJAX).
+
+    Eng yuqori huquq berilgani uchun faqat superuser'lar bajara oladi —
+    ``dashboard_perm_required`` faqat ``users.change_user`` ni tekshiradi
+    (Moderator rolida ham bor), shuning uchun bu yerda qo'shimcha tekshiruv
+    kerak.
+    """
+    if not request.user.is_superuser:
+        return JsonResponse({"error": "Faqat superuser boshqa foydalanuvchini admin qila oladi."}, status=403)
+
+    target = get_object_or_404(User, pk=pk)
+
+    if target == request.user:
+        return JsonResponse({"error": "O'zingizning admin holatingizni shu yerdan o'zgartira olmaysiz."}, status=400)
+
+    target.is_superuser = not target.is_superuser
+    if target.is_superuser:
+        # Admin huquqi doim boshqaruv paneliga kirish huquqini ham beradi.
+        target.is_staff = True
+    target.save(update_fields=["is_superuser", "is_staff"])
+
+    return JsonResponse(
+        {
+            "state": target.is_superuser,
+            "message": f"{target.username} {'admin qilindi' if target.is_superuser else 'admin huquqidan mahrum qilindi'}",
+        }
+    )
+
+
+@require_POST
 @dashboard_perm_required("reviews.change_review")
 def moderate_review(request, pk, action):
     """Sharhni tasdiqlash / rad etish / shikoyat / spam / o'chirish (AJAX)."""

@@ -36,6 +36,7 @@
               <th></th><th>Foydalanuvchi</th><th>Email</th>
               <th>Ro'yxatdan o'tgan</th><th>Sevimli</th><th>Sharh</th>
               <th>Rol</th><th>Bloklangan</th>
+              {% if request.user.is_superuser %}<th>Admin</th>{% endif %}
             </tr>
           </thead>
           <tbody>
@@ -77,6 +78,20 @@
                             data-url="{% url 'dashboard:api_toggle_block' u.pk %}"></button>
                   {% endif %}
                 </td>
+
+                {% if request.user.is_superuser %}
+                  <td>
+                    {% if u == request.user %}
+                      <span class="dim" title="O'zingizning admin holatingizni shu yerdan o'zgartira olmaysiz">—</span>
+                    {% else %}
+                      <button class="switch js-toggle {% if u.is_superuser %}is-on{% endif %}"
+                              type="button" role="switch"
+                              aria-checked="{% if u.is_superuser %}true{% else %}false{% endif %}"
+                              aria-label="{{ u.username }} ni admin qilish"
+                              data-url="{% url 'dashboard:api_toggle_admin' u.pk %}"></button>
+                    {% endif %}
+                  </td>
+                {% endif %}
               </tr>
             {% endfor %}
           </tbody>
