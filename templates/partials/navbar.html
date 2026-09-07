@@ -105,9 +105,15 @@
               {% include "partials/icon.html" with name="settings" %} Sozlamalar
             </a>
             {% if user.is_staff %}
-              <a class="user-menu__item" href="{% url 'dashboard:index' %}" role="menuitem">
-                {% include "partials/icon.html" with name="grid" %} Dashboard
-              </a>
+              {% if request.resolver_match.app_name == "dashboard" %}
+                <a class="user-menu__item" href="{% url 'core:home' %}" role="menuitem">
+                  {% include "partials/icon.html" with name="eye" %} Saytga o'tish
+                </a>
+              {% else %}
+                <a class="user-menu__item" href="{% url 'dashboard:index' %}" role="menuitem">
+                  {% include "partials/icon.html" with name="grid" %} Dashboard
+                </a>
+              {% endif %}
             {% endif %}
 
             {# Chiqish POST orqali — CSRF himoyasi bilan #}
@@ -148,7 +154,11 @@
       <a class="drawer__link" href="{% url 'users:favorites' %}">Favorites</a>
       <a class="drawer__link" href="{% url 'users:profile' %}">Profil</a>
       {% if user.is_staff %}
-        <a class="drawer__link" href="{% url 'dashboard:index' %}">Dashboard</a>
+        {% if request.resolver_match.app_name == "dashboard" %}
+          <a class="drawer__link" href="{% url 'core:home' %}">Saytga o'tish</a>
+        {% else %}
+          <a class="drawer__link" href="{% url 'dashboard:index' %}">Dashboard</a>
+        {% endif %}
       {% endif %}
       <form action="{% url 'users:logout' %}" method="post" style="margin-top: var(--s-5)">
         {% csrf_token %}
