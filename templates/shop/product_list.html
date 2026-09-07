@@ -57,7 +57,12 @@
               {% elif cinepoint_balance < product.price %}
                 <button class="btn btn--ghost btn--block" type="button" disabled>Balans yetarli emas</button>
               {% else %}
-                <button class="btn btn--primary btn--block js-buy" type="button" data-product="{{ product.id }}">
+                <button class="btn btn--primary btn--block js-buy-open" type="button"
+                        data-modal-open="buy-modal"
+                        data-product="{{ product.id }}"
+                        data-name="{{ product.name }}"
+                        data-price="{{ product.price }}"
+                        {% if product.stock is not None %}data-stock="{{ product.stock }}"{% endif %}>
                   Sotib olish
                 </button>
               {% endif %}
@@ -79,4 +84,43 @@
   {% endif %}
 
 </div>
+
+{% if user.is_authenticated %}
+  {% comment %}
+    Barcha "Sotib olish" tugmalari uchun bitta umumiy modal — miqdor
+    va narx tugma bosilganda data-atributlardan dinamik to'ldiriladi
+    (qarang: static/js/shop.js).
+  {% endcomment %}
+  <div class="modal" id="buy-modal">
+    <div class="modal__panel">
+      <div class="modal__head">
+        <h2 class="dash-head__title" style="font-size: var(--fs-lg)">
+          <span id="buy-modal-name">—</span>
+        </h2>
+        <button type="button" class="modal__close" data-modal-close aria-label="Yopish">
+          {% include "partials/icon.html" with name="x" %}
+        </button>
+      </div>
+
+      <form id="buy-form">
+        <div class="alert alert--error js-buy-error" hidden></div>
+
+        <div class="field" style="margin-bottom: var(--s-4)">
+          <label class="field__label" for="buy-quantity">Nechta olmoqchisiz?</label>
+          <input class="input" type="number" name="quantity" id="buy-quantity" min="1" value="1">
+        </div>
+
+        <p class="muted" style="margin-bottom: var(--s-4)">
+          Umumiy summa:
+          <strong id="buy-total" style="color: var(--warning)">0</strong> cinepoint
+        </p>
+
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ghost" data-modal-close>Bekor qilish</button>
+          <button type="submit" class="btn btn--primary">Sotib olish</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}
 {% endblock %}

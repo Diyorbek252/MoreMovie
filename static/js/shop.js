@@ -1,5 +1,5 @@
 /* ==========================================================================
-   MORE-MOVIE — Do'kon: mahsulot xaridi (AJAX)
+   MORE-MOVIE — Do'kon: mahsulot xaridi (miqdor tanlash modali + AJAX)
    ========================================================================== */
 
 (function () {
@@ -11,26 +11,74 @@
   const config = document.body.dataset;
   const ENDPOINTS = { purchase: config.urlPurchase || "/api/shop/purchase/" };
 
-  document.addEventListener("click", async function (event) {
-    const button = event.target.closest(".js-buy");
-    if (!button || button.disabled) return;
+  const modal = document.getElementById("buy-modal");
+  if (!modal) return;
 
-    button.disabled = true;
-    button.classList.add("is-loading");
+  const form = document.getElementById("buy-form");
+  const nameEl = document.getElementById("buy-modal-name");
+  const quantityInput = document.getElementById("buy-quantity");
+  const totalEl = document.getElementById("buy-total");
+  const errorBox = form.querySelector(".js-buy-error");
+
+  let currentPrice = 0;
+
+  /** Miqdor maydonidagi qiymatga qarab umumiy summani qayta hisoblaydi. */
+  const recalcTotal = function () {
+    const quantity = Math.max(1, parseInt(quantityInput.value, 10) || 1);
+    totalEl.textContent = String(currentPrice * quantity);
+  };
+
+  // "Sotib olish" tugmasi bosilganda — modal ochilishi data-modal-open
+  // orqali (main.js) avtomatik amalga oshadi, bu yerda faqat forma
+  // ma'lumotlarini shu mahsulotga moslab to'ldiramiz.
+  document.addEventListener("click", function (event) {
+    const opener = event.target.closest(".js-buy-open");
+    if (!opener) return;
+
+    form.dataset.product = opener.dataset.product;
+    currentPrice = parseInt(opener.dataset.price, 10) || 0;
+    nameEl.textContent = opener.dataset.name;
+
+    quantityInput.value = 1;
+    if (opener.dataset.stock !== undefined) {
+      quantityInput.max = opener.dataset.stock;
+    } else {
+      quantityInput.removeAttribute("max");
+    }
+
+    errorBox.hidden = true;
+    recalcTotal();
+  });
+
+  quantityInput.addEventListener("input", recalcTotal);
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const submit = form.querySelector("button[type=submit]");
+    const quantity = Math.max(1, parseInt(quantityInput.value, 10) || 1);
+
+    submit.disabled = true;
+    errorBox.hidden = true;
 
     try {
-      const data = await MM.postJSON(ENDPOINTS.purchase, { product: button.dataset.product });
-
-      const balanceEls = document.querySelectorAll("#cinepoint-balance");
-      balanceEls.forEach(function (el) { el.textContent = data.balance; });
+      const data = await MM.postJSON(ENDPOINTS.purchase, {
+        product: form.dataset.product,
+        quantity: quantity,
+      });
 
       MM.toast(data.message, "success");
-      button.textContent = "Xarid qilindi";
+      modal.classList.remove("is-open");
+
+      // Balans va zaxira holati bir nechta kartaga ta'sir qiladi
+      // (masalan boshqa mahsulot endi balans yetarli emas bo'lib
+      // qolishi mumkin) — sahifani qayta yuklab, hammasini serverdan
+      // to'g'ri holatda qayta chizamiz.
+      window.location.reload();
     } catch (error) {
-      MM.toast(error.message, "error");
-      button.disabled = false;
-    } finally {
-      button.classList.remove("is-loading");
+      errorBox.textContent = error.message;
+      errorBox.hidden = false;
+      submit.disabled = false;
     }
   });
 })();

@@ -73,7 +73,10 @@ class Order(TimeStampedModel):
     # Xarid vaqtidagi nomi/narxi — mahsulot keyin tahrirlansa yoki
     # o'chirilsa ham tarix o'zgarmas qoladi.
     product_name = models.CharField("mahsulot nomi", max_length=150)
-    price_paid = models.PositiveIntegerField("to'langan narx (cinepoint)")
+    quantity = models.PositiveIntegerField("miqdor", default=1)
+    # Umumiy summa (bir dona narxi emas) — bekor qilinganda to'liq shu
+    # summa qaytariladi, quantity bilan qayta ko'paytirish shart emas.
+    price_paid = models.PositiveIntegerField("to'langan narx (cinepoint, umumiy)")
     status = models.CharField(
         "holat", max_length=10, choices=Status.choices, default=Status.PENDING
     )

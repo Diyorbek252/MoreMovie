@@ -55,3 +55,26 @@ def has_earned(user, reason, related):
     return CinepointTransaction.objects.filter(
         user=user, reason=reason, content_type=content_type, object_id=related.pk
     ).exists()
+
+
+def notify_admins_new_order(order):
+    """Yangi buyurtma haqida barcha xodimlarga (is_staff) bildirishnoma yuboradi.
+
+    ``siteconfig.Notification`` ning mavjud fan-out mexanizmidan
+    foydalanadi (``dispatch()`` -> har bir xodim uchun
+    ``NotificationRecipient`` yaratadi) — navbar qo'ng'iroq ikonkasida
+    darhol ko'rinadi.
+    """
+    from siteconfig.models import Notification
+
+    notification = Notification.objects.create(
+        title="Yangi buyurtma",
+        message=(
+            f"{order.user.username} «{order.product_name}» dan {order.quantity} dona "
+            f"({order.price_paid} cinepoint) xarid qildi."
+        ),
+        notification_type=Notification.NotificationType.INFO,
+        target=Notification.Target.STAFF,
+    )
+    notification.dispatch()
+    return notification

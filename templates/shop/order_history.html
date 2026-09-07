@@ -20,7 +20,7 @@
         <article class="review">
           <div style="flex: 1">
             <div class="review__head">
-              <span class="review__author">{{ order.product_name }}</span>
+              <span class="review__author">{{ order.product_name }} × {{ order.quantity }}</span>
               <span class="badge" style="color: var(--warning)">
                 {% include "partials/icon.html" with name="coin" %} {{ order.price_paid }}
               </span>

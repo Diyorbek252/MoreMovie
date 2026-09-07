@@ -28,6 +28,7 @@
             <tr>
               <th>Foydalanuvchi</th>
               <th>Mahsulot</th>
+              <th>Miqdor</th>
               <th>Narxi</th>
               <th>Sana</th>
               <th></th>
@@ -38,6 +39,7 @@
               <tr data-order="{{ order.id }}">
                 <td class="table__title">{{ order.user.username }}</td>
                 <td class="muted">{{ order.product_name }}</td>
+                <td class="muted">{{ order.quantity }}</td>
                 <td class="muted">{{ order.price_paid }} cinepoint</td>
                 <td class="dim" style="font-size: var(--fs-xs)">{{ order.created_at|date:"d.m.Y H:i" }}</td>
                 <td>

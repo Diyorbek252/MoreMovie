@@ -249,6 +249,7 @@ class Notification(models.Model):
         ALL = "all", "Barcha foydalanuvchilar"
         ACTIVE = "active", "Faol foydalanuvchilar"
         SELECTED = "selected", "Tanlangan foydalanuvchilar"
+        STAFF = "staff", "Xodimlar"
 
     title = models.CharField("sarlavha", max_length=150)
     message = models.TextField("xabar matni", max_length=2000)
@@ -318,6 +319,8 @@ class Notification(models.Model):
             return self.target_users.all()
         if self.target == self.Target.ACTIVE:
             return User.objects.filter(is_active=True)
+        if self.target == self.Target.STAFF:
+            return User.objects.filter(is_staff=True)
         return User.objects.all()
 
     def dispatch(self):

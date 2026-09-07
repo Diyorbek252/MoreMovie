@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
 from .models import CinepointTransaction, Order, Product
-from .services import InsufficientBalanceError, adjust_balance
+from .services import InsufficientBalanceError, adjust_balance, notify_admins_new_order
 
 
 def _payload(request):
@@ -30,39 +30,49 @@ def _payload(request):
 @login_required
 @require_POST
 def purchase_product(request):
-    """POST /api/shop/purchase/  body: {"product": <id>}"""
+    """POST /api/shop/purchase/  body: {"product": <id>, "quantity": <int>}"""
     data = _payload(request)
     product_id = data.get("product")
 
     if not product_id:
         return JsonResponse({"error": "mahsulot ko'rsatilmagan"}, status=400)
 
+    try:
+        quantity = int(data.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 0
+
+    if quantity < 1:
+        return JsonResponse({"error": "Miqdor kamida 1 bo'lishi kerak."}, status=400)
+
     product = get_object_or_404(Product, pk=product_id, is_active=True)
+    total_price = product.price * quantity
 
     with transaction.atomic():
         # Zaxira cheklangan bo'lsa, shartli UPDATE orqali atomik kamaytiramiz —
-        # 0 qator qaytsa mahsulot ayni shu lahzada tugagan.
+        # kutilgan qatordan kamrog'i qaytsa, ayni shu lahzada zaxira yetmagan.
         if product.stock is not None:
-            rows = Product.objects.filter(pk=product.pk, stock__gte=1).update(
-                stock=F("stock") - 1
+            rows = Product.objects.filter(pk=product.pk, stock__gte=quantity).update(
+                stock=F("stock") - quantity
             )
             if not rows:
-                return JsonResponse({"error": "Mahsulot zaxirasi tugagan."}, status=400)
+                return JsonResponse({"error": "Mahsulot zaxirasi yetarli emas."}, status=400)
 
         order = Order.objects.create(
             user=request.user,
             product=product,
             product_name=product.name,
-            price_paid=product.price,
+            quantity=quantity,
+            price_paid=total_price,
             status=Order.Status.PENDING,
         )
 
         try:
             adjust_balance(
                 request.user,
-                -product.price,
+                -total_price,
                 CinepointTransaction.Reason.PURCHASE,
-                note=f"«{product.name}» xaridi",
+                note=f"«{product.name}» dan {quantity} dona xaridi",
                 related=order,
             )
         except InsufficientBalanceError:
@@ -71,11 +81,12 @@ def purchase_product(request):
             return JsonResponse({"error": "Balansingiz yetarli emas."}, status=400)
 
     request.user.profile.refresh_from_db(fields=["balance"])
+    notify_admins_new_order(order)
 
     return JsonResponse(
         {
             "ok": True,
             "balance": request.user.profile.balance,
-            "message": f"«{product.name}» xarid qilindi — buyurtmangiz tez orada yetkaziladi.",
+            "message": f"«{product.name}» dan {quantity} dona xarid qilindi — buyurtmangiz tez orada yetkaziladi.",
         }
     )
