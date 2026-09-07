@@ -22,13 +22,13 @@
   </div>
 
   {% if products %}
-    <div class="grid">
+    <div class="shop-grid">
       {% for product in products %}
-        <article class="card">
+        <article class="card card--shop">
           <div class="card__media">
             {% if product.image %}
               <img class="card__poster" src="{{ product.image.url }}" alt="{{ product.name }}"
-                   loading="lazy" width="300" height="450">
+                   loading="lazy" width="400" height="300">
             {% else %}
               <div class="card__fallback">{{ product.name }}</div>
             {% endif %}

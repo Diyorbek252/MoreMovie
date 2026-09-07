@@ -349,6 +349,27 @@
   color: var(--warning);
 }
 
+/* Do'kon — mahsulot kartalari. Umumiy `.grid`/`.card` filmlarning
+   2:3 poster nisbatiga mo'ljallangan (160px ustunlar), shu sababli
+   mahsulot rasmlari juda kichik va qirqilgan ko'rinardi. `.shop-grid`
+   kengroq ustun beradi, `.card--shop` esa media qismini kvadratga
+   yaqinroq qilib, rasmni to'liq (contain) ko'rsatadi. */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--s-5);
+}
+
+.card--shop .card__media {
+  aspect-ratio: 4 / 3;
+}
+
+.card--shop .card__poster {
+  object-fit: contain;
+  padding: var(--s-4);
+  background: var(--bg-3);
+}
+
 #notif-toggle {
   position: relative;
 }
