@@ -10,7 +10,7 @@ from .models import Order, Product
 
 
 class ProductListView(QueryStringMixin, ListView):
-    """Do'kon vitrinasi — qidiruv, mavjudlik filtri va saralash bilan."""
+    """Do'kon vitrinasi — qidiruv, "balansim yetadi" filtri va saralash bilan."""
 
     model = Product
     template_name = "shop/product_list.html"
@@ -36,8 +36,11 @@ class ProductListView(QueryStringMixin, ListView):
                 Q(name__icontains=query) | Q(description__icontains=query)
             )
 
-        if params.get("availability") == "in_stock":
-            queryset = queryset.filter(Q(stock__isnull=True) | Q(stock__gt=0))
+        # Faqat tizimga kirgan va balansi yetarli bo'lgan foydalanuvchi
+        # uchun ma'noga ega — anonim foydalanuvchida balans yo'q.
+        user = self.request.user
+        if params.get("affordable") == "1" and user.is_authenticated:
+            queryset = queryset.filter(price__lte=user.profile.balance)
 
         sort = params.get("sort", "default")
         order_field = self.SORT_OPTIONS.get(sort, self.SORT_OPTIONS["default"])[0]
@@ -52,10 +55,10 @@ class ProductListView(QueryStringMixin, ListView):
                 "sort_options": self.SORT_OPTIONS,
                 "current": {
                     "q": params.get("q", ""),
-                    "availability": params.get("availability", ""),
+                    "affordable": params.get("affordable", ""),
                     "sort": params.get("sort", "default"),
                 },
-                "has_filters": any(params.get(key) for key in ("q", "availability")),
+                "has_filters": any(params.get(key) for key in ("q", "affordable")),
             }
         )
         return context

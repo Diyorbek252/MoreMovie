@@ -29,15 +29,15 @@
              placeholder="Mahsulot qidirish..." value="{{ current.q }}">
     </div>
 
-    <div class="field">
-      <label class="field__label" for="f-availability">Mavjudlik</label>
-      <select class="select" name="availability" id="f-availability">
-        <option value="">Barchasi</option>
-        <option value="in_stock" {% if current.availability == "in_stock" %}selected{% endif %}>
-          Faqat mavjudlari
-        </option>
-      </select>
-    </div>
+    {% if user.is_authenticated %}
+      <div class="field">
+        <label class="field__label">&nbsp;</label>
+        <label class="checkbox">
+          <input type="checkbox" name="affordable" value="1" {% if current.affordable == "1" %}checked{% endif %}>
+          Faqat balansim yetadigan mahsulotlar
+        </label>
+      </div>
+    {% endif %}
 
     <div class="field">
       <label class="field__label" for="f-sort">Saralash</label>
