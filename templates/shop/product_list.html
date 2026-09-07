@@ -33,18 +33,20 @@
               <div class="card__fallback">{{ product.name }}</div>
             {% endif %}
 
-            <div class="card__tags">
-              <span class="badge" style="color: var(--warning)">
-                {% include "partials/icon.html" with name="coin" %} {{ product.price }}
-              </span>
-              {% if not product.is_in_stock %}
+            {% if not product.is_in_stock %}
+              <div class="card__tags">
                 <span class="badge badge--red">Tugagan</span>
-              {% endif %}
-            </div>
+              </div>
+            {% endif %}
           </div>
 
           <div class="card__body">
-            <h3 class="card__title">{{ product.name }}</h3>
+            <div class="row" style="justify-content: space-between; align-items: center; gap: var(--s-2)">
+              <h3 class="card__title" style="margin: 0">{{ product.name }}</h3>
+              <span class="badge" style="color: var(--warning); flex-shrink: 0">
+                {% include "partials/icon.html" with name="coin" %} {{ product.price }}
+              </span>
+            </div>
             {% if product.description %}
               <p class="card__meta">{{ product.description|truncatewords:16 }}</p>
             {% endif %}
