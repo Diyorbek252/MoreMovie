@@ -1,0 +1,77 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Buyurtmalar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Do'kon buyurtmalari</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta buyurtma</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <a class="chip {% if current_status == 'pending' %}is-active{% endif %}"
+       href="?status=pending">Kutilmoqda ({{ counts.pending }})</a>
+    <a class="chip {% if current_status == 'delivered' %}is-active{% endif %}"
+       href="?status=delivered">Yetkazildi ({{ counts.delivered }})</a>
+    <a class="chip {% if current_status == 'cancelled' %}is-active{% endif %}"
+       href="?status=cancelled">Bekor qilindi ({{ counts.cancelled }})</a>
+  </div>
+
+  <div class="panel">
+    {% if orders %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Foydalanuvchi</th>
+              <th>Mahsulot</th>
+              <th>Narxi</th>
+              <th>Sana</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+              <tr data-order="{{ order.id }}">
+                <td class="table__title">{{ order.user.username }}</td>
+                <td class="muted">{{ order.product_name }}</td>
+                <td class="muted">{{ order.price_paid }} cinepoint</td>
+                <td class="dim" style="font-size: var(--fs-xs)">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                  {% if order.status == "pending" %}
+                    <div class="table__actions">
+                      <button class="btn btn--sm btn--primary js-order-action"
+                              data-url="{% url 'dashboard:api_order_deliver' order.pk %}">
+                        {% include "partials/icon.html" with name="check" %} Yetkazildi
+                      </button>
+                      <button class="btn btn--sm btn--danger js-order-action"
+                              data-confirm="Buyurtma bekor qilinadi va cinepoint qaytariladi. Davom etamizmi?"
+                              data-url="{% url 'dashboard:api_order_cancel' order.pk %}">
+                        Bekor qilish
+                      </button>
+                    </div>
+                  {% elif order.status == "delivered" %}
+                    <span class="badge badge--success">Yetkazildi</span>
+                  {% else %}
+                    <span class="badge badge--red">Bekor qilindi</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="check" %}
+        <h2 class="empty__title">Bu bo'limda buyurtma yo'q</h2>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

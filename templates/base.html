@@ -74,6 +74,7 @@
   {% if user.is_authenticated %}
   data-url-notifications="{% url 'siteconfig:api_notifications' %}"
   data-url-notifications-read-all="{% url 'siteconfig:api_notifications_read_all' %}"
+  data-url-purchase="{% url 'shop:api_purchase' %}"
   {% endif %}>
 
   {# --- Yuklanish ekrani. JS uni birinchi bo'yashdan keyin yashiradi. --- #}
@@ -113,6 +114,7 @@
   {% if user.is_authenticated %}
     <script src="{% static 'js/interactions.js' %}" defer></script>
     <script src="{% static 'js/notifications.js' %}" defer></script>
+    <script src="{% static 'js/shop.js' %}" defer></script>
   {% endif %}
   <script src="{% static 'js/search.js' %}" defer></script>
   {% block extra_js %}{% endblock %}

@@ -21,6 +21,8 @@
          href="{% url 'movies:genre_list' %}">Genres</a>
       <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
       <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
+      <a class="nav__link {% if request.resolver_match.url_name == 'product_list' %}is-active{% endif %}"
+         href="{% url 'shop:product_list' %}">Do'kon</a>
     </nav>
 
     {# --- O'ng tomondagi harakatlar --- #}
@@ -70,6 +72,12 @@
           </div>
         </div>
 
+        <a class="btn-icon cinepoint-chip" href="{% url 'shop:product_list' %}"
+           aria-label="Cinepoint balansi" title="Cinepoint">
+          {% include "partials/icon.html" with name="coin" %}
+          <span id="cinepoint-balance">{{ cinepoint_balance }}</span>
+        </a>
+
         <a class="btn-icon" href="{% url 'users:favorites' %}" aria-label="Sevimlilar" title="Favorites">
           {% include "partials/icon.html" with name="heart" %}
         </a>
@@ -100,6 +108,9 @@
             </a>
             <a class="user-menu__item" href="{% url 'users:favorites' %}" role="menuitem">
               {% include "partials/icon.html" with name="heart" %} Favorites
+            </a>
+            <a class="user-menu__item" href="{% url 'shop:order_history' %}" role="menuitem">
+              {% include "partials/icon.html" with name="coin" %} Xaridlarim
             </a>
             <a class="user-menu__item" href="{% url 'users:profile_edit' %}" role="menuitem">
               {% include "partials/icon.html" with name="settings" %} Sozlamalar
@@ -148,10 +159,12 @@
     <a class="drawer__link" href="{% url 'movies:genre_list' %}">Genres</a>
     <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
     <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
+    <a class="drawer__link" href="{% url 'shop:product_list' %}">Do'kon</a>
 
     {% if user.is_authenticated %}
       <a class="drawer__link" href="{% url 'users:watchlist' %}">Watchlist</a>
       <a class="drawer__link" href="{% url 'users:favorites' %}">Favorites</a>
+      <a class="drawer__link" href="{% url 'shop:order_history' %}">Xaridlarim ({{ cinepoint_balance }} cinepoint)</a>
       <a class="drawer__link" href="{% url 'users:profile' %}">Profil</a>
       {% if user.is_staff %}
         {% if request.resolver_match.app_name == "dashboard" %}

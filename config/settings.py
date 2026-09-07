@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     "series.apps.SeriesConfig",
     "reviews.apps.ReviewsConfig",
     "siteconfig.apps.SiteConfigConfig",
+    "shop.apps.ShopConfig",
     "dashboard.apps.DashboardConfig",
 ]
 
@@ -280,6 +281,10 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
 # Sahifalash: bir sahifadagi kartalar soni (grid 2/3/4/6 ustunga bo'linadi).
 MOVIES_PER_PAGE = 24
+
+# Cinepoint do'koni — avtomatik mukofot miqdorlari.
+CINEPOINT_MOVIE_REWARD = 5
+CINEPOINT_REVIEW_REWARD = 15
 
 
 # ---------------------------------------------------------------------------

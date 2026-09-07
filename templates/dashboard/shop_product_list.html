@@ -1,0 +1,80 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Mahsulotlar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Mahsulotlar</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta mahsulot</p>
+    </div>
+    <a class="btn btn--primary" href="{% url 'dashboard:shop_product_add' %}">
+      {% include "partials/icon.html" with name="plus" %} Mahsulot qo'shish
+    </a>
+  </div>
+
+  <div class="panel">
+    {% if products %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Nomi</th>
+              <th>Narxi</th>
+              <th>Zaxira</th>
+              <th>Faol</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in products %}
+              <tr>
+                <td>
+                  {% if product.image %}
+                    <img class="table__poster" style="width:60px;height:34px;object-fit:cover"
+                         src="{{ product.image.url }}" alt="" loading="lazy">
+                  {% endif %}
+                </td>
+                <td class="table__title">{{ product.name }}</td>
+                <td class="muted">{{ product.price }} cinepoint</td>
+                <td class="muted">
+                  {% if product.stock is None %}Cheksiz{% else %}{{ product.stock }}{% endif %}
+                </td>
+                <td>
+                  <button class="switch js-toggle {% if product.is_active %}is-on{% endif %}"
+                          type="button" role="switch"
+                          aria-checked="{% if product.is_active %}true{% else %}false{% endif %}"
+                          aria-label="Faollik holati"
+                          data-url="{% url 'dashboard:api_toggle_product' product.pk %}"></button>
+                </td>
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:shop_product_edit' product.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:shop_product_delete' product.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="star" %}
+        <h2 class="empty__title">Mahsulot topilmadi</h2>
+        <a class="btn btn--primary" href="{% url 'dashboard:shop_product_add' %}">Birinchi mahsulotni qo'shish</a>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

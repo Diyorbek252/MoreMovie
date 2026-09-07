@@ -66,6 +66,19 @@ urlpatterns = [
     path("banners/<int:pk>/edit/", views.BannerUpdateView.as_view(), name="banner_edit"),
     path("banners/<int:pk>/delete/", views.BannerDeleteView.as_view(), name="banner_delete"),
 
+    # --- Do'kon: mahsulotlar va buyurtmalar ---
+    path("shop/products/", views.ProductManageListView.as_view(), name="shop_product_list"),
+    path("shop/products/add/", views.ProductCreateView.as_view(), name="shop_product_add"),
+    path(
+        "shop/products/<int:pk>/edit/",
+        views.ProductUpdateView.as_view(), name="shop_product_edit",
+    ),
+    path(
+        "shop/products/<int:pk>/delete/",
+        views.ProductDeleteView.as_view(), name="shop_product_delete",
+    ),
+    path("shop/orders/", views.OrderManageListView.as_view(), name="shop_order_list"),
+
     # --- Bosh sahifa bo'limlari ---
     path("homepage/", views.HomepageSectionListView.as_view(), name="homepage_sections"),
     path(
@@ -89,6 +102,10 @@ urlpatterns = [
     path("api/episode/<int:pk>/publish/", views.toggle_episode_publish, name="api_toggle_episode_publish"),
     path("api/user/<int:pk>/block/", views.toggle_block, name="api_toggle_block"),
     path("api/user/<int:pk>/admin/", views.toggle_admin, name="api_toggle_admin"),
+    path("api/user/<int:pk>/balance/", views.adjust_user_balance, name="api_adjust_balance"),
+    path("api/shop/product/<int:pk>/toggle/", views.toggle_product_active, name="api_toggle_product"),
+    path("api/shop/order/<int:pk>/deliver/", views.mark_order_delivered, name="api_order_deliver"),
+    path("api/shop/order/<int:pk>/cancel/", views.cancel_order, name="api_order_cancel"),
     path("api/review/<int:pk>/<str:action>/", views.moderate_review, name="api_moderate_review"),
     path("api/banner/<int:pk>/toggle/", views.toggle_banner, name="api_toggle_banner"),
     path("api/homepage/<int:pk>/toggle/", views.toggle_section, name="api_toggle_section"),

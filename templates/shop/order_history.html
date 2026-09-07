@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Xaridlarim — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Do'kondagi xaridlaringiz tarixi.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--s-6); padding-bottom: var(--s-8)">
+
+  <div class="page-head" style="text-align: left; padding-top: 0">
+    <h1 class="page-head__title" style="margin-bottom: var(--s-2)">Xaridlarim</h1>
+    <p class="muted">
+      {{ page_obj.paginator.count }} ta buyurtma — balansingiz:
+      <strong style="color: var(--warning)">{{ cinepoint_balance }} cinepoint</strong>
+    </p>
+  </div>
+
+  {% if orders %}
+    <div class="stack">
+      {% for order in orders %}
+        <article class="review">
+          <div style="flex: 1">
+            <div class="review__head">
+              <span class="review__author">{{ order.product_name }}</span>
+              <span class="badge" style="color: var(--warning)">
+                {% include "partials/icon.html" with name="coin" %} {{ order.price_paid }}
+              </span>
+              {% if order.status == "pending" %}
+                <span class="badge badge--warning">Kutilmoqda</span>
+              {% elif order.status == "delivered" %}
+                <span class="badge badge--success">Yetkazildi</span>
+              {% else %}
+                <span class="badge badge--red">Bekor qilindi</span>
+              {% endif %}
+              <span class="review__date">{{ order.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="coin" %}
+      <h2 class="empty__title">Hali xarid qilmagansiz</h2>
+      <p>Do'kondagi mahsulotlarni ko'rib chiqing.</p>
+      <a class="btn btn--primary" href="{% url 'shop:product_list' %}">Do'konga o'tish</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

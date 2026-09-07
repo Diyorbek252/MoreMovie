@@ -23,6 +23,8 @@ def site_globals(request):
         "user_watchlist_ids": set(),
         "user_favorite_ids": set(),
         "unread_notifications_count": 0,
+        # Navbar'dagi cinepoint chipi uchun.
+        "cinepoint_balance": 0,
     }
 
     user = getattr(request, "user", None)
@@ -36,5 +38,7 @@ def site_globals(request):
         context["unread_notifications_count"] = NotificationRecipient.objects.filter(
             user=user, is_read=False
         ).count()
+        # Profile signal orqali har bir User uchun kafolatlangan.
+        context["cinepoint_balance"] = user.profile.balance
 
     return context

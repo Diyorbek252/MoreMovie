@@ -332,6 +332,23 @@
    foydalanadi — shu sabab ikkalasi ham shu klasslarni oladi, bu yerda
    faqat qo'shimcha/farqlanuvchi qismlar. */
 
+/* Navbar'dagi cinepoint balans chipi — .btn-icon doira shakli o'rniga
+   ikonka + son sig'adigan cho'ziluvchi kapsula. */
+.cinepoint-chip {
+  width: auto;
+  height: 38px;
+  padding: 0 var(--s-3);
+  gap: var(--s-2);
+  border-radius: var(--r-full);
+  color: var(--warning);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.cinepoint-chip svg {
+  color: var(--warning);
+}
+
 #notif-toggle {
   position: relative;
 }

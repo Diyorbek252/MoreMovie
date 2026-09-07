@@ -12,6 +12,7 @@ from django.urls import NoReverseMatch, reverse
 
 from core.models import ContactMessage
 from reviews.models import Review
+from shop.models import Order
 
 
 @dataclass
@@ -50,6 +51,13 @@ NAV_SECTIONS = [
                 perms=["core.view_contactmessage"], match_prefix="/dashboard/messages/",
                 count_key="messages_unread"),
     ]),
+    ("Do'kon", [
+        NavItem("Mahsulotlar", "dashboard:shop_product_list", "star",
+                perms=["shop.view_product"], match_prefix="/dashboard/shop/products/"),
+        NavItem("Buyurtmalar", "dashboard:shop_order_list", "mail",
+                perms=["shop.view_order"], match_prefix="/dashboard/shop/orders/",
+                count_key="orders_pending"),
+    ]),
     ("Sayt", [
         NavItem("Bosh sahifa", "dashboard:homepage_sections", "grid",
                 perms=["dashboard.manage_homepage"], match_prefix="/dashboard/homepage/"),
@@ -74,6 +82,7 @@ def get_nav_counts():
     return {
         "reviews_pending": Review.objects.filter(status=Review.Status.PENDING).count(),
         "messages_unread": ContactMessage.objects.filter(is_read=False).count(),
+        "orders_pending": Order.objects.filter(status=Order.Status.PENDING).count(),
     }
 
 

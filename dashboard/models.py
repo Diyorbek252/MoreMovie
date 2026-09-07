@@ -33,6 +33,7 @@ class DashboardAccess(models.Model):
             ("send_notifications", "Bildirishnoma yuborish"),
             ("manage_roles", "Rollarni boshqarish"),
             ("manage_homepage", "Bosh sahifa bo'limlarini boshqarish"),
+            ("manage_balance", "Cinepoint balansini boshqarish"),
         ]
 
 

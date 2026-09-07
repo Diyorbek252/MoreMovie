@@ -7,12 +7,14 @@ soddalashtirilgan.
 
 import json
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.db.models import Avg, Count, Q, Sum
+from django.db.models import Avg, Count, ProtectedError, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
@@ -27,10 +29,14 @@ from core.models import ContactMessage
 from movies.models import Category, Favorite, Genre, Movie, Watchlist
 from reviews.models import Review
 from series.models import Episode, Season, Series
+from shop.models import CinepointTransaction, Order, Product
+from shop.services import InsufficientBalanceError, adjust_balance, has_earned
 from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
+from users.models import Profile
 
 from . import analytics
 from .forms import (
+    BalanceAdjustForm,
     BannerForm,
     CategoryForm,
     EpisodeForm,
@@ -38,6 +44,7 @@ from .forms import (
     HomepageSectionForm,
     MovieForm,
     NotificationForm,
+    ProductForm,
     SeasonForm,
     SeriesForm,
     SiteSettingsForm,
@@ -81,6 +88,9 @@ class DashboardIndexView(StaffRequiredMixin, TemplateView):
             "watchlist_total": Watchlist.objects.count(),
             "reviews_pending": Review.objects.filter(status=Review.Status.PENDING).count(),
             "messages_unread": ContactMessage.objects.filter(is_read=False).count(),
+            "products_total": Product.objects.count(),
+            "orders_pending": Order.objects.filter(status=Order.Status.PENDING).count(),
+            "cinepoints_circulating": Profile.objects.aggregate(total=Sum("balance"))["total"] or 0,
         }
 
         # Eng mashhur 10 film.
@@ -737,6 +747,104 @@ class BannerDeleteView(DashboardPermissionMixin, DeleteView):
 
 
 # ---------------------------------------------------------------------------
+# Do'kon — mahsulotlar va buyurtmalar
+# ---------------------------------------------------------------------------
+
+
+class ProductManageListView(DashboardPermissionMixin, ListView):
+    required_perms = ["shop.view_product"]
+    model = Product
+    template_name = "dashboard/shop_product_list.html"
+    context_object_name = "products"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Product.objects.all()
+
+
+class ProductCreateView(DashboardPermissionMixin, CreateView):
+    required_perms = ["shop.add_product"]
+    model = Product
+    form_class = ProductForm
+    template_name = "dashboard/shop_product_form.html"
+    success_url = reverse_lazy("dashboard:shop_product_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{form.instance.name}» mahsuloti qo'shildi.")
+        return super().form_valid(form)
+
+
+class ProductUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["shop.change_product"]
+    model = Product
+    form_class = ProductForm
+    template_name = "dashboard/shop_product_form.html"
+    success_url = reverse_lazy("dashboard:shop_product_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{form.instance.name}» mahsuloti yangilandi.")
+        return super().form_valid(form)
+
+
+class ProductDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["shop.delete_product"]
+    model = Product
+    template_name = "dashboard/shop_product_confirm_delete.html"
+    success_url = reverse_lazy("dashboard:shop_product_list")
+
+    def form_valid(self, form):
+        # Order.product = PROTECT — xarid tarixi bor mahsulot o'chirilsa
+        # ProtectedError ko'tariladi. Xato sahifasi o'rniga tushunarli
+        # xabar bilan ro'yxatga qaytaramiz, mahsulotni faqat o'chiramiz.
+        name = self.object.name
+        try:
+            self.object.delete()
+        except ProtectedError:
+            messages.error(
+                self.request,
+                f"«{name}» mahsulotini o'chirib bo'lmaydi — unga bog'liq buyurtmalar mavjud. "
+                "Uni o'chirish o'rniga «Faol emas» qiling.",
+            )
+            return redirect("dashboard:shop_product_list")
+
+        messages.success(self.request, f"«{name}» mahsuloti o'chirildi.")
+        return redirect(self.success_url)
+
+
+class OrderManageListView(DashboardPermissionMixin, ListView):
+    """Buyurtmalar ro'yxati — sharhlar moderatsiyasi bilan bir xil naqsh."""
+
+    required_perms = ["shop.view_order"]
+    model = Order
+    template_name = "dashboard/shop_order_list.html"
+    context_object_name = "orders"
+    paginate_by = 25
+
+    def get_queryset(self):
+        queryset = Order.objects.select_related("user", "product")
+        status = self.request.GET.get("status", "pending")
+        if status in dict(Order.Status.choices):
+            queryset = queryset.filter(status=status)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_status"] = self.request.GET.get("status", "pending")
+        context["status_choices"] = Order.Status.choices
+
+        rows = Order.objects.values("status").annotate(total=Count("id"))
+        counts = {value: 0 for value, _ in Order.Status.choices}
+        counts.update({row["status"]: row["total"] for row in rows})
+        context["counts"] = counts
+
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        context["querystring"] = params.urlencode()
+
+        return context
+
+
+# ---------------------------------------------------------------------------
 # Bosh sahifa bo'limlari
 # ---------------------------------------------------------------------------
 
@@ -950,6 +1058,22 @@ def moderate_review(request, pk, action):
         new_status, message = status_map[action]
         review.status = new_status
         review.save(update_fields=["status", "updated_at"])
+
+        # Sharh tasdiqlanganda bir martalik cinepoint mukofoti — sharh
+        # tahrirlanib qayta yuborilsa (status PENDING'ga qaytadi) va yana
+        # tasdiqlansa, has_earned() shu review.pk uchun True qaytaradi va
+        # ikkinchi marta berilmaydi.
+        if new_status == Review.Status.APPROVED and not has_earned(
+            review.user, CinepointTransaction.Reason.REVIEW_APPROVED, review
+        ):
+            adjust_balance(
+                review.user,
+                settings.CINEPOINT_REVIEW_REWARD,
+                CinepointTransaction.Reason.REVIEW_APPROVED,
+                note=f"«{review.movie.title}» uchun sharh tasdiqlandi",
+                related=review,
+            )
+
         return JsonResponse({"status": new_status, "message": message})
 
     if action == "delete":
@@ -993,6 +1117,95 @@ def toggle_banner(request, pk):
 
     note = "faollashtirildi" if banner.is_active else "o'chirildi"
     return JsonResponse({"state": banner.is_active, "message": f"«{banner.title}» {note}"})
+
+
+@require_POST
+@dashboard_perm_required("shop.change_product")
+def toggle_product_active(request, pk):
+    """Mahsulotni faollashtirish / o'chirish (AJAX)."""
+    product = get_object_or_404(Product, pk=pk)
+    product.is_active = not product.is_active
+    product.save(update_fields=["is_active", "updated_at"])
+
+    note = "faollashtirildi" if product.is_active else "o'chirildi"
+    return JsonResponse({"state": product.is_active, "message": f"«{product.name}» {note}"})
+
+
+@require_POST
+@dashboard_perm_required("shop.change_order")
+def mark_order_delivered(request, pk):
+    """Buyurtmani "yetkazildi" deb belgilash (AJAX)."""
+    order = get_object_or_404(Order, pk=pk)
+    order.status = Order.Status.DELIVERED
+    order.delivered_at = timezone.now()
+    order.save(update_fields=["status", "delivered_at", "updated_at"])
+
+    return JsonResponse({"status": order.status, "message": "Buyurtma yetkazildi deb belgilandi."})
+
+
+@require_POST
+@dashboard_perm_required("shop.change_order")
+def cancel_order(request, pk):
+    """Buyurtmani bekor qilish — sarflangan cinepoint foydalanuvchiga qaytariladi (AJAX)."""
+    order = get_object_or_404(Order, pk=pk)
+
+    if order.status == Order.Status.CANCELLED:
+        return JsonResponse({"error": "Buyurtma allaqachon bekor qilingan."}, status=400)
+
+    order.status = Order.Status.CANCELLED
+    order.save(update_fields=["status", "updated_at"])
+
+    adjust_balance(
+        order.user,
+        order.price_paid,
+        CinepointTransaction.Reason.REFUND,
+        note=f"«{order.product_name}» buyurtmasi bekor qilingani uchun qaytarish",
+        related=order,
+        created_by=request.user,
+    )
+
+    return JsonResponse({"status": order.status, "message": "Buyurtma bekor qilindi va cinepoint qaytarildi."})
+
+
+@require_POST
+@dashboard_perm_required("dashboard.manage_balance")
+def adjust_user_balance(request, pk):
+    """Foydalanuvchi balansini qo'lda tuzatish (AJAX) — user_list.html dagi modal."""
+    target = get_object_or_404(User, pk=pk)
+
+    if request.content_type and "application/json" in request.content_type:
+        try:
+            payload = json.loads(request.body or "{}")
+        except json.JSONDecodeError:
+            payload = {}
+    else:
+        payload = request.POST
+
+    form = BalanceAdjustForm(payload)
+
+    if not form.is_valid():
+        first_error = next(iter(form.errors.values()))[0]
+        return JsonResponse({"error": first_error}, status=400)
+
+    amount = form.cleaned_data["amount"]
+    note = form.cleaned_data["note"] or "Admin tomonidan qo'lda tuzatildi"
+
+    try:
+        adjust_balance(
+            target, amount, CinepointTransaction.Reason.ADMIN_ADJUST,
+            note=note, created_by=request.user,
+        )
+    except InsufficientBalanceError:
+        return JsonResponse({"error": "Balans manfiyga tushishi mumkin emas."}, status=400)
+
+    target.profile.refresh_from_db(fields=["balance"])
+    sign = "+" if amount > 0 else ""
+    return JsonResponse(
+        {
+            "balance": target.profile.balance,
+            "message": f"{target.username} balansiga {sign}{amount} cinepoint qo'llanildi.",
+        }
+    )
 
 
 @require_POST

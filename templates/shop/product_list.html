@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Do'kon — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Cinepoint balansingiz bilan {{ SITE_NAME }} do'konidagi mahsulotlarni xarid qiling.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--s-6); padding-bottom: var(--s-8)">
+
+  <div class="page-head" style="text-align: left; padding-bottom: var(--s-5)">
+    <h1 class="page-head__title" style="margin-bottom: var(--s-2)">Do'kon</h1>
+    {% if user.is_authenticated %}
+      <p class="muted">
+        Balansingiz:
+        <strong style="color: var(--warning)">{{ cinepoint_balance }} cinepoint</strong>
+      </p>
+    {% else %}
+      <p class="muted">
+        Cinepoint sarflab mahsulot xarid qilish uchun
+        <a href="{% url 'users:login' %}?next={{ request.path }}" style="color: var(--red); font-weight: 600">tizimga kiring</a>.
+      </p>
+    {% endif %}
+  </div>
+
+  {% if products %}
+    <div class="grid">
+      {% for product in products %}
+        <article class="card">
+          <div class="card__media">
+            {% if product.image %}
+              <img class="card__poster" src="{{ product.image.url }}" alt="{{ product.name }}"
+                   loading="lazy" width="300" height="450">
+            {% else %}
+              <div class="card__fallback">{{ product.name }}</div>
+            {% endif %}
+
+            <div class="card__tags">
+              <span class="badge" style="color: var(--warning)">
+                {% include "partials/icon.html" with name="coin" %} {{ product.price }}
+              </span>
+              {% if not product.is_in_stock %}
+                <span class="badge badge--red">Tugagan</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="card__body">
+            <h3 class="card__title">{{ product.name }}</h3>
+            {% if product.description %}
+              <p class="card__meta">{{ product.description|truncatewords:16 }}</p>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+              {% if not product.is_in_stock %}
+                <button class="btn btn--ghost btn--block" type="button" disabled>Tugagan</button>
+              {% elif cinepoint_balance < product.price %}
+                <button class="btn btn--ghost btn--block" type="button" disabled>Balans yetarli emas</button>
+              {% else %}
+                <button class="btn btn--primary btn--block js-buy" type="button" data-product="{{ product.id }}">
+                  Sotib olish
+                </button>
+              {% endif %}
+            {% else %}
+              <a class="btn btn--ghost btn--block" href="{% url 'users:login' %}?next={{ request.path }}">
+                Kirish kerak
+              </a>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="coin" %}
+      <h2 class="empty__title">Hozircha mahsulot yo'q</h2>
+      <p>Tez orada yangi mahsulotlar qo'shiladi.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

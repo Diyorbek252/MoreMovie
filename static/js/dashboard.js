@@ -86,6 +86,101 @@
   });
 
   /* --------------------------------------------------------------------
+     Do'kon — buyurtma amallari (yetkazish / bekor qilish)
+     -------------------------------------------------------------------- */
+
+  document.addEventListener("click", async function (event) {
+    const button = event.target.closest(".js-order-action");
+    if (!button || button.disabled) return;
+
+    if (button.dataset.confirm && !window.confirm(button.dataset.confirm)) {
+      return;
+    }
+
+    const row = button.closest("[data-order]");
+    const buttons = row ? row.querySelectorAll("button") : [button];
+    buttons.forEach(function (b) { b.disabled = true; });
+
+    try {
+      const data = await MM.postJSON(button.dataset.url, {});
+      MM.toast(data.message, "success");
+
+      if (row) {
+        row.classList.add("is-gone");
+        setTimeout(function () { row.remove(); }, 260);
+      }
+    } catch (error) {
+      MM.toast(error.message, "error");
+      buttons.forEach(function (b) { b.disabled = false; });
+    }
+  });
+
+  /* --------------------------------------------------------------------
+     Foydalanuvchi balansini qo'lda tuzatish (modal forma)
+
+     Sahifada bitta umumiy modal bor (#balance-modal) — jadvaldagi har bir
+     "Balans" tugmasi bosilganda forma manzili va sarlavha shu tugmaning
+     data-atributlaridan dinamik to'ldiriladi (modalni ochish o'zi
+     main.js dagi umumiy data-modal-open delegatsiyasi orqali ishlaydi).
+     -------------------------------------------------------------------- */
+
+  document.addEventListener("click", function (event) {
+    const opener = event.target.closest(".js-balance-open");
+    if (!opener) return;
+
+    const form = document.getElementById("balance-adjust-form");
+    if (!form) return;
+
+    form.dataset.url = opener.dataset.url;
+    form.dataset.userId = opener.dataset.userId;
+
+    const label = document.getElementById("balance-modal-username");
+    if (label) label.textContent = opener.dataset.username;
+  });
+
+  const balanceForm = document.getElementById("balance-adjust-form");
+
+  if (balanceForm) {
+    balanceForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const submit = balanceForm.querySelector("button[type=submit]");
+      const amountInput = balanceForm.querySelector("[name=amount]");
+      const noteInput = balanceForm.querySelector("[name=note]");
+      const errorBox = balanceForm.querySelector(".js-balance-error");
+
+      submit.disabled = true;
+      if (errorBox) errorBox.hidden = true;
+
+      try {
+        const data = await MM.postJSON(balanceForm.dataset.url, {
+          amount: amountInput.value,
+          note: noteInput.value,
+        });
+
+        MM.toast(data.message, "success");
+
+        const row = document.querySelector('[data-balance-for="' + balanceForm.dataset.userId + '"]');
+        if (row) row.textContent = data.balance;
+
+        const modal = balanceForm.closest(".modal");
+        if (modal) modal.classList.remove("is-open");
+        amountInput.value = "";
+        noteInput.value = "";
+      } catch (error) {
+        if (errorBox) {
+          errorBox.textContent = error.message;
+          errorBox.hidden = false;
+        } else {
+          MM.toast(error.message, "error");
+        }
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+
+  /* --------------------------------------------------------------------
      Rasm yuklashda oldindan ko'rish
      -------------------------------------------------------------------- */
 

@@ -27,6 +27,7 @@ urlpatterns = [
     path("", include("movies.urls")),
     path("", include("reviews.urls")),
     path("", include("siteconfig.urls")),
+    path("", include("shop.urls")),
     path("dashboard/", include("dashboard.urls")),
 
     # --- SEO ---

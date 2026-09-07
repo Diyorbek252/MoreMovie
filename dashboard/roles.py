@@ -33,6 +33,9 @@ ROLES = {
         # Faqat ko'rish
         "reviews.view_review",
         "users.view_user",
+        # Do'kon — mahsulotlar to'liq CRUD
+        "shop.add_product", "shop.change_product", "shop.delete_product", "shop.view_product",
+        "shop.view_order",
     ],
     "Moderator": [
         "dashboard.access_dashboard",
@@ -40,6 +43,9 @@ ROLES = {
         "core.view_contactmessage", "core.change_contactmessage",
         "users.view_user", "users.change_user",
         "movies.view_movie",
+        # Buyurtmalarni yetkazish/bekor qilish va balansni qo'lda tuzatish
+        "shop.view_order", "shop.change_order",
+        "dashboard.manage_balance",
     ],
     "Editor": [
         "dashboard.access_dashboard",
@@ -60,5 +66,6 @@ ROLES = {
         "series.view_series", "series.view_season", "series.view_episode",
         "reviews.view_review",
         "users.view_user",
+        "shop.view_product", "shop.view_order",
     ],
 }

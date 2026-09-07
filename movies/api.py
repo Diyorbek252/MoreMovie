@@ -6,10 +6,14 @@ tomonidan avtomatik qo'llanadi (JS `X-CSRFToken` header yuboradi).
 
 import json
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
+
+from shop.models import CinepointTransaction
+from shop.services import has_earned, adjust_balance
 
 from .models import Favorite, Movie, ViewHistory, Watchlist
 
@@ -90,10 +94,22 @@ def save_progress(request):
 
     finished = bool(payload.get("finished", False))
 
-    ViewHistory.objects.update_or_create(
-        user=request.user,
-        movie=movie,
-        defaults={"progress_seconds": seconds, "is_finished": finished},
-    )
+    history, _ = ViewHistory.objects.get_or_create(user=request.user, movie=movie)
+    # Faqat hozir birinchi marta "tugatilgan" holatga o'tsa mukofot beramiz —
+    # aks holda filmni qayta-qayta tomosha qilib cinepoint yig'ib bo'lmaydi.
+    newly_finished = finished and not history.is_finished
+
+    history.progress_seconds = seconds
+    history.is_finished = finished
+    history.save(update_fields=["progress_seconds", "is_finished"])
+
+    if newly_finished and not has_earned(request.user, CinepointTransaction.Reason.MOVIE_WATCH, movie):
+        adjust_balance(
+            request.user,
+            settings.CINEPOINT_MOVIE_REWARD,
+            CinepointTransaction.Reason.MOVIE_WATCH,
+            note=f"«{movie.title}» filmini ko'rish uchun",
+            related=movie,
+        )
 
     return JsonResponse({"saved": True, "seconds": seconds})

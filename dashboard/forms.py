@@ -4,6 +4,7 @@ from django import forms
 
 from movies.models import Category, Genre, Movie
 from series.models import Episode, Season, Series
+from shop.models import Product
 from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
 
 
@@ -357,3 +358,42 @@ class NotificationForm(forms.ModelForm):
                 "«Tanlangan foydalanuvchilar» qamrovi uchun kamida bitta foydalanuvchi tanlang.",
             )
         return cleaned
+
+
+class ProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ["name", "description", "image", "price", "stock", "is_active", "order"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "input", "placeholder": "Mahsulot nomi"}),
+            "description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
+            "price": forms.NumberInput(attrs={"class": "input", "min": 1}),
+            "stock": forms.NumberInput(
+                attrs={"class": "input", "min": 0, "placeholder": "Bo'sh — cheksiz"}
+            ),
+            "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+        }
+
+
+class BalanceAdjustForm(forms.Form):
+    """Foydalanuvchi balansini qo'lda tuzatish — user_list.html dagi modal orqali."""
+
+    amount = forms.IntegerField(
+        label="Miqdor",
+        widget=forms.NumberInput(
+            attrs={"class": "input", "placeholder": "Masalan: 50 yoki -20"}
+        ),
+        help_text="Musbat son qo'shadi, manfiy son ayiradi.",
+    )
+    note = forms.CharField(
+        label="Izoh",
+        required=False,
+        max_length=255,
+        widget=forms.TextInput(attrs={"class": "input", "placeholder": "Ixtiyoriy izoh"}),
+    )
+
+    def clean_amount(self):
+        amount = self.cleaned_data["amount"]
+        if amount == 0:
+            raise forms.ValidationError("Miqdor 0 bo'lishi mumkin emas.")
+        return amount

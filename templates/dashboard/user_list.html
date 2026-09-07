@@ -37,6 +37,7 @@
               <th>Ro'yxatdan o'tgan</th><th>Sevimli</th><th>Sharh</th>
               <th>Rol</th><th>Bloklangan</th>
               {% if request.user.is_superuser %}<th>Admin</th>{% endif %}
+              {% if perms.dashboard.manage_balance %}<th>Cinepoint</th>{% endif %}
             </tr>
           </thead>
           <tbody>
@@ -92,6 +93,18 @@
                     {% endif %}
                   </td>
                 {% endif %}
+
+                {% if perms.dashboard.manage_balance %}
+                  <td>
+                    <span data-balance-for="{{ u.pk }}">{{ u.profile.balance }}</span>
+                    <button type="button" class="btn btn--sm btn--ghost js-balance-open"
+                            data-modal-open="balance-modal"
+                            data-url="{% url 'dashboard:api_adjust_balance' u.pk %}"
+                            data-user-id="{{ u.pk }}" data-username="{{ u.username }}">
+                      Balans
+                    </button>
+                  </td>
+                {% endif %}
               </tr>
             {% endfor %}
           </tbody>
@@ -103,5 +116,41 @@
       <p class="muted">Foydalanuvchi topilmadi.</p>
     {% endif %}
   </div>
+
+  {% if perms.dashboard.manage_balance %}
+    <div class="modal" id="balance-modal">
+      <div class="modal__panel">
+        <div class="modal__head">
+          <h2 class="dash-head__title" style="font-size: var(--fs-lg)">
+            <span id="balance-modal-username">—</span> balansini tuzatish
+          </h2>
+          <button type="button" class="modal__close" data-modal-close aria-label="Yopish">
+            {% include "partials/icon.html" with name="x" %}
+          </button>
+        </div>
+
+        <form id="balance-adjust-form">
+          <div class="alert alert--error js-balance-error" hidden></div>
+
+          <div class="field" style="margin-bottom: var(--s-4)">
+            <label class="field__label" for="balance-amount">Miqdor</label>
+            <input class="input" type="number" name="amount" id="balance-amount"
+                   placeholder="Masalan: 50 yoki -20">
+            <p class="field__help">Musbat son qo'shadi, manfiy son ayiradi.</p>
+          </div>
+
+          <div class="field" style="margin-bottom: var(--s-4)">
+            <label class="field__label" for="balance-note">Izoh</label>
+            <input class="input" type="text" name="note" id="balance-note" placeholder="Ixtiyoriy izoh">
+          </div>
+
+          <div class="modal__actions">
+            <button type="button" class="btn btn--ghost" data-modal-close>Bekor qilish</button>
+            <button type="submit" class="btn btn--primary">Qo'llash</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endif %}
 
 {% endblock %}

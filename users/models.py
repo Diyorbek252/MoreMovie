@@ -85,6 +85,12 @@ class Profile(models.Model):
     )
     bio = models.TextField("bio", max_length=500, blank=True)
     country = models.CharField("davlat", max_length=80, blank=True)
+    balance = models.PositiveIntegerField(
+        "cinepoint balansi",
+        default=0,
+        editable=False,
+        help_text="Faqat shop.services.adjust_balance() orqali o'zgartiriladi.",
+    )
     created_at = models.DateTimeField("yaratilgan", auto_now_add=True)
     updated_at = models.DateTimeField("yangilangan", auto_now=True)
 
