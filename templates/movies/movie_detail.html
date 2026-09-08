@@ -105,11 +105,7 @@
 
         {# --- Harakat tugmalari --- #}
         <div class="detail__actions">
-          {% if movie.can_watch %}
-            <a class="btn btn--primary btn--lg" href="{{ movie.get_watch_url }}">
-              {% include "partials/icon.html" with name="play" %} Watch Now
-            </a>
-          {% elif movie.trailer_url %}
+          {% if not movie.can_watch and movie.trailer_url %}
             <a class="btn btn--primary btn--lg" href="#player">
               {% include "partials/icon.html" with name="play" %} Treylerni ko'rish
             </a>
