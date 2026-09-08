@@ -202,6 +202,51 @@
   }
 
   /* --------------------------------------------------------------------
+     Sozlamalar — ijro tezligi
+     -------------------------------------------------------------------- */
+
+  const settingsToggle = root.querySelector(".js-settings-toggle");
+  const settingsMenu = root.querySelector(".js-settings-menu");
+
+  function closeSettingsMenu() {
+    if (!settingsMenu) return;
+    settingsMenu.classList.remove("is-open");
+    if (settingsToggle) settingsToggle.setAttribute("aria-expanded", "false");
+  }
+
+  if (settingsToggle && settingsMenu) {
+    settingsToggle.addEventListener("click", function (event) {
+      event.stopPropagation();
+      const isOpen = settingsMenu.classList.toggle("is-open");
+      settingsToggle.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    settingsMenu.querySelectorAll(".js-speed").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const rate = parseFloat(button.dataset.speed) || 1;
+        video.playbackRate = rate;
+
+        settingsMenu.querySelectorAll(".js-speed").forEach(function (item) {
+          item.classList.toggle("is-active", item === button);
+        });
+
+        closeSettingsMenu();
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!root.contains(event.target)) return;
+      if (!settingsToggle.contains(event.target) && !settingsMenu.contains(event.target)) {
+        closeSettingsMenu();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeSettingsMenu();
+    });
+  }
+
+  /* --------------------------------------------------------------------
      Boshqaruv panelini avtomatik yashirish
      -------------------------------------------------------------------- */
 

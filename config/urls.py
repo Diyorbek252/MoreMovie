@@ -13,6 +13,7 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 
 from core.sitemaps import GenreSitemap, MovieSitemap, StaticSitemap
+from core.views import serve_media
 
 sitemaps = {
     "movies": MovieSitemap,
@@ -53,5 +54,11 @@ handler403 = "core.views.error_403"
 handler500 = "core.views.error_500"
 
 if settings.DEBUG:
-    # Development'da media fayllarni Django o'zi xizmat qiladi.
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Development'da media fayllarni Django o'zi xizmat qiladi. Standart
+    # `django.views.static.serve()` o'rniga `serve_media` ishlatiladi —
+    # u HTTP Range so'rovlarini qo'llab-quvvatlaydi, aks holda video
+    # player'da oldinga o'tkazish (seek) ishlamay, oxirgi buferlangan
+    # joyga qaytib qolar edi (qarang: core/views.py::serve_media).
+    urlpatterns += static(
+        settings.MEDIA_URL, view=serve_media, document_root=settings.MEDIA_ROOT
+    )

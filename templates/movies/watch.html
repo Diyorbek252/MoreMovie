@@ -53,6 +53,23 @@
 
         <span class="badge badge--quality">{{ movie.get_quality_display }}</span>
 
+        {# Sozlamalar — hozircha faqat tezlik, kelajakda kengaytirilishi mumkin #}
+        <div class="player__settings">
+          <button class="player__btn js-settings-toggle" type="button"
+                  aria-label="Sozlamalar" aria-haspopup="true" aria-expanded="false">
+            {% include "partials/icon.html" with name="settings" %}
+          </button>
+          <div class="player__menu js-settings-menu" role="menu">
+            <div class="player__menu-title">Ijro tezligi</div>
+            <button class="player__menu-item js-speed" type="button" data-speed="0.5" role="menuitem">0.5x</button>
+            <button class="player__menu-item js-speed" type="button" data-speed="0.75" role="menuitem">0.75x</button>
+            <button class="player__menu-item js-speed is-active" type="button" data-speed="1" role="menuitem">Normal</button>
+            <button class="player__menu-item js-speed" type="button" data-speed="1.25" role="menuitem">1.25x</button>
+            <button class="player__menu-item js-speed" type="button" data-speed="1.5" role="menuitem">1.5x</button>
+            <button class="player__menu-item js-speed" type="button" data-speed="2" role="menuitem">2x</button>
+          </div>
+        </div>
+
         <button class="player__btn js-fullscreen" type="button" aria-label="To'liq ekran">
           {% include "partials/icon.html" with name="fullscreen" %}
         </button>

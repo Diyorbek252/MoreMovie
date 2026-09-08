@@ -1192,6 +1192,60 @@
   margin-left: 4px;
 }
 
+/* Sozlamalar (tezlik) popover'i */
+.player__settings {
+  position: relative;
+}
+
+.player__menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--s-2));
+  min-width: 140px;
+  padding: var(--s-2);
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  z-index: 2;
+}
+
+.player__menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.player__menu-title {
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.player__menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--s-2);
+  border-radius: var(--r-sm);
+  text-align: left;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.player__menu-item:hover { background: rgba(255, 255, 255, 0.08); }
+
+.player__menu-item.is-active {
+  color: var(--red);
+  font-weight: 600;
+}
+
 /* Video manbasi yo'q bo'lganda */
 .player__unavailable {
   display: grid;

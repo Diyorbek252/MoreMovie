@@ -1,12 +1,25 @@
 """Sayt darajasidagi sahifalar: home, about, contact, huquqiy sahifalar."""
 
+import mimetypes
+import re
+from pathlib import Path
+
 from django.contrib import messages
 from django.core.cache import cache
 from django.db.models import Count, Q
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseNotModified,
+    StreamingHttpResponse,
+)
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils._os import safe_join
+from django.utils.http import http_date
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView
+from django.views.static import was_modified_since
 
 from movies.models import Genre, Movie, ViewHistory
 from siteconfig.models import HomepageSection
@@ -209,3 +222,93 @@ def error_403(request, exception=None):
 
 def error_500(request):
     return render(request, "errors/500.html", status=500)
+
+
+# ---------------------------------------------------------------------------
+# Media fayllarni Range so'rovlari bilan xizmat qilish (faqat DEBUG)
+# ---------------------------------------------------------------------------
+
+MEDIA_CHUNK_SIZE = 8192
+_RANGE_RE = re.compile(r"bytes\s*=\s*(\d*)-(\d*)", re.IGNORECASE)
+
+
+def _iter_file_range(full_path, start, length, chunk_size=MEDIA_CHUNK_SIZE):
+    """Fayldan `start` baytidan boshlab `length` bayt o'qib, bo'laklab beradi."""
+    with open(full_path, "rb") as handle:
+        handle.seek(start)
+        remaining = length
+        while remaining > 0:
+            chunk = handle.read(min(chunk_size, remaining))
+            if not chunk:
+                break
+            remaining -= len(chunk)
+            yield chunk
+
+
+def serve_media(request, path, document_root=None):
+    """`django.views.static.serve()` ning HTTP Range'ni qo'llab-quvvatlaydigan o'rnini bosuvchisi.
+
+    Django'ning standart media serve() funksiyasi (dev rejimida
+    `MEDIA_URL` uchun ishlatiladi) `Range` so'rov sarlavhasini umuman
+    o'qimaydi va har doim faylni to'liq, boshidan qaytaradi. Video
+    elementi esa oldinga o'tkazish (seek) uchun aynan shu sarlavha
+    orqali kerakli bayt oralig'ini so'raydi — javob berilmagach,
+    brauzer so'ralgan joyga o'ta olmay, oxirgi buferlangan (ko'pincha
+    ancha orqadagi) joyga "qaytib qoladi". Bu funksiya xuddi shu
+    `static()` yo'l yordamchisi chaqiradigan view sifatida ulanadi
+    (`config/urls.py`), imzosi va xatti-harakati mos keladi.
+
+    Ishlab chiqarishda (`DEBUG=False`) media haqiqiy veb-server yoki
+    CDN orqali xizmat qilinishi kerak — bu yechim faqat lokal
+    ishlanmada video ko'rish/oldinga o'tkazishni to'g'ri ishlashi
+    uchun.
+    """
+    full_path = Path(safe_join(document_root, path))
+
+    if not full_path.is_file():
+        raise Http404("Fayl topilmadi.")
+
+    stat_result = full_path.stat()
+    file_size = stat_result.st_size
+
+    if not was_modified_since(
+        request.META.get("HTTP_IF_MODIFIED_SINCE"), stat_result.st_mtime
+    ):
+        return HttpResponseNotModified()
+
+    content_type, encoding = mimetypes.guess_type(str(full_path))
+    content_type = content_type or "application/octet-stream"
+
+    range_match = _RANGE_RE.match(request.META.get("HTTP_RANGE", ""))
+
+    if range_match:
+        start_str, end_str = range_match.groups()
+        start = int(start_str) if start_str else 0
+        end = int(end_str) if end_str else file_size - 1
+        end = min(end, file_size - 1)
+
+        if start >= file_size or start > end:
+            response = HttpResponse(status=416, content_type=content_type)
+            response.headers["Content-Range"] = f"bytes */{file_size}"
+            return response
+
+        length = end - start + 1
+        response = StreamingHttpResponse(
+            _iter_file_range(full_path, start, length),
+            status=206,
+            content_type=content_type,
+        )
+        response.headers["Content-Range"] = f"bytes {start}-{end}/{file_size}"
+        response.headers["Content-Length"] = str(length)
+    else:
+        response = StreamingHttpResponse(
+            _iter_file_range(full_path, 0, file_size),
+            content_type=content_type,
+        )
+        response.headers["Content-Length"] = str(file_size)
+
+    response.headers["Accept-Ranges"] = "bytes"
+    response.headers["Last-Modified"] = http_date(stat_result.st_mtime)
+    if encoding:
+        response.headers["Content-Encoding"] = encoding
+    return response
