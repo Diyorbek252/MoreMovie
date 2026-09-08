@@ -18,7 +18,7 @@ class MovieForm(forms.ModelForm):
         model = Movie
         fields = [
             "title", "original_title", "slug",
-            "description", "short_description", "meta_description",
+            "short_description", "meta_description",
             "poster", "backdrop",
             "trailer_url", "video_url", "video_file", "download_url",
             "release_year", "release_date", "duration_minutes", "quality",
@@ -35,8 +35,7 @@ class MovieForm(forms.ModelForm):
             "slug": forms.TextInput(
                 attrs={"class": "input", "placeholder": "bo'sh qoldirilsa avtomatik"}
             ),
-            "description": forms.Textarea(attrs={"class": "textarea", "rows": 6}),
-            "short_description": forms.Textarea(attrs={"class": "textarea", "rows": 2}),
+            "short_description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
             "meta_description": forms.TextInput(
                 attrs={"class": "input", "maxlength": 170, "placeholder": "SEO tavsifi"}
             ),
@@ -72,6 +71,13 @@ class MovieForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["slug"].required = False
         self.fields["genres"].required = True
+        # Forma endi to'liq "tavsif"ni yig'maydi — shu bo'sh qolmasligi
+        # uchun "qisqa tavsif" majburiy (avval shu rolni "tavsif" o'ynardi).
+        self.fields["short_description"].required = True
+        # Model darajasidagi yordam matni ("bo'sh bo'lsa tavsifdan olinadi")
+        # bu yerda endi teskari — save() qisqa tavsifdan to'liq tavsifni
+        # to'ldiradi, aksincha emas (Django admin'da esa asl matn to'g'ri).
+        self.fields["short_description"].help_text = "Kartalar va hero bo'limida ko'rsatiladi."
 
     def clean(self):
         """Huquqiy izchillikni tekshiramiz.
@@ -79,11 +85,12 @@ class MovieForm(forms.ModelForm):
         Yuklab olishga ruxsat faqat public domain yoki litsenziyalangan
         kontent uchun berilishi mumkin — bu qoida forma darajasida ham
         ushlab turiladi, model darajasidagi `can_download` bilan bir qatorda.
+        Havolaning o'zi — hatto ruxsat yoqilganda ham — majburiy emas:
+        admin avval ruxsatni yoqib, havolani keyinroq qo'shishi mumkin.
         """
         cleaned = super().clean()
         license_type = cleaned.get("license_type")
         download_allowed = cleaned.get("is_download_allowed")
-        download_url = cleaned.get("download_url")
 
         legal_types = {Movie.LicenseType.PUBLIC_DOMAIN, Movie.LicenseType.LICENSED}
 
@@ -94,9 +101,6 @@ class MovieForm(forms.ModelForm):
                 "kontent uchun ruxsat berish mumkin.",
             )
 
-        if download_allowed and not download_url:
-            self.add_error("download_url", "Yuklab olish uchun havola kiriting.")
-
         if license_type == Movie.LicenseType.TRAILER_ONLY and cleaned.get("video_url"):
             self.add_error(
                 "video_url",
@@ -104,6 +108,20 @@ class MovieForm(forms.ModelForm):
             )
 
         return cleaned
+
+    def save(self, commit=True):
+        """`description` endi formada yo'q — bo'sh qolib ketmasligi uchun
+        (film detali va watch sahifasi shu maydonni ko'rsatadi) "qisqa
+        tavsif"dan to'ldiramiz, faqat u hali bo'sh bo'lsa (masalan eski
+        yozuvni tahrirlashda mavjud to'liq tavsif saqlanib qoladi).
+        """
+        instance = super().save(commit=False)
+        if not instance.description:
+            instance.description = instance.short_description
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 class GenreForm(forms.ModelForm):

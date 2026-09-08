@@ -310,7 +310,7 @@ class Movie(TimeStampedModel):
         help_text="Serverga yuklangan qonuniy video. video_url dan ustun turadi.",
     )
     download_url = models.URLField(
-        "yuklab olish havolasi", blank=True,
+        "yuklab olish havolasi", blank=True, null=True,
         help_text="Faqat huquq egasi ruxsat bergan fayl havolasi.",
     )
 

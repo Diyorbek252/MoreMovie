@@ -46,7 +46,7 @@
 
       <div class="form-grid form-grid--full" style="margin-top: var(--s-4)">
         {% for field in form %}
-          {% if field.name == "description" or field.name == "short_description" %}
+          {% if field.name == "short_description" %}
             <div class="field">
               <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
               {{ field }}
