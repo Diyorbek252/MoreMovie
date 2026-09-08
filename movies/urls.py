@@ -12,7 +12,9 @@ urlpatterns = [
     path("genre/<slug:slug>/", views.GenreDetailView.as_view(), name="genre_detail"),
     path("search/", views.SearchView.as_view(), name="search"),
     path("movie/<slug:slug>/", views.MovieDetailView.as_view(), name="movie_detail"),
-    path("watch/<slug:slug>/", views.WatchView.as_view(), name="watch"),
+    # Pleer endi film detali sahifasining o'zida (#player) — eski
+    # bookmarklar uchun yo'naltirish saqlanadi.
+    path("watch/<slug:slug>/", views.WatchRedirectView.as_view(), name="watch"),
 
     # --- AJAX endpointlar ---
     path("api/search/", views.search_suggest, name="api_search"),

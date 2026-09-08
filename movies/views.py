@@ -1,12 +1,11 @@
-"""Film katalogi view'lari: ro'yxat, filtr, detail, watch, janr, qidiruv."""
+"""Film katalogi view'lari: ro'yxat, filtr, detail (pleer bilan), janr, qidiruv."""
 
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
 from django.db.models import Count, F, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.generic import DetailView, ListView, TemplateView
+from django.urls import reverse
+from django.views.generic import DetailView, ListView, RedirectView, TemplateView
 
 from reviews.models import Rating, Review
 
@@ -123,7 +122,16 @@ class MovieListView(QueryStringMixin, ListView):
 
 
 class MovieDetailView(DetailView):
-    """Film sahifasi — ma'lumot, treyler, kadrlar, sharhlar, o'xshash filmlar."""
+    """Film sahifasi — ma'lumot, pleer, kadrlar, sharhlar, o'xshash filmlar.
+
+    Pleer avval alohida `/watch/<slug>/` sahifasida edi — endi shu
+    sahifaning o'zida (`#player` bo'limida) ko'rsatiladi. Video manbasi
+    faqat autentifikatsiya qilingan va `can_watch` bo'lgan holatda
+    shablonga uzatiladi (qarang: movie_detail.html), shu bilan avvalgi
+    `LoginRequiredMixin` orqali ta'minlangan cheklov saqlanib qoladi —
+    farqi shundaki, endi butun sahifa emas, faqat pleerning o'zi
+    tizimga kirishni talab qiladi.
+    """
 
     model = Movie
     template_name = "movies/movie_detail.html"
@@ -139,6 +147,7 @@ class MovieDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         movie = self.object
+        user = self.request.user
 
         # Tasdiqlangan sharhlar.
         context["reviews"] = (
@@ -159,12 +168,22 @@ class MovieDetailView(DetailView):
             .distinct()[:12]
         )
 
-        # Joriy foydalanuvchining bahosi va sharhi.
-        user = self.request.user
+        context["resume_at"] = 0
+
         if user.is_authenticated:
             rating = Rating.objects.filter(user=user, movie=movie).first()
             context["user_rating"] = rating.score if rating else 0
             context["user_review"] = Review.objects.filter(user=user, movie=movie).first()
+
+            if movie.can_watch:
+                # Ko'rishlar hisoblagichi — F() bilan atomik oshiriladi
+                # (race condition yo'q). Faqat haqiqatan pleer
+                # ko'rsatiladigan holatda oshiriladi.
+                Movie.objects.filter(pk=movie.pk).update(views_count=F("views_count") + 1)
+
+                # Oldingi to'xtagan joyni topamiz.
+                history = ViewHistory.objects.filter(user=user, movie=movie).first()
+                context["resume_at"] = history.progress_seconds if history else 0
         else:
             context["user_rating"] = 0
 
@@ -174,57 +193,18 @@ class MovieDetailView(DetailView):
         return context
 
 
-class WatchView(LoginRequiredMixin, DetailView):
-    """Video player sahifasi.
+class WatchRedirectView(RedirectView):
+    """Eski `/watch/<slug>/` havolalarini yangi joyga yo'naltiradi.
 
-    Kirish uchun tizimga kirgan bo'lish shart. Bundan tashqari film
-    `can_watch` shartini qanoatlantirishi kerak — bu litsenziya tekshiruvi.
+    Pleer endi mustaqil sahifa emas — film detali bilan bitta sahifada
+    (`#player` bo'limi). Signat/bookmark qilingan eski havolalar
+    buzilmasligi uchun doimiy (301) yo'naltirish saqlanadi.
     """
 
-    model = Movie
-    template_name = "movies/watch.html"
-    context_object_name = "movie"
+    permanent = True
 
-    def get_queryset(self):
-        return (
-            Movie.objects.published()
-            .select_related("country", "language", "director")
-            .prefetch_related("genres")
-        )
-
-    def get_object(self, queryset=None):
-        movie = super().get_object(queryset)
-
-        # Huquqiy tekshiruv — litsenziya ruxsat bermasa 403.
-        if not movie.can_watch:
-            raise PermissionDenied(
-                "Bu film uchun to'liq versiyani ko'rish imkoni yo'q. "
-                "Faqat rasmiy treyler mavjud."
-            )
-
-        return movie
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        movie = self.object
-
-        # Ko'rishlar hisoblagichi — F() bilan atomik oshiriladi (race condition yo'q).
-        Movie.objects.filter(pk=movie.pk).update(views_count=F("views_count") + 1)
-
-        # Oldingi to'xtagan joyni topamiz.
-        history = ViewHistory.objects.filter(user=self.request.user, movie=movie).first()
-        context["resume_at"] = history.progress_seconds if history else 0
-
-        genre_ids = list(movie.genres.values_list("id", flat=True))
-        context["similar_movies"] = (
-            Movie.objects.published()
-            .with_relations()
-            .filter(genres__id__in=genre_ids)
-            .exclude(pk=movie.pk)
-            .distinct()[:12]
-        )
-
-        return context
+    def get_redirect_url(self, *args, **kwargs):
+        return reverse("movies:movie_detail", kwargs={"slug": kwargs["slug"]}) + "#player"
 
 
 class GenreListView(TemplateView):

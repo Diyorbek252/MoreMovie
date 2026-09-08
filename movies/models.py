@@ -438,7 +438,9 @@ class Movie(TimeStampedModel):
         return reverse("movies:movie_detail", kwargs={"slug": self.slug})
 
     def get_watch_url(self):
-        return reverse("movies:watch", kwargs={"slug": self.slug})
+        """Pleer endi mustaqil sahifa emas — film detali sahifasining
+        o'zida (`#player` bo'limida) joylashgan."""
+        return f"{self.get_absolute_url()}#player"
 
     # --- Huquqiy tekshiruvlar ---
 
