@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ series.title }} ({{ series.release_year }}) — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ series.short_description }}{% endblock %}
+
+{% block og_type %}video.tv_show{% endblock %}
+{% block og_title %}{{ series.title }} ({{ series.release_year }}){% endblock %}
+{% block og_description %}{{ series.short_description }}{% endblock %}
+{% block og_image %}{% if series.backdrop %}{{ request.scheme }}://{{ request.get_host }}{{ series.backdrop.url }}{% elif series.poster %}{{ request.scheme }}://{{ request.get_host }}{{ series.poster.url }}{% endif %}{% endblock %}
+
+{% block content %}
+
+{# ==================== ASOSIY QISM ==================== #}
+<section class="detail">
+  {% if series.backdrop %}
+    <div class="detail__bg"><img src="{{ series.backdrop.url }}" alt="" width="1600" height="900"></div>
+  {% endif %}
+  <div class="detail__scrim"></div>
+
+  <div class="container">
+    <div class="detail__grid">
+
+      {# --- Poster --- #}
+      <div class="detail__poster">
+        {% if series.poster %}
+          <img src="{{ series.poster.url }}" alt="{{ series.title }} posteri" width="300" height="450">
+        {% else %}
+          <div class="card__fallback">{{ series.title }}</div>
+        {% endif %}
+      </div>
+
+      {# --- Ma'lumot --- #}
+      <div>
+        <h1 class="detail__title">{{ series.title }}</h1>
+        {% if series.original_title %}
+          <p class="detail__original">{{ series.original_title }}</p>
+        {% endif %}
+
+        <div class="detail__meta">
+          {% if series.imdb_rating %}
+            <span class="badge badge--rating">
+              {% include "partials/icon.html" with name="star" %} {{ series.imdb_rating }}
+            </span>
+          {% endif %}
+
+          <span class="badge">{{ series.get_status_display }}</span>
+          <span class="badge">
+            {{ series.release_year }}{% if series.end_year %} — {{ series.end_year }}{% endif %}
+          </span>
+
+          {% for genre in series.genres.all %}
+            <a class="chip" href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
+          {% endfor %}
+        </div>
+
+        <p class="detail__desc">{{ series.description|linebreaksbr }}</p>
+
+        {# --- Ma'lumotlar jadvali --- #}
+        <div class="facts">
+          {% if series.director %}
+            <div class="fact">
+              <div class="fact__label">Rejissyor</div>
+              <div class="fact__value">{{ series.director.full_name }}</div>
+            </div>
+          {% endif %}
+          {% if series.country %}
+            <div class="fact">
+              <div class="fact__label">Davlat</div>
+              <div class="fact__value">{{ series.country.name }}</div>
+            </div>
+          {% endif %}
+          {% if series.language %}
+            <div class="fact">
+              <div class="fact__label">Til</div>
+              <div class="fact__value">{{ series.language.name }}</div>
+            </div>
+          {% endif %}
+          <div class="fact">
+            <div class="fact__label">Fasllar</div>
+            <div class="fact__value">{{ series.season_count }}</div>
+          </div>
+          <div class="fact">
+            <div class="fact__label">Epizodlar</div>
+            <div class="fact__value">{{ series.episode_count }}</div>
+          </div>
+          <div class="fact">
+            <div class="fact__label">Ko'rishlar</div>
+            <div class="fact__value">{{ series.views_count }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% comment %}
+  ==================== PLEER ====================
+  Movie detali bilan bir xil naqsh: ma'lumotdan pastroqda, #player
+  bo'limida. Farqi — joriy epizod ?episode=<id> query parametri orqali
+  tanlanadi va data-movie yo'q (progress saqlash faqat Movie uchun).
+{% endcomment %}
+<div class="container">
+  <section class="section" id="player">
+    {% if current_episode and current_episode.can_watch %}
+      {% if user.is_authenticated %}
+        <div class="player">
+          <video preload="metadata"
+                 {% if current_episode.thumbnail %}poster="{{ current_episode.thumbnail.url }}"
+                 {% elif series.backdrop %}poster="{{ series.backdrop.url }}"{% endif %}
+                 playsinline>
+            <source src="{{ current_episode.video_source }}">
+            Brauzeringiz video ko'rsatishni qo'llab-quvvatlamaydi.
+          </video>
+
+          <div class="player__center">
+            <button class="player__center-btn js-center-play" type="button" aria-label="Ijro etish">
+              {% include "partials/icon.html" with name="play" %}
+            </button>
+          </div>
+
+          <div class="player__controls">
+            <div class="player__progress js-progress" role="slider" tabindex="0"
+                 aria-label="Video vaqti" aria-valuemin="0" aria-valuemax="100">
+              <div class="player__buffered js-buffered"></div>
+              <div class="player__played js-played"></div>
+              <div class="player__thumb js-thumb"></div>
+            </div>
+
+            <div class="player__row">
+              <button class="player__btn player__btn--play js-play" type="button" aria-label="Ijro / pauza">
+                <span data-icon="play">{% include "partials/icon.html" with name="play" %}</span>
+                <span data-icon="pause" hidden>{% include "partials/icon.html" with name="pause" %}</span>
+              </button>
+
+              <div class="player__volume">
+                <button class="player__btn js-mute" type="button" aria-label="Ovozni o'chirish">
+                  <span data-icon="volume">{% include "partials/icon.html" with name="volume" %}</span>
+                  <span data-icon="mute" hidden>{% include "partials/icon.html" with name="mute" %}</span>
+                </button>
+                <input class="js-volume" type="range" min="0" max="1" step="0.05" value="1"
+                       aria-label="Ovoz balandligi">
+              </div>
+
+              <span class="player__time js-time">0:00 / 0:00</span>
+
+              <span class="player__spacer"></span>
+
+              <span class="badge badge--quality">{{ current_episode.get_quality_display }}</span>
+
+              <div class="player__settings">
+                <button class="player__btn js-settings-toggle" type="button"
+                        aria-label="Sozlamalar" aria-haspopup="true" aria-expanded="false">
+                  {% include "partials/icon.html" with name="settings" %}
+                </button>
+                <div class="player__menu js-settings-menu" role="menu">
+                  <div class="player__menu-title">Ijro tezligi</div>
+                  <button class="player__menu-item js-speed" type="button" data-speed="0.5" role="menuitem">0.5x</button>
+                  <button class="player__menu-item js-speed" type="button" data-speed="0.75" role="menuitem">0.75x</button>
+                  <button class="player__menu-item js-speed is-active" type="button" data-speed="1" role="menuitem">Normal</button>
+                  <button class="player__menu-item js-speed" type="button" data-speed="1.25" role="menuitem">1.25x</button>
+                  <button class="player__menu-item js-speed" type="button" data-speed="1.5" role="menuitem">1.5x</button>
+                  <button class="player__menu-item js-speed" type="button" data-speed="2" role="menuitem">2x</button>
+                </div>
+              </div>
+
+              <button class="player__btn js-fullscreen" type="button" aria-label="To'liq ekran">
+                {% include "partials/icon.html" with name="fullscreen" %}
+              </button>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="player player--locked">
+          {% if series.backdrop %}
+            <img src="{{ series.backdrop.url }}" alt="" width="1600" height="900">
+          {% endif %}
+          <div class="player__lock">
+            {% include "partials/icon.html" with name="shield" %}
+            <p>Tomosha qilish uchun tizimga kiring.</p>
+            <a class="btn btn--primary" href="{% url 'users:login' %}?next={{ request.path }}">Kirish</a>
+          </div>
+        </div>
+      {% endif %}
+    {% elif series.trailer_url %}
+      <div class="video-frame">
+        <iframe src="{{ series.trailer_url }}" title="{{ series.title }} treyleri"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen loading="lazy"></iframe>
+      </div>
+    {% else %}
+      <div class="player__unavailable">
+        {% include "partials/icon.html" with name="alert" %}
+        <p>Hozircha tomosha qilish uchun epizod mavjud emas.</p>
+      </div>
+    {% endif %}
+
+    {% if current_episode %}
+      <h2 style="margin-top: var(--s-4); font-size: var(--fs-lg)">
+        {{ current_episode.season.display_title }} — {{ current_episode.episode_number }}-epizod:
+        {{ current_episode.title }}
+      </h2>
+      {% if current_episode.description %}
+        <p class="muted" style="margin-top: var(--s-2)">{{ current_episode.description }}</p>
+      {% endif %}
+    {% endif %}
+  </section>
+</div>
+
+<div class="container">
+
+  {# ==================== FASLLAR / EPIZODLAR ==================== #}
+  {% if seasons %}
+    <section class="section">
+      <div class="section__head"><h2 class="section__title">Fasllar va epizodlar</h2></div>
+
+      <div class="stack" style="gap: var(--s-5)">
+        {% for season in seasons %}
+          <div>
+            <h3 style="margin-bottom: var(--s-3); font-size: var(--fs-base)">{{ season.display_title }}</h3>
+            <div class="stack" style="gap: 0">
+              {% for episode in season.episodes.all %}
+                {% if episode.is_published %}
+                  <div class="row" style="justify-content: space-between; align-items: center;
+                       padding: var(--s-3) 0; border-bottom: 1px solid var(--border)">
+                    <div class="row" style="gap: var(--s-3); align-items: center">
+                      <span class="muted" style="width: 28px">{{ episode.episode_number }}</span>
+                      {% if episode.can_watch %}
+                        <a href="?episode={{ episode.pk }}#player"
+                           style="{% if current_episode.pk == episode.pk %}color: var(--red); font-weight: 600{% endif %}">
+                          {{ episode.title }}
+                        </a>
+                      {% else %}
+                        <span class="dim">{{ episode.title }}</span>
+                      {% endif %}
+                    </div>
+                    <div class="row" style="gap: var(--s-3); align-items: center">
+                      {% if current_episode.pk == episode.pk %}
+                        <span class="badge" style="color: var(--red)">Ijro etilmoqda</span>
+                      {% elif not episode.has_video_source %}
+                        <span class="dim" style="font-size: var(--fs-xs)">Video yo'q</span>
+                      {% endif %}
+                      <span class="muted" style="font-size: var(--fs-xs)">{{ episode.duration_display }}</span>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {# ==================== AKTYORLAR ==================== #}
+  {% if series.cast_members.all %}
+    <section class="section">
+      <div class="section__head"><h2 class="section__title">Aktyorlar</h2></div>
+      <div class="cast-rail">
+        {% for member in series.cast_members.all %}
+          <div class="cast-card">
+            {% if member.person.photo %}
+              <img class="cast-card__photo" src="{{ member.person.photo.url }}"
+                   alt="{{ member.person.full_name }}" loading="lazy" width="132" height="132">
+            {% else %}
+              <div class="cast-card__photo cast-card__photo--initials">{{ member.person.initials }}</div>
+            {% endif %}
+            <div class="cast-card__name">{{ member.person.full_name }}</div>
+            {% if member.character_name %}
+              <div class="cast-card__role">{{ member.character_name }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
+
+{# ==================== O'XSHASH SERIALLAR ==================== #}
+{% include "partials/series_row.html" with title="Similar Series" series_list=similar_series %}
+
+{% endblock %}
+
+{% block extra_js %}
+  {% if current_episode and current_episode.can_watch and user.is_authenticated %}
+    <script src="{% static 'js/player.js' %}" defer></script>
+  {% endif %}
+{% endblock %}

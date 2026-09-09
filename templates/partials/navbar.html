@@ -27,10 +27,10 @@
            href="{% url 'core:home' %}">Home</a>
         <a class="nav__link {% if request.resolver_match.url_name == 'movie_list' %}is-active{% endif %}"
            href="{% url 'movies:movie_list' %}">Movies</a>
-        <a class="nav__link {% if request.resolver_match.url_name == 'genre_list' or request.resolver_match.url_name == 'genre_detail' %}is-active{% endif %}"
-           href="{% url 'movies:genre_list' %}">Genres</a>
-        <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
-        <a class="nav__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
+        <a class="nav__link {% if request.resolver_match.url_name == 'category_detail' and request.resolver_match.kwargs.slug == 'multfilmlar' %}is-active{% endif %}"
+           href="{% url 'movies:category_detail' slug='multfilmlar' %}">Multfilmlar</a>
+        <a class="nav__link {% if request.resolver_match.app_name == 'series' %}is-active{% endif %}"
+           href="{% url 'series:series_list' %}">Seriallar</a>
         <a class="nav__link {% if request.resolver_match.url_name == 'product_list' %}is-active{% endif %}"
            href="{% url 'shop:product_list' %}">Do'kon</a>
       </nav>
@@ -168,9 +168,8 @@
     {% if request.resolver_match.app_name != "dashboard" %}
       <a class="drawer__link" href="{% url 'core:home' %}">Home</a>
       <a class="drawer__link" href="{% url 'movies:movie_list' %}">Movies</a>
-      <a class="drawer__link" href="{% url 'movies:genre_list' %}">Genres</a>
-      <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=popular">Popular</a>
-      <a class="drawer__link" href="{% url 'movies:movie_list' %}?sort=latest">New Movies</a>
+      <a class="drawer__link" href="{% url 'movies:category_detail' slug='multfilmlar' %}">Multfilmlar</a>
+      <a class="drawer__link" href="{% url 'series:series_list' %}">Seriallar</a>
       <a class="drawer__link" href="{% url 'shop:product_list' %}">Do'kon</a>
     {% endif %}
 

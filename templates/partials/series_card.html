@@ -1,0 +1,42 @@
+{% comment %}
+Serial kartasi — Movie uchun partials/movie_card.html bilan bir xil
+naqsh. Watchlist/Favorite tugmalari yo'q — bu modellar hozircha faqat
+Movie'ga bog'langan.
+
+Ishlatish:
+    {% include "partials/series_card.html" with series=series %}
+{% endcomment %}
+
+<article class="card">
+  <div class="card__media">
+    <a href="{{ series.get_absolute_url }}" aria-label="{{ series.title }} sahifasi">
+      {% if series.poster %}
+        <img class="card__poster" src="{{ series.poster.url }}" alt="{{ series.title }} posteri"
+             loading="lazy" width="300" height="450">
+      {% else %}
+        <div class="card__fallback">{{ series.title }}</div>
+      {% endif %}
+    </a>
+
+    <div class="card__tags">
+      {% if series.imdb_rating %}
+        <span class="badge badge--rating">
+          {% include "partials/icon.html" with name="star" %}
+          {{ series.imdb_rating }}
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card__body">
+    <h3 class="card__title">
+      <a href="{{ series.get_absolute_url }}">{{ series.title }}</a>
+    </h3>
+    <div class="card__meta">
+      <span>{{ series.release_year }}</span>
+      {% with genre=series.genres.all|first %}
+        {% if genre %}<span>{{ genre.name }}</span>{% endif %}
+      {% endwith %}
+    </div>
+  </div>
+</article>

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Seriallar — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} katalogidagi barcha seriallar. Janr va saralash bo'yicha filtrlang.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--s-6)">
+
+  <div class="page-head" style="text-align: left; padding-bottom: var(--s-5)">
+    <h1 class="page-head__title" style="margin-bottom: var(--s-2)">Seriallar</h1>
+    <p class="muted">Katalogdagi barcha seriallar — filtrlang va o'zingizga mosini toping.</p>
+  </div>
+
+  {# ==================== FILTR PANELI ==================== #}
+  <form class="filters" method="get" action="{% url 'series:series_list' %}">
+
+    <div class="field">
+      <label class="field__label" for="f-q">Qidiruv</label>
+      <input class="input" type="search" name="q" id="f-q"
+             placeholder="Serial qidirish..." value="{{ current.q }}">
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="f-genre">Janr</label>
+      <select class="select" name="genre" id="f-genre">
+        <option value="">Barcha janrlar</option>
+        {% for genre in genres %}
+          <option value="{{ genre.slug }}" {% if current.genre == genre.slug %}selected{% endif %}>
+            {{ genre.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="f-sort">Saralash</label>
+      <select class="select" name="sort" id="f-sort">
+        {% for key, option in sort_options.items %}
+          <option value="{{ key }}" {% if current.sort == key %}selected{% endif %}>
+            {{ option.1 }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filters__actions">
+      <button class="btn btn--primary" type="submit">Qo'llash</button>
+      {% if has_filters %}
+        <a class="btn btn--ghost" href="{% url 'series:series_list' %}">Tozalash</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {# ==================== NATIJALAR ==================== #}
+  <div class="results-bar">
+    <span>
+      <strong>{{ page_obj.paginator.count }}</strong> ta serial topildi
+      {% if current.q %} — «{{ current.q }}» so'rovi bo'yicha{% endif %}
+    </span>
+    {% if page_obj.paginator.num_pages > 1 %}
+      <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }} sahifa</span>
+    {% endif %}
+  </div>
+
+  {% if series_list %}
+    <div class="grid">
+      {% for series in series_list %}
+        {% include "partials/series_card.html" with series=series %}
+      {% endfor %}
+    </div>
+
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="film" %}
+      <h2 class="empty__title">Hech narsa topilmadi</h2>
+      <p>Filtrlarni o'zgartirib yoki boshqa so'z bilan qidirib ko'ring.</p>
+      <a class="btn btn--primary" href="{% url 'series:series_list' %}">Filtrlarni tozalash</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% comment %}
+Sarlavhali gorizontal karusel — movie_row.html bilan bir xil naqsh,
+faqat series_card.html ishlatadi.
+
+Ishlatish:
+    {% include "partials/series_row.html" with title="Similar Series" series_list=similar_series %}
+{% endcomment %}
+
+{% if series_list %}
+<section class="section reveal">
+  <div class="container">
+
+    <div class="section__head">
+      <div>
+        <h2 class="section__title">{{ title }}</h2>
+        {% if subtitle %}<p class="muted" style="margin-top: var(--s-1)">{{ subtitle }}</p>{% endif %}
+      </div>
+      {% if link %}
+        <a class="section__link" href="{{ link }}">Barchasini ko'rish →</a>
+      {% endif %}
+    </div>
+
+    <div class="rail-wrap">
+      <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
+        {% include "partials/icon.html" with name="chevron-left" %}
+      </button>
+
+      <div class="rail {% if compact %}rail--sm{% endif %}">
+        {% for series in series_list %}
+          {% include "partials/series_card.html" with series=series %}
+        {% endfor %}
+      </div>
+
+      <button class="rail-btn rail-btn--next" type="button" aria-label="Oldinga" data-rail="next">
+        {% include "partials/icon.html" with name="chevron-right" %}
+      </button>
+    </div>
+  </div>
+</section>
+{% endif %}

@@ -9,7 +9,7 @@ from django.views.generic import DetailView, ListView, RedirectView, TemplateVie
 
 from reviews.models import Rating, Review
 
-from .models import Genre, Movie, ViewHistory
+from .models import Category, Genre, Movie, ViewHistory
 
 
 class QueryStringMixin:
@@ -243,6 +243,28 @@ class GenreDetailView(QueryStringMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["genre"] = self.genre
+        return context
+
+
+class CategoryDetailView(QueryStringMixin, ListView):
+    """Bitta kategoriyadagi filmlar — GenreDetailView bilan bir xil naqsh."""
+
+    template_name = "movies/category_detail.html"
+    context_object_name = "movies"
+    paginate_by = settings.MOVIES_PER_PAGE
+
+    def get_queryset(self):
+        self.category = get_object_or_404(Category, slug=self.kwargs["slug"], is_active=True)
+        return (
+            Movie.objects.published()
+            .with_relations()
+            .filter(categories=self.category)
+            .order_by("-created_at")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["category"] = self.category
         return context
 
 

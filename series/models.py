@@ -1,13 +1,14 @@
 """Serial / fasl / epizod modellari.
 
-MUHIM: bu modellar FAQAT boshqaruv panelida boshqariladi. Public sahifasi
-yo'q — shu sababdan `Series` da `get_absolute_url()` ATAYLAB yo'q va bu
-ilova `config/urls.py` ga hech qachon ulanmaydi (`series/urls.py` ham
-yo'q). Kelajakda public sahifa kerak bo'lsa, shu ikkalasini qo'shish
-kifoya — boshqa hech narsa o'zgarmaydi.
+Boshqaruv panelidan tashqari endi public sahifasi ham bor (`series/urls.py`,
+`series/views.py`) — Movie bilan bir xil naqshda: ro'yxat, detail (epizod
+pleeri bilan). Litsenziya (`LicenseType`) tushunchasi Series/Episode'da
+yo'q — barcha chop etilgan (`is_published`) va video manbasi bor epizodlar
+tizimga kirgan foydalanuvchiga ko'rinadi (qarang: `Episode.can_watch`).
 """
 
 from django.db import models
+from django.urls import reverse
 
 from movies.models import (
     AgeRating,
@@ -32,6 +33,15 @@ class SeriesQuerySet(models.QuerySet):
         return self.select_related("country", "language", "director").prefetch_related(
             "genres"
         )
+
+    def newest(self):
+        return self.published().with_relations().order_by("-created_at")
+
+    def trending(self):
+        return self.published().with_relations().order_by("-views_count", "-created_at")
+
+    def top_rated(self):
+        return self.published().with_relations().filter(imdb_rating__gt=0).order_by("-imdb_rating")
 
 
 class Series(TimeStampedModel):
@@ -135,6 +145,9 @@ class Series(TimeStampedModel):
     @property
     def episode_count(self):
         return Episode.objects.filter(season__series=self).count()
+
+    def get_absolute_url(self):
+        return reverse("series:series_detail", kwargs={"slug": self.slug})
 
 
 class SeriesCast(models.Model):
@@ -256,6 +269,13 @@ class Episode(TimeStampedModel):
         return bool(self.video_file or self.video_url)
 
     @property
+    def can_watch(self):
+        """Movie.can_watch bilan bir xil rol o'ynaydi — litsenziya
+        tushunchasi yo'qligi sababli faqat chop etilgan va video manbasi
+        bor epizodlar tomosha qilinadi."""
+        return self.is_published and self.has_video_source
+
+    @property
     def video_source(self):
         if self.video_file:
             return self.video_file.url
@@ -271,3 +291,10 @@ class Episode(TimeStampedModel):
         if hours:
             return f"{hours}s"
         return f"{minutes}d"
+
+    def get_absolute_url(self):
+        """Serial detali sahifasidagi shu epizodning pleeriga ishora
+        qiladi (`?episode=<id>#player`) — Movie.get_watch_url bilan bir
+        xil naqsh, faqat pleer alohida bo'lim emas, query parametr orqali
+        tanlanadi."""
+        return f"{self.season.series.get_absolute_url()}?episode={self.pk}#player"

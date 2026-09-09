@@ -98,10 +98,10 @@ class CategoryQuerySet(models.QuerySet):
 
 
 class Category(TimeStampedModel):
-    """Janrdan alohida taksonomiya — masalan "Yangi filmlar", "Premyeralar",
-    "Koreys filmlari". `Movie` va (keyinchalik) `Series` ikkalasi ham
-    ishlatadi. Hozircha public sahifasi yo'q — faqat admin panelida
-    boshqariladi va bosh sahifa bo'limlarini belgilash uchun ishlatiladi.
+    """Janrdan alohida taksonomiya — masalan "Multfilmlar", "Premyeralar",
+    "Koreys filmlari". `Movie` va `Series` ikkalasi ham ishlatadi.
+    Bosh sahifa bo'limlarini belgilashdan tashqari o'zining public
+    sahifasi ham bor (`movies:category_detail`).
     """
 
     name = models.CharField("nomi", max_length=80, unique=True)
@@ -128,6 +128,9 @@ class Category(TimeStampedModel):
         if not self.slug:
             self.slug = unique_slugify(self, self.name)
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("movies:category_detail", kwargs={"slug": self.slug})
 
 
 class Country(TimeStampedModel):

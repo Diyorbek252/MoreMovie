@@ -10,6 +10,7 @@ urlpatterns = [
     path("movies/", views.MovieListView.as_view(), name="movie_list"),
     path("genres/", views.GenreListView.as_view(), name="genre_list"),
     path("genre/<slug:slug>/", views.GenreDetailView.as_view(), name="genre_detail"),
+    path("category/<slug:slug>/", views.CategoryDetailView.as_view(), name="category_detail"),
     path("search/", views.SearchView.as_view(), name="search"),
     path("movie/<slug:slug>/", views.MovieDetailView.as_view(), name="movie_detail"),
     # Pleer endi film detali sahifasining o'zida (#player) — eski

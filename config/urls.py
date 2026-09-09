@@ -26,6 +26,7 @@ urlpatterns = [
 
     path("", include("users.urls")),
     path("", include("movies.urls")),
+    path("", include("series.urls")),
     path("", include("reviews.urls")),
     path("", include("siteconfig.urls")),
     path("", include("shop.urls")),
