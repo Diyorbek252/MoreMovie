@@ -231,6 +231,7 @@
 
     if (points.length) {
       chartHost.innerHTML = renderChart(points);
+      attachChartTooltip(chartHost);
     }
   });
 
@@ -241,10 +242,7 @@
   function renderChart(data) {
     const width = 800;
     const height = 200;
-    // Nuqta ustidagi son yorlig'i uchun yetarli joy — avval 12px edi va
-    // eng baland nuqtaning raqami grafik chegarasidan tashqarida
-    // ko'rinmay qolar, hover qilmaguncha son umuman ko'rinmas edi.
-    const padTop = 26;
+    const padTop = 12;
     const padBottom = 26;
     const usableHeight = height - padTop - padBottom;
 
@@ -268,23 +266,17 @@
       " L" + width + " " + (height - padBottom) +
       " L0 " + (height - padBottom) + " Z";
 
+    // Har bir nuqtada ikkita doira bor: ko'rinadigan kichik nuqta va
+    // uning ustidagi shaffof kattaroq doira — faqat hover maqsadida,
+    // aks holda 3px radiusga sichqonchani aniq tekislash qiyin bo'lardi.
+    // Son har doim emas, faqat shu kattaroq doiraga hover qilinganda
+    // (qarang: attachChartTooltip) alohida tooltip orqali ko'rsatiladi.
     const dots = coords
-      .map(function (p) {
+      .map(function (p, i) {
         return (
-          '<circle class="chart__dot" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) +
-          '" r="3"><title>' + p.label + ": " + p.value + " ko'rish</title></circle>"
-        );
-      })
-      .join("");
-
-    // Sonni faqat hover'da (title tooltip) emas, doim ko'rinadigan
-    // qilib nuqta ustiga yozamiz — aks holda foydalanuvchi qiymatni
-    // ko'rish uchun har bir nuqtani ustma-ust bosib chiqishi kerak edi.
-    const values = coords
-      .map(function (p) {
-        return (
-          '<text class="chart__value" x="' + p.x.toFixed(1) + '" y="' + (p.y - 8).toFixed(1) +
-          '" text-anchor="middle">' + p.value + "</text>"
+          '<circle class="chart__dot" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3"/>' +
+          '<circle class="chart__hit" data-index="' + i + '" cx="' + p.x.toFixed(1) +
+          '" cy="' + p.y.toFixed(1) + '" r="10"/>'
         );
       })
       .join("");
@@ -312,10 +304,60 @@
       '<path class="chart__area" d="' + area + '"/>' +
       '<path class="chart__line" d="' + line + '"/>' +
       dots +
-      values +
       labels +
       "</svg>"
     );
+  }
+
+  /**
+   * Grafik ustiga sichqoncha olib borilganda shu nuqtaning qiymatini
+   * ko'rsatuvchi kichik tooltip qo'shadi. Boshqa paytda hech qanday son
+   * ko'rinmaydi — faqat aynan hover qilingan nuqta uchun chiqadi.
+   */
+  function attachChartTooltip(chartHost) {
+    let points;
+    try {
+      points = JSON.parse(chartHost.dataset.chart);
+    } catch (error) {
+      return;
+    }
+
+    chartHost.style.position = "relative";
+
+    const tooltip = document.createElement("div");
+    tooltip.className = "chart-tooltip";
+    tooltip.hidden = true;
+    chartHost.appendChild(tooltip);
+
+    const svg = chartHost.querySelector("svg.chart");
+    if (!svg) return;
+
+    function showTooltip(event, index) {
+      const point = points[index];
+      if (!point) return;
+
+      const hostRect = chartHost.getBoundingClientRect();
+      const dotRect = event.target.getBoundingClientRect();
+
+      tooltip.textContent = point.label + ": " + point.value + " ko'rish";
+      tooltip.hidden = false;
+
+      // Nuqtaning konteyner ichidagi nisbiy o'rniga joylashtiramiz.
+      const left = dotRect.left + dotRect.width / 2 - hostRect.left;
+      const top = dotRect.top - hostRect.top;
+      tooltip.style.left = left + "px";
+      tooltip.style.top = top + "px";
+    }
+
+    function hideTooltip() {
+      tooltip.hidden = true;
+    }
+
+    svg.querySelectorAll(".chart__hit").forEach(function (hit) {
+      const index = parseInt(hit.dataset.index, 10);
+      hit.addEventListener("mouseenter", function (event) { showTooltip(event, index); });
+      hit.addEventListener("mouseleave", hideTooltip);
+    });
   }
 
   /* --------------------------------------------------------------------
