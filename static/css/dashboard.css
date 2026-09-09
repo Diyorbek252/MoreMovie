@@ -309,6 +309,12 @@
   font-size: 10px;
 }
 
+.chart__value {
+  fill: var(--text);
+  font-size: 10px;
+  font-weight: 600;
+}
+
 /* --- Film formasi --- */
 
 .form-grid {

@@ -241,7 +241,10 @@
   function renderChart(data) {
     const width = 800;
     const height = 200;
-    const padTop = 12;
+    // Nuqta ustidagi son yorlig'i uchun yetarli joy — avval 12px edi va
+    // eng baland nuqtaning raqami grafik chegarasidan tashqarida
+    // ko'rinmay qolar, hover qilmaguncha son umuman ko'rinmas edi.
+    const padTop = 26;
     const padBottom = 26;
     const usableHeight = height - padTop - padBottom;
 
@@ -274,6 +277,18 @@
       })
       .join("");
 
+    // Sonni faqat hover'da (title tooltip) emas, doim ko'rinadigan
+    // qilib nuqta ustiga yozamiz — aks holda foydalanuvchi qiymatni
+    // ko'rish uchun har bir nuqtani ustma-ust bosib chiqishi kerak edi.
+    const values = coords
+      .map(function (p) {
+        return (
+          '<text class="chart__value" x="' + p.x.toFixed(1) + '" y="' + (p.y - 8).toFixed(1) +
+          '" text-anchor="middle">' + p.value + "</text>"
+        );
+      })
+      .join("");
+
     // Har bir sanani chizsak siqilib ketadi — bittasini oralatib ko'rsatamiz.
     const labels = coords
       .map(function (p, i) {
@@ -297,6 +312,7 @@
       '<path class="chart__area" d="' + area + '"/>' +
       '<path class="chart__line" d="' + line + '"/>' +
       dots +
+      values +
       labels +
       "</svg>"
     );
