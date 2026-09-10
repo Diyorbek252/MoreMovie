@@ -138,32 +138,41 @@
           <div class="alert alert--error">{{ cast_formset.non_form_errors }}</div>
         {% endif %}
 
-        <div class="row row--wrap" style="gap: var(--s-3); margin-bottom: var(--s-2)">
-          <div class="field" style="min-width: 220px"><label class="field__label">Aktyor</label></div>
-          <div class="field" style="min-width: 200px"><label class="field__label">Rol nomi</label></div>
-          <div class="field" style="width: 100px"><label class="field__label">Tartib</label></div>
-          <div class="field"><label class="field__label">O'chirish</label></div>
-        </div>
-
-        <div class="stack js-cast-rows" style="gap: var(--s-3)">
-          {% for cast_form in cast_formset %}
-            <div class="row row--wrap js-cast-row" style="align-items: flex-start; gap: var(--s-3)">
-              {{ cast_form.id }}
-              <div class="field" style="min-width: 220px">
-                {{ cast_form.actor }}
-                {% if cast_form.actor.errors %}
-                  <p class="field__error">{{ cast_form.actor.errors|first }}</p>
-                {% endif %}
-              </div>
-              <div class="field" style="min-width: 200px">{{ cast_form.character_name }}</div>
-              <div class="field" style="width: 100px">{{ cast_form.order }}</div>
-              <div class="field">
-                {% if cast_form.instance.pk %}
-                  <label class="checkbox">{{ cast_form.DELETE }}</label>
-                {% endif %}
-              </div>
-            </div>
-          {% endfor %}
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Aktyor</th>
+                <th>Rol nomi</th>
+                <th style="width: 100px">Tartib</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody class="js-cast-rows">
+              {% for cast_form in cast_formset %}
+                <tr class="js-cast-row">
+                  {{ cast_form.id }}
+                  <td>
+                    {{ cast_form.actor }}
+                    {% if cast_form.actor.errors %}
+                      <p class="field__error">{{ cast_form.actor.errors|first }}</p>
+                    {% endif %}
+                  </td>
+                  <td>{{ cast_form.character_name }}</td>
+                  <td style="width: 100px">{{ cast_form.order }}</td>
+                  <td>
+                    {% if cast_form.instance.pk %}
+                      <label class="checkbox">{{ cast_form.DELETE }} O'chirish</label>
+                    {% else %}
+                      <button type="button" class="btn btn--sm btn--ghost js-cast-remove">
+                        {% include "partials/icon.html" with name="trash" %} Olib tashlash
+                      </button>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
 
         <button type="button" class="btn btn--ghost js-cast-add" style="margin-top: var(--s-4)">
@@ -171,13 +180,17 @@
         </button>
 
         <template id="cast-empty-form">
-          <div class="row row--wrap js-cast-row" style="align-items: flex-start; gap: var(--s-3)">
+          <tr class="js-cast-row">
             {{ cast_formset.empty_form.id }}
-            <div class="field" style="min-width: 220px">{{ cast_formset.empty_form.actor }}</div>
-            <div class="field" style="min-width: 200px">{{ cast_formset.empty_form.character_name }}</div>
-            <div class="field" style="width: 100px">{{ cast_formset.empty_form.order }}</div>
-            <div class="field"></div>
-          </div>
+            <td>{{ cast_formset.empty_form.actor }}</td>
+            <td>{{ cast_formset.empty_form.character_name }}</td>
+            <td style="width: 100px">{{ cast_formset.empty_form.order }}</td>
+            <td>
+              <button type="button" class="btn btn--sm btn--ghost js-cast-remove">
+                {% include "partials/icon.html" with name="trash" %} Olib tashlash
+              </button>
+            </td>
+          </tr>
         </template>
       </div>
     {% endif %}

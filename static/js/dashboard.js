@@ -195,13 +195,31 @@
     if (!template || !rows || !totalForms) return;
 
     const index = parseInt(totalForms.value, 10);
-    const html = template.innerHTML.replaceAll("__prefix__", String(index));
 
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = html.trim();
-    rows.appendChild(wrapper.firstElementChild);
+    // `<tr>` qatorini `<div>`.innerHTML orqali klonlash ishlamaydi —
+    // brauzer jadval tashqarisidagi kontekstda <tr>'ni "foster parenting"
+    // qoidasi bo'yicha tashlab yuboradi. Shuning uchun <template>.content
+    // (haqiqiy DOM klonlash) ishlatiladi.
+    const fragment = template.content.cloneNode(true);
+    fragment.querySelectorAll("[name], [id], label[for]").forEach(function (el) {
+      if (el.name) el.name = el.name.replace("__prefix__", index);
+      if (el.id) el.id = el.id.replace("__prefix__", index);
+      if (el.htmlFor) el.htmlFor = el.htmlFor.replace("__prefix__", index);
+    });
 
+    rows.appendChild(fragment);
     totalForms.value = String(index + 1);
+  });
+
+  // Yangi (hali saqlanmagan) aktyor qatorini bekor qilish — shu qator
+  // butunlay olib tashlanadi, chunki bo'sh formset qatori formaga hech
+  // qanday ma'lumot yubormaydi va Django tomonidan e'tiborsiz qoldiriladi.
+  document.addEventListener("click", function (event) {
+    const removeButton = event.target.closest(".js-cast-remove");
+    if (!removeButton) return;
+
+    const row = removeButton.closest(".js-cast-row");
+    if (row) row.remove();
   });
 
   /* --------------------------------------------------------------------
