@@ -15,7 +15,7 @@
   </div>
 
   {# --- Qidiruv va holat filtri --- #}
-  <form class="row row--wrap" method="get" style="margin-bottom: var(--s-4)">
+  <form class="row row--wrap js-auto-filter" method="get" style="margin-bottom: var(--s-4)">
     <input class="input" type="search" name="q" value="{{ current_q }}"
            placeholder="Sarlavha yoki rejissyor..." style="max-width: 320px">
 
@@ -25,7 +25,6 @@
       <option value="draft" {% if current_status == "draft" %}selected{% endif %}>Qoralama</option>
     </select>
 
-    <button class="btn btn--primary" type="submit">Qidirish</button>
     {% if current_q or current_status %}
       <a class="btn btn--ghost" href="{% url 'dashboard:series_list' %}">Tozalash</a>
     {% endif %}

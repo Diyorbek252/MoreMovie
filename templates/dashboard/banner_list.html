@@ -14,14 +14,13 @@
     </a>
   </div>
 
-  <form class="row row--wrap" method="get" style="margin-bottom: var(--s-4)">
+  <form class="row row--wrap js-auto-filter" method="get" style="margin-bottom: var(--s-4)">
     <select class="select" name="position" style="max-width: 260px">
       <option value="">Barcha joylashuvlar</option>
       {% for value, label in position_choices %}
         <option value="{{ value }}" {% if current_position == value %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-    <button class="btn btn--primary" type="submit">Filtrlash</button>
     {% if current_position %}
       <a class="btn btn--ghost" href="{% url 'dashboard:banner_list' %}">Tozalash</a>
     {% endif %}

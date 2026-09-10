@@ -11,7 +11,7 @@
     </div>
   </div>
 
-  <form class="row row--wrap" method="get" style="margin-bottom: var(--s-4)">
+  <form class="row row--wrap js-auto-filter" method="get" style="margin-bottom: var(--s-4)">
     <input class="input" type="search" name="q" value="{{ current_q }}"
            placeholder="Username yoki email..." style="max-width: 320px">
 
@@ -21,7 +21,6 @@
       <option value="staff" {% if current_status == "staff" %}selected{% endif %}>Xodimlar</option>
     </select>
 
-    <button class="btn btn--primary" type="submit">Qidirish</button>
     {% if current_q or current_status %}
       <a class="btn btn--ghost" href="{% url 'dashboard:user_list' %}">Tozalash</a>
     {% endif %}
