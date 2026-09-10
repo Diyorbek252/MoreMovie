@@ -902,29 +902,51 @@
 
 .people-tabs {
   display: flex;
-  gap: var(--s-2);
+  gap: var(--s-3);
 }
 
 .people-tabs__btn {
-  padding: var(--s-2) var(--s-4);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
   border-radius: var(--r-full);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   background: transparent;
   color: var(--text-dim);
-  font-size: var(--fs-sm);
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: 700;
   cursor: pointer;
   transition: all var(--dur-fast) var(--ease);
 }
 
+.people-tabs__btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
 .people-tabs__btn:hover {
   color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.people-tabs__btn:hover svg {
+  opacity: 1;
 }
 
 .people-tabs__btn.is-active {
   background: var(--red);
   border-color: var(--red);
   color: #fff;
+  box-shadow: var(--shadow-red);
+  transform: translateY(-1px);
+}
+
+.people-tabs__btn.is-active svg {
+  opacity: 1;
 }
 
 .cast-rail {
@@ -944,6 +966,7 @@
 }
 
 .cast-card__photo {
+  display: block;
   width: 100%;
   aspect-ratio: 1;
   border-radius: var(--r-full);

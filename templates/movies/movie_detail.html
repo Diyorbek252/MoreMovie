@@ -285,8 +285,12 @@
     <section class="section">
       <div class="section__head">
         <div class="people-tabs">
-          <button type="button" class="people-tabs__btn is-active" data-people-tab="cast">Aktyorlar</button>
-          <button type="button" class="people-tabs__btn" data-people-tab="director">Rejissyor</button>
+          <button type="button" class="people-tabs__btn is-active" data-people-tab="cast">
+            {% include "partials/icon.html" with name="users" %} Aktyorlar
+          </button>
+          <button type="button" class="people-tabs__btn" data-people-tab="director">
+            {% include "partials/icon.html" with name="film" %} Rejissyor
+          </button>
         </div>
       </div>
 
