@@ -74,7 +74,7 @@
             </span>
           {% endif %}
 
-          <span class="badge badge--quality">{{ movie.get_quality_display }}</span>
+          <span class="badge badge--quality">{{ movie.best_quality_display }}</span>
           <span class="badge">{{ movie.release_year }}</span>
 
           {% for genre in movie.genres.all %}
@@ -246,15 +246,26 @@
 
               <span class="player__spacer"></span>
 
-              <span class="badge badge--quality">{{ movie.get_quality_display }}</span>
+              <span class="badge badge--quality js-quality-badge">{{ movie.best_quality_display }}</span>
 
-              {# Sozlamalar — ijro tezligi #}
+              {# Sozlamalar — sifat va ijro tezligi #}
               <div class="player__settings">
                 <button class="player__btn js-settings-toggle" type="button"
                         aria-label="Sozlamalar" aria-haspopup="true" aria-expanded="false">
                   {% include "partials/icon.html" with name="settings" %}
                 </button>
                 <div class="player__menu js-settings-menu" role="menu">
+                  {% if video_sources|length > 1 %}
+                    <div class="player__menu-title">Sifat</div>
+                    {% for source in video_sources %}
+                      <button class="player__menu-item js-quality {% if forloop.first %}is-active{% endif %}"
+                              type="button" role="menuitem"
+                              data-quality="{{ source.quality }}" data-src="{{ source.url }}">
+                        {{ source.label }}
+                      </button>
+                    {% endfor %}
+                  {% endif %}
+
                   <div class="player__menu-title">Ijro tezligi</div>
                   <button class="player__menu-item js-speed" type="button" data-speed="0.5" role="menuitem">0.5x</button>
                   <button class="player__menu-item js-speed" type="button" data-speed="0.75" role="menuitem">0.75x</button>

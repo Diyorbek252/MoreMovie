@@ -33,7 +33,7 @@
               {% include "partials/icon.html" with name="star" %} {{ hero.display_rating }}
             </span>
           {% endif %}
-          <span class="badge badge--quality">{{ hero.get_quality_display }}</span>
+          <span class="badge badge--quality">{{ hero.best_quality_display }}</span>
           <span>{{ hero.release_year }}</span>
           <span>{{ hero.duration_display }}</span>
           {% for genre in hero.genres.all|slice:":3" %}

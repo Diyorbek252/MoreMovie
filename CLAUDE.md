@@ -53,7 +53,7 @@ config/     — settings (.env orqali), urls, wsgi/asgi
 core/       — home, about, contact, ContactMessage, context_processors
 users/      — User(AbstractUser), Profile, EmailOrUsernameBackend, BlockedUserMiddleware
 movies/     — Genre, Country, Language, Director, Actor, Movie, MovieCast,
-              Screenshot, Watchlist, Favorite, ViewHistory
+              MovieVideo, Screenshot, Watchlist, Favorite, ViewHistory
 reviews/    — Rating (1-5), Review (moderatsiya bilan)
 dashboard/  — staff-only custom boshqaruv paneli (o'z modeli yo'q)
 templates/  — loyiha darajasida (app ichida emas)
@@ -84,6 +84,12 @@ takrorlanmas slug beradi. `save()` da qo'lda slug yozish shart emas.
 
 **Kartalar** — filmni ko'rsatuvchi yagona shablon `templates/partials/movie_card.html`.
 Yangi kartochka varianti yozmang, shuni `include` qiling.
+
+**Video sifatlari** — bitta filmda bir nechta sifat bo'lishi mumkin: asosiy
+`video_url`/`video_file` (sifati `quality` maydonida) + `MovieVideo` qatorlari.
+Pleer uchun ro'yxatni `Movie.video_sources` beradi (yuqori sifatdan pastga),
+belgilarda `best_quality_display` ishlatiladi. Ro'yxat view'larida `videos`
+`with_relations()` orqali prefetch qilinadi — aks holda har kartada N+1 so'rov.
 
 **Watchlist/Favorite holati** — `core.context_processors.site_globals`
 `user_watchlist_ids` va `user_favorite_ids` to'plamlarini beradi. Kartada tugma

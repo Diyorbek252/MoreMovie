@@ -46,6 +46,7 @@ from .forms import (
     HomepageSectionForm,
     MovieCastFormSet,
     MovieForm,
+    MovieVideoFormSet,
     NotificationForm,
     ProductForm,
     SeasonForm,
@@ -198,59 +199,70 @@ class MovieManageListView(DashboardPermissionMixin, ListView):
         return context
 
 
-class MovieCastFormsetMixin:
-    """Film formasi bilan birga aktyorlar tarkibini (MovieCast) saqlaydi.
+class MovieRelatedFormsetsMixin:
+    """Film formasi bilan birga aktyorlar tarkibi va video sifatlarini saqlaydi.
 
-    Yangi film qo'shishda `self.object` hali `None` — formset avval
+    Yangi film qo'shishda `self.object` hali `None` — formsetlar avval
     filmga bog'lanmagan holda tekshiriladi, film saqlangandan keyin esa
     `instance` unga ulanib, qatorlar yoziladi. Shu sabab bir xil mantiq
     ham qo'shish, ham tahrirlash sahifasida ishlaydi.
     """
 
     #: Muvaffaqiyatli saqlangandan keyingi xabar ("{title}" almashtiriladi).
-    cast_success_message = ""
+    success_message = ""
+
+    def _formsets(self, bound):
+        """Ikkala formsetni bir xil holatda (bog'langan/bo'sh) yaratadi."""
+        data = self.request.POST if bound else None
+        files = self.request.FILES if bound else None
+        return {
+            "cast_formset": MovieCastFormSet(data, instance=self.object),
+            "video_formset": MovieVideoFormSet(data, files, instance=self.object),
+        }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if "cast_formset" not in context:
-            data = self.request.POST if self.request.method == "POST" else None
-            context["cast_formset"] = MovieCastFormSet(data, instance=self.object)
+        for name, formset in self._formsets(self.request.method == "POST").items():
+            context.setdefault(name, formset)
         return context
 
     def form_valid(self, form):
-        cast_formset = MovieCastFormSet(self.request.POST, instance=self.object)
-        if not cast_formset.is_valid():
-            return self.render_to_response(
-                self.get_context_data(form=form, cast_formset=cast_formset)
-            )
+        formsets = self._formsets(bound=True)
+        # Ikkalasi ham tekshiriladi (qisqa tutashuvsiz) — aks holda
+        # ikkinchisining xatolari sahifada ko'rsatilmay qolardi.
+        results = [formset.is_valid() for formset in formsets.values()]
+
+        if not all(results):
+            return self.render_to_response(self.get_context_data(form=form, **formsets))
 
         response = super().form_valid(form)
-        cast_formset.instance = self.object
-        cast_formset.save()
+        for formset in formsets.values():
+            formset.instance = self.object
+            formset.save()
 
-        if self.cast_success_message:
+        if self.success_message:
             messages.success(
-                self.request, self.cast_success_message.format(title=self.object.title)
+                self.request, self.success_message.format(title=self.object.title)
             )
         return response
 
 
-class MovieCreateView(MovieCastFormsetMixin, DashboardPermissionMixin, CreateView):
+class MovieCreateView(MovieRelatedFormsetsMixin, DashboardPermissionMixin, CreateView):
     required_perms = ["movies.add_movie"]
     model = Movie
     form_class = MovieForm
     template_name = "dashboard/movie_form.html"
     success_url = reverse_lazy("dashboard:movie_list")
-    cast_success_message = "«{title}» qo'shildi."
+    success_message = "«{title}» qo'shildi."
 
 
-class MovieUpdateView(MovieCastFormsetMixin, DashboardPermissionMixin, UpdateView):
+class MovieUpdateView(MovieRelatedFormsetsMixin, DashboardPermissionMixin, UpdateView):
     required_perms = ["movies.change_movie"]
     model = Movie
     form_class = MovieForm
     template_name = "dashboard/movie_form.html"
     success_url = reverse_lazy("dashboard:movie_list")
-    cast_success_message = "«{title}» yangilandi."
+    success_message = "«{title}» yangilandi."
 
 
 class MovieDeleteView(DashboardPermissionMixin, DeleteView):

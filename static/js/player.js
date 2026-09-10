@@ -114,10 +114,18 @@
     }
   }
 
+  // Sifat almashtirilganda video qaytadan yuklanadi va yana
+  // "loadedmetadata" chiqadi — davom ettirish esa faqat bir marta,
+  // sahifa ochilganda ishlashi kerak.
+  let resumeHandled = false;
+
   video.addEventListener("timeupdate", updateProgress);
   video.addEventListener("progress", updateProgress);
   video.addEventListener("loadedmetadata", function () {
     updateProgress();
+    if (resumeHandled) return;
+    resumeHandled = true;
+
     // Oldingi safar to'xtagan joydan davom ettiramiz.
     if (resumeAt > 5 && resumeAt < video.duration - 10) {
       video.currentTime = resumeAt;
@@ -220,6 +228,85 @@
       const isOpen = settingsMenu.classList.toggle("is-open");
       settingsToggle.setAttribute("aria-expanded", String(isOpen));
     });
+
+    /* ------------------------------------------------------------------
+       Sifat tanlash (720p / 1080p / 4K ...)
+       ------------------------------------------------------------------ */
+
+    const qualityButtons = settingsMenu.querySelectorAll(".js-quality");
+    const qualityBadge = root.querySelector(".js-quality-badge");
+    const QUALITY_KEY = "mm:quality";
+
+    /** Tanlangan sifatni brauzer xotirasiga yozadi (keyingi filmlar uchun ham). */
+    function rememberQuality(quality) {
+      try {
+        localStorage.setItem(QUALITY_KEY, quality);
+      } catch (error) {
+        // Maxfiy rejimda localStorage bloklanishi mumkin — muhim emas.
+      }
+    }
+
+    /**
+     * Manbani almashtiradi: joriy vaqt va ijro holati saqlanadi.
+     * @param {HTMLElement} button — bosilgan sifat tugmasi
+     * @param {boolean} silent — sahifa ochilishida (vaqtni tiklamasdan)
+     */
+    function switchQuality(button, silent) {
+      const url = button.dataset.src;
+      if (!url) return;
+
+      const time = video.currentTime;
+      const wasPlaying = !video.paused;
+
+      // Yangi manba uchun "loadedmetadata" davom ettirishni qayta
+      // ishga tushirmasligi kerak — vaqtni o'zimiz tiklaymiz.
+      if (!silent) resumeHandled = true;
+
+      video.src = url;
+      video.load();
+
+      if (!silent) {
+        video.addEventListener("loadedmetadata", function restore() {
+          video.currentTime = time;
+          if (wasPlaying) {
+            const promise = video.play();
+            if (promise && promise.catch) promise.catch(function () {});
+          }
+        }, { once: true });
+      }
+
+      qualityButtons.forEach(function (item) {
+        item.classList.toggle("is-active", item === button);
+      });
+      if (qualityBadge) qualityBadge.textContent = button.textContent.trim();
+      rememberQuality(button.dataset.quality);
+    }
+
+    qualityButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        if (!button.classList.contains("is-active")) switchQuality(button, false);
+        closeSettingsMenu();
+      });
+    });
+
+    // Foydalanuvchi avval tanlagan sifat shu filmda ham bo'lsa — o'shani
+    // ochamiz (video hali ijro etilmagan, shuning uchun "silent").
+    if (qualityButtons.length > 1) {
+      let stored = null;
+      try {
+        stored = localStorage.getItem(QUALITY_KEY);
+      } catch (error) {
+        stored = null;
+      }
+
+      if (stored) {
+        qualityButtons.forEach(function (button) {
+          if (button.dataset.quality === stored && !button.classList.contains("is-active")) {
+            switchQuality(button, true);
+          }
+        });
+      }
+    }
 
     settingsMenu.querySelectorAll(".js-speed").forEach(function (button) {
       button.addEventListener("click", function () {

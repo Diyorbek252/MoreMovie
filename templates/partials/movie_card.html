@@ -27,7 +27,7 @@ har karta uchun alohida so'rov qilinmaydi.
 
     {# Yuqori burchaklar: sifat va reyting #}
     <div class="card__tags">
-      <span class="badge badge--quality">{{ movie.get_quality_display }}</span>
+      <span class="badge badge--quality">{{ movie.best_quality_display }}</span>
       {% if movie.display_rating %}
         <span class="badge badge--rating">
           {% include "partials/icon.html" with name="star" %}

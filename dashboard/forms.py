@@ -3,7 +3,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from movies.models import Actor, Category, Director, Genre, Movie, MovieCast
+from movies.models import Actor, Category, Director, Genre, Movie, MovieCast, MovieVideo
 from series.models import Episode, Season, Series
 from shop.models import Product
 from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
@@ -123,6 +123,46 @@ class MovieForm(forms.ModelForm):
             instance.save()
             self.save_m2m()
         return instance
+
+
+class MovieVideoForm(forms.ModelForm):
+    """Bitta sifatdagi video manbasi. Havola yoki fayldan biri bo'lishi shart."""
+
+    class Meta:
+        model = MovieVideo
+        fields = ["quality", "video_url", "video_file"]
+        widgets = {
+            "quality": forms.Select(attrs={"class": "select"}),
+            "video_url": forms.URLInput(
+                attrs={"class": "input", "placeholder": "https://.../film-1080p.mp4"}
+            ),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+
+        # Bo'sh qator (hech narsa kiritilmagan) — formset uni o'zi
+        # e'tiborsiz qoldiradi, shuning uchun bu yerda xato bermaymiz.
+        if not self.has_changed():
+            return cleaned
+
+        if self.cleaned_data.get("DELETE"):
+            return cleaned
+
+        if not cleaned.get("video_url") and not cleaned.get("video_file"):
+            raise forms.ValidationError(
+                "Video havolasi yoki faylini kiriting — aks holda bu sifat ochilmaydi."
+            )
+        return cleaned
+
+
+MovieVideoFormSet = inlineformset_factory(
+    Movie,
+    MovieVideo,
+    form=MovieVideoForm,
+    extra=1,
+    can_delete=True,
+)
 
 
 MovieCastFormSet = inlineformset_factory(

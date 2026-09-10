@@ -250,6 +250,11 @@ class Actor(TimeStampedModel):
 # ---------------------------------------------------------------------------
 
 
+# Sifatlar yuqoridan pastga — pleerdagi ro'yxat va "eng yaxshi sifat"
+# tanlovi shu tartibga tayanadi (`Movie.Quality` qiymatlari bilan bir xil).
+QUALITY_ORDER = ("4K", "FHD", "HD", "SD")
+
+
 class MovieQuerySet(models.QuerySet):
     """Ko'p takrorlanadigan so'rovlarni bitta joyda saqlaymiz."""
 
@@ -257,9 +262,13 @@ class MovieQuerySet(models.QuerySet):
         return self.filter(is_published=True)
 
     def with_relations(self):
-        """N+1 so'rovlarning oldini oladi — kartalar va ro'yxatlar uchun."""
+        """N+1 so'rovlarning oldini oladi — kartalar va ro'yxatlar uchun.
+
+        `videos` ham shu yerda — kartadagi sifat belgisi va `can_watch`
+        tekshiruvi qo'shimcha sifatlarni ham hisobga oladi.
+        """
         return self.select_related("country", "language", "director").prefetch_related(
-            "genres"
+            "genres", "videos"
         )
 
     def trending(self):
@@ -483,7 +492,15 @@ class Movie(TimeStampedModel):
 
     @property
     def has_video_source(self):
-        return bool(self.video_file or self.video_url)
+        """Asosiy maydonlarda yoki qo'shimcha sifatlar orasida video bormi?
+
+        `videos.all()` ataylab `exists()` o'rniga ishlatiladi — ro'yxat
+        sahifalarida `prefetch_related("videos")` bilan qo'shimcha so'rov
+        yuzaga kelmaydi (qarang: MovieQuerySet.with_relations).
+        """
+        if self.video_file or self.video_url:
+            return True
+        return any(video.has_source for video in self.videos.all())
 
     @property
     def can_watch(self):
@@ -513,11 +530,46 @@ class Movie(TimeStampedModel):
         )
 
     @property
+    def video_sources(self):
+        """Pleerda tanlash mumkin bo'lgan sifatlar — yuqoridan pastga.
+
+        Ikki manba birlashtiriladi: filmning asosiy maydonlari
+        (`video_file`/`video_url`, sifati `quality` maydonidan) va
+        qo'shimcha `MovieVideo` qatorlari. Bir xil sifat ikkalasida ham
+        bo'lsa, alohida qator ustun turadi — admin eski yozuvni
+        o'zgartirmasdan yangi manba bera oladi.
+
+        Har bir element: {"quality": "FHD", "label": "Full HD 1080p", "url": ...}
+        """
+        labels = dict(self.Quality.choices)
+        urls = {}
+
+        if self.video_file or self.video_url:
+            urls[self.quality] = self.video_file.url if self.video_file else self.video_url
+
+        for video in self.videos.all():
+            if video.has_source:
+                urls[video.quality] = video.source
+
+        return [
+            {"quality": quality, "label": labels.get(quality, quality), "url": urls[quality]}
+            for quality in QUALITY_ORDER
+            if quality in urls
+        ]
+
+    @property
     def video_source(self):
-        """Player uchun yakuniy video manba (yuklangan fayl ustun turadi)."""
-        if self.video_file:
-            return self.video_file.url
-        return self.video_url or ""
+        """Pleer boshlanishida yuklanadigan manba — eng yuqori sifat."""
+        sources = self.video_sources
+        return sources[0]["url"] if sources else ""
+
+    @property
+    def best_quality_display(self):
+        """Kartochka va pleerdagi sifat belgisi — mavjud eng yuqori sifat."""
+        sources = self.video_sources
+        if sources:
+            return sources[0]["label"]
+        return self.get_quality_display()
 
     # --- Ko'rsatish uchun yordamchilar ---
 
@@ -592,6 +644,75 @@ class MovieCast(models.Model):
         if self.character_name:
             return f"{self.actor} — {self.character_name}"
         return str(self.actor)
+
+
+class MovieVideoManager(models.Manager):
+    """Sifat bo'yicha tartiblab qaytaradi — eng yuqorisi birinchi.
+
+    `Meta.ordering` bilan buni qilib bo'lmaydi, chunki tartib alifbo
+    bo'yicha emas, `QUALITY_ORDER` bo'yicha bo'lishi kerak.
+    """
+
+    def get_queryset(self):
+        rank = models.Case(
+            *[
+                models.When(quality=quality, then=models.Value(index))
+                for index, quality in enumerate(QUALITY_ORDER)
+            ],
+            default=models.Value(len(QUALITY_ORDER)),
+            output_field=models.IntegerField(),
+        )
+        return super().get_queryset().annotate(quality_rank=rank).order_by("quality_rank")
+
+
+class MovieVideo(models.Model):
+    """Filmning qo'shimcha sifatdagi video manbasi (masalan 720p yonida 1080p).
+
+    HUQUQIY ESLATMA: bu model faqat manbani saqlaydi, ko'rish ruxsatini
+    bermaydi — pleer baribir `Movie.can_watch` orqali ochiladi, ya'ni
+    litsenziya `trailer_only` bo'lsa bu yozuvlar hech qayerda
+    ko'rsatilmaydi.
+    """
+
+    movie = models.ForeignKey(
+        Movie, on_delete=models.CASCADE, related_name="videos", verbose_name="film"
+    )
+    quality = models.CharField(
+        "sifat", max_length=4, choices=Movie.Quality.choices, default=Movie.Quality.FULL_HD
+    )
+    video_url = models.URLField(
+        "video havolasi", blank=True,
+        help_text="To'g'ridan-to'g'ri MP4/HLS havolasi (qonuniy manba).",
+    )
+    video_file = models.FileField(
+        "video fayl", upload_to="videos/%Y/%m/", blank=True, null=True,
+        help_text="Serverga yuklangan fayl — havoladan ustun turadi.",
+    )
+
+    objects = MovieVideoManager()
+
+    class Meta:
+        verbose_name = "video sifati"
+        verbose_name_plural = "video sifatlari"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["movie", "quality"], name="unique_movie_video_quality"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.movie.title} — {self.get_quality_display()}"
+
+    @property
+    def has_source(self):
+        return bool(self.video_file or self.video_url)
+
+    @property
+    def source(self):
+        """Yakuniy manba — yuklangan fayl havoladan ustun turadi."""
+        if self.video_file:
+            return self.video_file.url
+        return self.video_url or ""
 
 
 class Screenshot(models.Model):

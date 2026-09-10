@@ -141,13 +141,17 @@ class MovieDetailView(DetailView):
         return (
             Movie.objects.published()
             .select_related("country", "language", "director")
-            .prefetch_related("genres", "screenshots", "cast_members__actor")
+            .prefetch_related("genres", "screenshots", "cast_members__actor", "videos")
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         movie = self.object
         user = self.request.user
+
+        # Pleerdagi sifat ro'yxati — shablonda bir necha marta kerak
+        # bo'lgani uchun bir marta hisoblab, kontekstga qo'yamiz.
+        context["video_sources"] = movie.video_sources
 
         # Tasdiqlangan sharhlar.
         context["reviews"] = (

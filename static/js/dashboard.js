@@ -181,17 +181,25 @@
   }
 
   /* --------------------------------------------------------------------
-     Aktyorlar formset'i — "Yana aktyor qo'shish" tugmasi bilan
-     cheksiz qator qo'shish (Django formset "empty_form" naqshi).
+     Formset qatorlari — "Yana qo'shish" / "Olib tashlash"
+     (aktyorlar tarkibi, video sifatlari va h.k.)
+
+     Naqsh — tugmada formset prefiksi ko'rsatiladi, qolgani shundan
+     kelib chiqadi:
+       tugma:      data-formset-add="<prefix>"
+       qatorlar:   [data-formset-rows="<prefix>"]
+       namuna:     <template id="<prefix>-empty-form">
+       hisoblagich: #id_<prefix>-TOTAL_FORMS
      -------------------------------------------------------------------- */
 
   document.addEventListener("click", function (event) {
-    const addButton = event.target.closest(".js-cast-add");
+    const addButton = event.target.closest("[data-formset-add]");
     if (!addButton) return;
 
-    const template = document.getElementById("cast-empty-form");
-    const rows = document.querySelector(".js-cast-rows");
-    const totalForms = document.getElementById("id_cast_members-TOTAL_FORMS");
+    const prefix = addButton.dataset.formsetAdd;
+    const template = document.getElementById(prefix + "-empty-form");
+    const rows = document.querySelector('[data-formset-rows="' + prefix + '"]');
+    const totalForms = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
     if (!template || !rows || !totalForms) return;
 
     const index = parseInt(totalForms.value, 10);
@@ -211,14 +219,14 @@
     totalForms.value = String(index + 1);
   });
 
-  // Yangi (hali saqlanmagan) aktyor qatorini bekor qilish — shu qator
-  // butunlay olib tashlanadi, chunki bo'sh formset qatori formaga hech
-  // qanday ma'lumot yubormaydi va Django tomonidan e'tiborsiz qoldiriladi.
+  // Yangi (hali saqlanmagan) qatorni bekor qilish — u butunlay olib
+  // tashlanadi, chunki bo'sh formset qatori formaga hech qanday
+  // ma'lumot yubormaydi va Django uni e'tiborsiz qoldiradi.
   document.addEventListener("click", function (event) {
-    const removeButton = event.target.closest(".js-cast-remove");
+    const removeButton = event.target.closest("[data-formset-remove]");
     if (!removeButton) return;
 
-    const row = removeButton.closest(".js-cast-row");
+    const row = removeButton.closest("[data-formset-row]");
     if (row) row.remove();
   });
 

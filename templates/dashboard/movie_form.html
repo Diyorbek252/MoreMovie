@@ -98,6 +98,90 @@
       </div>
     </div>
 
+    {% comment %}
+      ==================== VIDEO SIFATLARI ====================
+      Yuqoridagi asosiy video "Tasnif" bo'limidagi sifat bilan hisoblanadi.
+      Bu yerga boshqa sifatlar qo'shiladi (masalan 720p yonida 1080p) —
+      pleerda foydalanuvchi ular orasidan tanlaydi.
+    {% endcomment %}
+    {% if video_formset %}
+      <div class="panel">
+        <div class="panel__head"><h2 class="panel__title">Video sifatlari</h2></div>
+
+        <p class="field__help" style="margin-bottom: var(--s-4)">
+          Asosiy video (yuqoridagi «video havolasi»/«video fayl») «Tasnif»
+          bo'limida tanlangan sifat sifatida hisoblanadi. Qo'shimcha
+          sifatlarni shu yerga qo'shing — pleerda tomoshabin o'zi tanlaydi.
+        </p>
+
+        {{ video_formset.management_form }}
+        {% if video_formset.non_form_errors %}
+          <div class="alert alert--error">{{ video_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 150px">Sifat</th>
+                <th>Video havolasi</th>
+                <th>Video fayl</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody data-formset-rows="videos">
+              {% for video_form in video_formset %}
+                <tr data-formset-row>
+                  {{ video_form.id }}
+                  <td style="width: 150px">{{ video_form.quality }}</td>
+                  <td>
+                    {{ video_form.video_url }}
+                    {% if video_form.non_field_errors %}
+                      <p class="field__error">{{ video_form.non_field_errors|first }}</p>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {{ video_form.video_file }}
+                    {% if video_form.instance.video_file %}
+                      <p class="field__help">Joriy: {{ video_form.instance.video_file.name }}</p>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if video_form.instance.pk %}
+                      <label class="checkbox">{{ video_form.DELETE }} O'chirish</label>
+                    {% else %}
+                      <button type="button" class="btn btn--sm btn--ghost" data-formset-remove>
+                        {% include "partials/icon.html" with name="trash" %} Olib tashlash
+                      </button>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <button type="button" class="btn btn--ghost" data-formset-add="videos"
+                style="margin-top: var(--s-4)">
+          {% include "partials/icon.html" with name="plus" %} Yana sifat qo'shish
+        </button>
+
+        <template id="videos-empty-form">
+          <tr data-formset-row>
+            {{ video_formset.empty_form.id }}
+            <td style="width: 150px">{{ video_formset.empty_form.quality }}</td>
+            <td>{{ video_formset.empty_form.video_url }}</td>
+            <td>{{ video_formset.empty_form.video_file }}</td>
+            <td>
+              <button type="button" class="btn btn--sm btn--ghost" data-formset-remove>
+                {% include "partials/icon.html" with name="trash" %} Olib tashlash
+              </button>
+            </td>
+          </tr>
+        </template>
+      </div>
+    {% endif %}
+
     {# ==================== TASNIF ==================== #}
     <div class="panel">
       <div class="panel__head"><h2 class="panel__title">Tasnif</h2></div>
@@ -148,9 +232,9 @@
                 <th></th>
               </tr>
             </thead>
-            <tbody class="js-cast-rows">
+            <tbody data-formset-rows="cast_members">
               {% for cast_form in cast_formset %}
-                <tr class="js-cast-row">
+                <tr data-formset-row>
                   {{ cast_form.id }}
                   <td>
                     {{ cast_form.actor }}
@@ -164,7 +248,7 @@
                     {% if cast_form.instance.pk %}
                       <label class="checkbox">{{ cast_form.DELETE }} O'chirish</label>
                     {% else %}
-                      <button type="button" class="btn btn--sm btn--ghost js-cast-remove">
+                      <button type="button" class="btn btn--sm btn--ghost" data-formset-remove>
                         {% include "partials/icon.html" with name="trash" %} Olib tashlash
                       </button>
                     {% endif %}
@@ -175,18 +259,19 @@
           </table>
         </div>
 
-        <button type="button" class="btn btn--ghost js-cast-add" style="margin-top: var(--s-4)">
+        <button type="button" class="btn btn--ghost" data-formset-add="cast_members"
+                style="margin-top: var(--s-4)">
           {% include "partials/icon.html" with name="plus" %} Yana aktyor qo'shish
         </button>
 
-        <template id="cast-empty-form">
-          <tr class="js-cast-row">
+        <template id="cast_members-empty-form">
+          <tr data-formset-row>
             {{ cast_formset.empty_form.id }}
             <td>{{ cast_formset.empty_form.actor }}</td>
             <td>{{ cast_formset.empty_form.character_name }}</td>
             <td style="width: 100px">{{ cast_formset.empty_form.order }}</td>
             <td>
-              <button type="button" class="btn btn--sm btn--ghost js-cast-remove">
+              <button type="button" class="btn btn--sm btn--ghost" data-formset-remove>
                 {% include "partials/icon.html" with name="trash" %} Olib tashlash
               </button>
             </td>
