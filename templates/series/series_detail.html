@@ -60,33 +60,51 @@
         <div class="facts">
           {% if series.country %}
             <div class="fact">
-              <div class="fact__label">Davlat</div>
-              <div class="fact__value">{{ series.country.name }}</div>
+              <div class="fact__icon">{% include "partials/icon.html" with name="globe" %}</div>
+              <div>
+                <div class="fact__label">Davlat</div>
+                <div class="fact__value">{{ series.country.name }}</div>
+              </div>
             </div>
           {% endif %}
           {% if series.language %}
             <div class="fact">
-              <div class="fact__label">Til</div>
-              <div class="fact__value">{{ series.language.name }}</div>
+              <div class="fact__icon">{% include "partials/icon.html" with name="message" %}</div>
+              <div>
+                <div class="fact__label">Til</div>
+                <div class="fact__value">{{ series.language.name }}</div>
+              </div>
             </div>
           {% endif %}
           {% if series.age_rating %}
             <div class="fact">
-              <div class="fact__label">Yosh chegarasi</div>
-              <div class="fact__value">{{ series.age_rating }}</div>
+              <div class="fact__icon">{% include "partials/icon.html" with name="user" %}</div>
+              <div>
+                <div class="fact__label">Yosh chegarasi</div>
+                <div class="fact__value">{{ series.age_rating }}</div>
+              </div>
             </div>
           {% endif %}
           <div class="fact">
-            <div class="fact__label">Fasllar</div>
-            <div class="fact__value">{{ series.season_count }}</div>
+            <div class="fact__icon">{% include "partials/icon.html" with name="grid" %}</div>
+            <div>
+              <div class="fact__label">Fasllar</div>
+              <div class="fact__value">{{ series.season_count }}</div>
+            </div>
           </div>
           <div class="fact">
-            <div class="fact__label">Epizodlar</div>
-            <div class="fact__value">{{ series.episode_count }}</div>
+            <div class="fact__icon">{% include "partials/icon.html" with name="film" %}</div>
+            <div>
+              <div class="fact__label">Epizodlar</div>
+              <div class="fact__value">{{ series.episode_count }}</div>
+            </div>
           </div>
           <div class="fact">
-            <div class="fact__label">Ko'rishlar</div>
-            <div class="fact__value">{{ series.views_count }}</div>
+            <div class="fact__icon">{% include "partials/icon.html" with name="eye" %}</div>
+            <div>
+              <div class="fact__label">Ko'rishlar</div>
+              <div class="fact__value">{{ series.views_count }}</div>
+            </div>
           </div>
         </div>
       </div>

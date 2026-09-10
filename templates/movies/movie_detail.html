@@ -140,33 +140,51 @@
         <div class="facts">
           {% if movie.country %}
             <div class="fact">
-              <div class="fact__label">Davlat</div>
-              <div class="fact__value">{{ movie.country.name }}</div>
+              <div class="fact__icon">{% include "partials/icon.html" with name="globe" %}</div>
+              <div>
+                <div class="fact__label">Davlat</div>
+                <div class="fact__value">{{ movie.country.name }}</div>
+              </div>
             </div>
           {% endif %}
           {% if movie.language %}
             <div class="fact">
-              <div class="fact__label">Til</div>
-              <div class="fact__value">{{ movie.language.name }}</div>
+              <div class="fact__icon">{% include "partials/icon.html" with name="message" %}</div>
+              <div>
+                <div class="fact__label">Til</div>
+                <div class="fact__value">{{ movie.language.name }}</div>
+              </div>
             </div>
           {% endif %}
           <div class="fact">
-            <div class="fact__label">Davomiyligi</div>
-            <div class="fact__value">{{ movie.duration_display }}</div>
+            <div class="fact__icon">{% include "partials/icon.html" with name="clock" %}</div>
+            <div>
+              <div class="fact__label">Davomiyligi</div>
+              <div class="fact__value">{{ movie.duration_display }}</div>
+            </div>
           </div>
           {% if movie.age_rating %}
             <div class="fact">
-              <div class="fact__label">Yosh chegarasi</div>
-              <div class="fact__value">{{ movie.age_rating }}</div>
+              <div class="fact__icon">{% include "partials/icon.html" with name="user" %}</div>
+              <div>
+                <div class="fact__label">Yosh chegarasi</div>
+                <div class="fact__value">{{ movie.age_rating }}</div>
+              </div>
             </div>
           {% endif %}
           <div class="fact">
-            <div class="fact__label">Ko'rishlar</div>
-            <div class="fact__value">{{ movie.views_count|intcomma }}</div>
+            <div class="fact__icon">{% include "partials/icon.html" with name="eye" %}</div>
+            <div>
+              <div class="fact__label">Ko'rishlar</div>
+              <div class="fact__value">{{ movie.views_count|intcomma }}</div>
+            </div>
           </div>
-          <div class="fact">
-            <div class="fact__label">Litsenziya</div>
-            <div class="fact__value">{{ movie.get_license_type_display }}</div>
+          <div class="fact fact--wide">
+            <div class="fact__icon">{% include "partials/icon.html" with name="shield" %}</div>
+            <div>
+              <div class="fact__label">Litsenziya</div>
+              <div class="fact__value">{{ movie.get_license_type_display }}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -357,11 +375,19 @@
 
   {# ==================== REYTING VA SHARHLAR ==================== #}
   <section class="section">
-    <div class="section__head"><h2 class="section__title">Sharhlar</h2></div>
+    <div class="section__head">
+      <h2 class="section__title">Sharhlar</h2>
+      {% if reviews %}
+        <span class="muted" style="font-size: var(--fs-sm)">{{ reviews|length }} ta sharh</span>
+      {% endif %}
+    </div>
 
     {% if user.is_authenticated %}
       <div class="rate-box" style="margin-bottom: var(--s-5)">
-        <h3 style="margin-bottom: var(--s-3); font-size: var(--fs-lg)">Filmni baholang</h3>
+        <div class="rate-box__head">
+          {% include "partials/icon.html" with name="star" %}
+          <h3 class="rate-box__title">Filmni baholang</h3>
+        </div>
 
         <div class="row" style="margin-bottom: var(--s-5)">
           <div class="stars stars--input js-rating"
@@ -413,7 +439,7 @@
     {% endif %}
 
     {% if reviews %}
-      <div>
+      <div class="stack">
         {% for review in reviews %}
           <article class="review">
             <div class="avatar">
@@ -437,7 +463,11 @@
         {% endfor %}
       </div>
     {% else %}
-      <p class="muted">Hozircha sharhlar yo'q. Birinchi bo'lib fikr bildiring!</p>
+      <div class="empty">
+        {% include "partials/icon.html" with name="message" %}
+        <h3 class="empty__title">Hozircha sharhlar yo'q</h3>
+        <p>Birinchi bo'lib fikringizni bildiring!</p>
+      </div>
     {% endif %}
   </section>
 </div>

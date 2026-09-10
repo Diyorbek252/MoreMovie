@@ -856,10 +856,54 @@
 /* Ma'lumotlar jadvali (rejissyor, davlat, til...) */
 .facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--s-4);
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--s-3);
   padding-top: var(--s-5);
   border-top: 1px solid var(--border);
+}
+
+/* Har bir ma'lumot — kichik kartochka: chapda ikonka, o'ngda matn */
+.fact {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: border-color var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease);
+}
+
+.fact:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+/* Uzun qiymatli kartochka (masalan litsenziya nomi) ikki ustunni egallaydi —
+   aks holda matn 3 qatorga bo'linib, qator balandligini buzadi.
+   Faqat keng ekranda: tor ekranda grid bir ustunli bo'ladi va "span 2"
+   uni majburan ikki ustunga bo'lib, kartalarni chetga chiqarib yuboradi. */
+@media (min-width: 769px) {
+  .fact--wide {
+    grid-column: span 2;
+  }
+}
+
+.fact__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.fact__icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .fact__label {
@@ -871,8 +915,10 @@
 }
 
 .fact__value {
-  margin-top: var(--s-1);
-  font-weight: 500;
+  margin-top: 2px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 /* Litsenziya haqida ogohlantirish paneli */
@@ -1033,11 +1079,20 @@
    Sharhlar
    -------------------------------------------------------------------------- */
 
+/* Har bir sharh — alohida kartochka (avval faqat pastki chiziq bilan
+   ajratilgan qator edi). Xarid tarixi ham shu klassni ishlatadi. */
 .review {
   display: flex;
   gap: var(--s-4);
-  padding: var(--s-4) 0;
-  border-bottom: 1px solid var(--border);
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.review:hover {
+  border-color: var(--border-strong);
 }
 
 .review__thumb {
@@ -1070,13 +1125,15 @@
 }
 
 .review__author {
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--fs-sm);
 }
 
+/* Sana o'ng chekkaga suriladi — ism va baho chapda guruhlanadi */
 .review__date {
   color: var(--text-dim);
   font-size: var(--fs-xs);
+  margin-left: auto;
 }
 
 .review__text {
@@ -1085,11 +1142,47 @@
   white-space: pre-line;
 }
 
+/* Baholash paneli — tepasida qizil urg'u chizig'i bilan */
 .rate-box {
+  position: relative;
+  overflow: hidden;
   padding: var(--s-5);
   border-radius: var(--r-lg);
-  background: var(--bg-2);
+  background: linear-gradient(165deg, var(--bg-3), var(--bg-2));
   border: 1px solid var(--border);
+}
+
+.rate-box::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--red), transparent 70%);
+}
+
+.rate-box__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+
+.rate-box__head svg {
+  width: 20px;
+  height: 20px;
+  color: var(--red);
+  flex-shrink: 0;
+}
+
+.rate-box__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+/* Baho berish yulduzlari kattaroq — asosiy harakat shu yerda */
+.rate-box .stars--input svg {
+  width: 30px;
+  height: 30px;
 }
 
 /* --------------------------------------------------------------------------
