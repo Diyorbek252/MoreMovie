@@ -11,8 +11,12 @@
     <p class="muted">Katalogdagi barcha filmlar — filtrlang va o'zingizga mosini toping.</p>
   </div>
 
-  {# ==================== FILTR PANELI ==================== #}
-  <form class="filters" method="get" action="{% url 'movies:movie_list' %}">
+  {% comment %}
+    ==================== FILTR PANELI ====================
+    Submit tugmasi yo'q — maydon o'zgarganda formani static/js/main.js
+    dagi umumiy "form.js-auto-filter" bloki avtomatik yuboradi.
+  {% endcomment %}
+  <form class="filters js-auto-filter" method="get" action="{% url 'movies:movie_list' %}">
 
     <div class="field">
       <label class="field__label" for="f-q">Qidiruv</label>
@@ -91,12 +95,11 @@
       </select>
     </div>
 
-    <div class="filters__actions">
-      <button class="btn btn--primary" type="submit">Qo'llash</button>
-      {% if has_filters %}
+    {% if has_filters %}
+      <div class="filters__actions">
         <a class="btn btn--ghost" href="{% url 'movies:movie_list' %}">Tozalash</a>
-      {% endif %}
-    </div>
+      </div>
+    {% endif %}
   </form>
 
   {# ==================== NATIJALAR ==================== #}

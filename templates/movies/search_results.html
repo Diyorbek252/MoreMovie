@@ -14,11 +14,14 @@
     {% endif %}
   </div>
 
-  {# Qidiruvni sahifada ham davom ettirish uchun forma #}
-  <form class="row" method="get" action="{% url 'movies:search' %}" style="margin-bottom: var(--s-5)">
+  {% comment %}
+    Qidiruvni sahifada ham davom ettirish uchun forma — yozish
+    to'xtaganda static/js/main.js "form.js-auto-filter" bloki orqali
+    avtomatik yuboriladi, submit tugmasi kerak emas.
+  {% endcomment %}
+  <form class="row js-auto-filter" method="get" action="{% url 'movies:search' %}" style="margin-bottom: var(--s-5)">
     <input class="input" type="search" name="q" value="{{ query }}"
            placeholder="Film, janr, aktyor yoki rejissyor nomi..." style="max-width: 480px">
-    <button class="btn btn--primary" type="submit">Qidirish</button>
   </form>
 
   {% if movies %}

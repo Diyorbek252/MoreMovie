@@ -282,6 +282,27 @@
   });
 
   /* --------------------------------------------------------------------
+     Filtr formalari — submit tugmasisiz avtomatik yuborish
+     Barcha filtr formalarida (filmlar, seriallar, do'kon, qidiruv)
+     bir xil naqsh: select/checkbox/radio o'zgarishi bilanoq, matn
+     maydonlari esa yozish to'xtaganda (debounce) formani yuboradi.
+     -------------------------------------------------------------------- */
+
+  document.querySelectorAll("form.js-auto-filter").forEach(function (form) {
+    form.querySelectorAll("select, input[type=checkbox], input[type=radio]").forEach(function (field) {
+      field.addEventListener("change", function () { form.submit(); });
+    });
+
+    form.querySelectorAll('input[type=search], input[type=text]').forEach(function (field) {
+      let debounceTimer;
+      field.addEventListener("input", function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () { form.submit(); }, 600);
+      });
+    });
+  });
+
+  /* --------------------------------------------------------------------
      Django messages -> toast
      -------------------------------------------------------------------- */
 
