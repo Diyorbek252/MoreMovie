@@ -48,9 +48,6 @@
           <span class="badge">
             {{ series.release_year }}{% if series.end_year %} — {{ series.end_year }}{% endif %}
           </span>
-          {% if series.age_rating %}
-            <span class="badge badge--age">{{ series.age_rating }}</span>
-          {% endif %}
 
           {% for genre in series.genres.all %}
             <a class="chip" href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
@@ -71,6 +68,12 @@
             <div class="fact">
               <div class="fact__label">Til</div>
               <div class="fact__value">{{ series.language.name }}</div>
+            </div>
+          {% endif %}
+          {% if series.age_rating %}
+            <div class="fact">
+              <div class="fact__label">Yosh chegarasi</div>
+              <div class="fact__value">{{ series.age_rating }}</div>
             </div>
           {% endif %}
           <div class="fact">

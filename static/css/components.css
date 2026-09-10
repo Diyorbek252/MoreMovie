@@ -234,14 +234,6 @@
   color: var(--warning);
 }
 
-/* Yosh chegarasi (0+, 16+, 18+ va h.k.) — neytral, alohida rang emas */
-.badge--age {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: var(--text-dim);
-  color: var(--text);
-  font-weight: 700;
-}
-
 /* Janr chipi — bosiladigan */
 .chip {
   display: inline-block;
