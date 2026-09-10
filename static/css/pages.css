@@ -1040,6 +1040,27 @@
   border-bottom: 1px solid var(--border);
 }
 
+.review__thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-md);
+  object-fit: cover;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.review__thumb--fallback {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(150deg, var(--bg-3), var(--surface-2));
+  color: var(--text-faint);
+}
+
+.review__thumb--fallback svg {
+  width: 26px;
+  height: 26px;
+}
+
 .review__head {
   display: flex;
   align-items: center;

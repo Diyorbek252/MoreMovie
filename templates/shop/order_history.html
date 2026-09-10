@@ -18,6 +18,13 @@
     <div class="stack">
       {% for order in orders %}
         <article class="review">
+          {% if order.product.image %}
+            <img class="review__thumb" src="{{ order.product.image.url }}" alt="{{ order.product_name }}" loading="lazy">
+          {% else %}
+            <div class="review__thumb review__thumb--fallback">
+              {% include "partials/icon.html" with name="coin" %}
+            </div>
+          {% endif %}
           <div style="flex: 1">
             <div class="review__head">
               <span class="review__author">{{ order.product_name }} × {{ order.quantity }}</span>
