@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Avg, Count, ProtectedError, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import (
@@ -1268,11 +1268,25 @@ def toggle_product_active(request, pk):
 @require_POST
 @dashboard_perm_required("shop.change_order")
 def mark_order_delivered(request, pk):
-    """Buyurtmani "yetkazildi" deb belgilash (AJAX)."""
+    """Buyurtmani "yetkazildi" deb belgilash (AJAX) — bir vaqtda foydalanuvchiga
+    buyurtmasi qabul qilingani haqida shaxsiy bildirishnoma yuboriladi."""
     order = get_object_or_404(Order, pk=pk)
     order.status = Order.Status.DELIVERED
     order.delivered_at = timezone.now()
     order.save(update_fields=["status", "delivered_at", "updated_at"])
+
+    notification = Notification.objects.create(
+        title="Buyurtmangiz qabul qilindi",
+        message=(
+            f"«{order.product_name}» buyurtmangiz tasdiqlandi va tez orada yetkaziladi."
+        ),
+        notification_type=Notification.NotificationType.INFO,
+        link=reverse("shop:order_history"),
+        target=Notification.Target.SELECTED,
+        created_by=request.user,
+    )
+    notification.target_users.add(order.user)
+    notification.dispatch()
 
     return JsonResponse({"status": order.status, "message": "Buyurtma yetkazildi deb belgilandi."})
 
