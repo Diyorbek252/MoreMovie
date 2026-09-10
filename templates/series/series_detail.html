@@ -58,14 +58,6 @@
 
         {# --- Ma'lumotlar jadvali --- #}
         <div class="facts">
-          {% if series.director %}
-            <div class="fact">
-              <div class="fact__label">Rejissyor</div>
-              <div class="fact__value">
-                <a href="{{ series.director.get_absolute_url }}">{{ series.director.full_name }}</a>
-              </div>
-            </div>
-          {% endif %}
           {% if series.country %}
             <div class="fact">
               <div class="fact__label">Davlat</div>
