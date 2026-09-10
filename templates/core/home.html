@@ -28,10 +28,13 @@
         <h1 class="hero__title">{{ hero.title }}</h1>
 
         <div class="hero__meta">
-          {% if hero.display_rating %}
-            <span class="badge badge--rating">
-              {% include "partials/icon.html" with name="star" %} {{ hero.display_rating }}
+          {% if hero.user_rating_display %}
+            <span class="badge badge--rating" title="Sayt foydalanuvchilari bahosi">
+              {% include "partials/icon.html" with name="star" %} {{ hero.user_rating_display }}/5
             </span>
+          {% endif %}
+          {% if hero.imdb_rating %}
+            <span class="badge badge--imdb" title="IMDb reytingi">IMDb {{ hero.imdb_rating }}</span>
           {% endif %}
           <span class="badge badge--quality">{{ hero.best_quality_display }}</span>
           <span>{{ hero.release_year }}</span>

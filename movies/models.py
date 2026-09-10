@@ -591,12 +591,17 @@ class Movie(TimeStampedModel):
         return f"{minutes}d"
 
     @property
-    def display_rating(self):
-        """Kartalarda ko'rsatiladigan reyting: foydalanuvchi bahosi ustun."""
-        if self.rating_count:
-            # 1-5 shkalasini 10 ballikka keltiramiz.
-            return round(float(self.avg_rating) * 2, 1)
-        return float(self.imdb_rating)
+    def user_rating_display(self):
+        """Sayt foydalanuvchilarining o'rtacha bahosi — o'z shkalasida (1-5).
+
+        IMDb reytingi (`imdb_rating`, 0-10) bilan ATAYLAB aralashtirilmaydi:
+        ikkalasi turli manba, shuning uchun interfeysda ham alohida belgi
+        sifatida, o'z nomi bilan ko'rsatiladi. Baho berilmagan bo'lsa
+        `None` — shablon belgini umuman chizmaydi.
+        """
+        if not self.rating_count:
+            return None
+        return round(float(self.avg_rating), 1)
 
     @property
     def meta_description_text(self):

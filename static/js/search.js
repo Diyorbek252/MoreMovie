@@ -89,7 +89,7 @@
           '<div class="search-result__title">' + escapeHtml(item.title) + "</div>" +
           '<div class="search-result__meta">' +
           escapeHtml(item.year) + " · " + escapeHtml(item.quality) +
-          (item.rating ? " · ★ " + escapeHtml(item.rating) : "") +
+          (item.imdb ? " · IMDb " + escapeHtml(item.imdb) : "") +
           "</div></div></a>"
         );
       })

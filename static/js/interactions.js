@@ -153,12 +153,17 @@
         starsInput.dataset.score = String(data.score);
         paint(data.score);
 
-        // Sahifadagi o'rtacha reyting ko'rsatkichlarini yangilaymiz.
+        // Sahifadagi sayt bahosini yangilaymiz. Birinchi baho berilganda
+        // belgi hali yashirin bo'ladi — shu yerda ochamiz.
         const avgEl = document.querySelector(".js-avg-rating");
-        if (avgEl) avgEl.textContent = data.display_rating;
+        if (avgEl) avgEl.textContent = data.user_rating;
 
         const countEl = document.querySelector(".js-rating-count");
         if (countEl) countEl.textContent = data.count;
+
+        document.querySelectorAll(".js-user-rating, .js-rating-count-wrap").forEach(
+          function (el) { el.hidden = false; }
+        );
 
         MM.toast(data.message, "success");
       } catch (error) {

@@ -379,7 +379,7 @@ def search_suggest(request):
             "title": movie.title,
             "year": movie.release_year,
             "quality": movie.get_quality_display(),
-            "rating": movie.display_rating,
+            "imdb": float(movie.imdb_rating),
             "url": movie.get_absolute_url(),
             "poster": movie.poster.url if movie.poster else "",
         }

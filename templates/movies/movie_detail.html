@@ -60,18 +60,25 @@
         {% endif %}
 
         <div class="detail__meta">
-          {% if movie.rating_count %}
-            <span class="badge badge--rating">
-              {% include "partials/icon.html" with name="star" %}
-              <span class="js-avg-rating">{{ movie.display_rating }}</span>
-            </span>
-            <span class="muted" style="font-size: var(--fs-sm)">
-              (<span class="js-rating-count">{{ movie.rating_count }}</span> baho)
-            </span>
-          {% elif movie.imdb_rating %}
-            <span class="badge badge--rating">
-              {% include "partials/icon.html" with name="star" %} {{ movie.imdb_rating }}
-            </span>
+          {% comment %}
+            Ikkita reyting ATAYLAB alohida ko'rsatiladi: sayt
+            foydalanuvchilarining bahosi (1-5) va IMDb reytingi (0-10).
+            Sayt bahosi hali yo'q bo'lsa ham belgi DOM'da qoladi (hidden) —
+            foydalanuvchi baho berganda interactions.js uni ochadi.
+          {% endcomment %}
+          <span class="badge badge--rating js-user-rating" title="Sayt foydalanuvchilari bahosi"
+                {% if not movie.rating_count %}hidden{% endif %}>
+            {% include "partials/icon.html" with name="star" %}
+            {# Qiymat va "/5" bitta elementda — badge flex gap'i ajratmasligi uchun #}
+            <span><span class="js-avg-rating">{{ movie.user_rating_display|default_if_none:"—" }}</span>/5</span>
+          </span>
+          <span class="muted js-rating-count-wrap" style="font-size: var(--fs-sm)"
+                {% if not movie.rating_count %}hidden{% endif %}>
+            (<span class="js-rating-count">{{ movie.rating_count }}</span> baho)
+          </span>
+
+          {% if movie.imdb_rating %}
+            <span class="badge badge--imdb" title="IMDb reytingi">IMDb {{ movie.imdb_rating }}</span>
           {% endif %}
 
           <span class="badge badge--quality">{{ movie.best_quality_display }}</span>

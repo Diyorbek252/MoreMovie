@@ -53,7 +53,9 @@ def rate_movie(request):
             "score": rating.score,
             "average": float(movie.avg_rating),
             "count": movie.rating_count,
-            "display_rating": movie.display_rating,
+            # Sahifada server chizgan qiymat bilan bir xil ko'rinishi uchun
+            # matn sifatida ("4.0", "4" emas).
+            "user_rating": f"{movie.user_rating_display:.1f}",
             "message": "Bahoyingiz qabul qilindi" if created else "Bahoyingiz yangilandi",
         }
     )

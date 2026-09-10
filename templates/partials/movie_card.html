@@ -28,11 +28,8 @@ har karta uchun alohida so'rov qilinmaydi.
     {# Yuqori burchaklar: sifat va reyting #}
     <div class="card__tags">
       <span class="badge badge--quality">{{ movie.best_quality_display }}</span>
-      {% if movie.display_rating %}
-        <span class="badge badge--rating">
-          {% include "partials/icon.html" with name="star" %}
-          {{ movie.display_rating }}
-        </span>
+      {% if movie.imdb_rating %}
+        <span class="badge badge--imdb" title="IMDb reytingi">IMDb {{ movie.imdb_rating }}</span>
       {% endif %}
     </div>
 
@@ -77,6 +74,13 @@ har karta uchun alohida so'rov qilinmaydi.
       {% with genre=movie.genres.all|first %}
         {% if genre %}<span>{{ genre.name }}</span>{% endif %}
       {% endwith %}
+      {% if movie.user_rating_display %}
+        {# Sayt foydalanuvchilarining bahosi — IMDb'dan alohida, 1-5 shkalada #}
+        <span class="card__score" title="Sayt foydalanuvchilari bahosi">
+          {% include "partials/icon.html" with name="star" %}
+          {{ movie.user_rating_display }}
+        </span>
+      {% endif %}
     </div>
   </div>
 </article>
