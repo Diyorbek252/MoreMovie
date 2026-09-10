@@ -24,6 +24,7 @@ ROLES = {
         "movies.add_category", "movies.change_category", "movies.delete_category", "movies.view_category",
         "movies.add_director", "movies.change_director", "movies.delete_director", "movies.view_director",
         "movies.add_actor", "movies.change_actor", "movies.delete_actor", "movies.view_actor",
+        "movies.add_moviecast", "movies.change_moviecast", "movies.delete_moviecast", "movies.view_moviecast",
         "movies.add_country", "movies.change_country", "movies.delete_country", "movies.view_country",
         "movies.add_language", "movies.change_language", "movies.delete_language", "movies.view_language",
         "movies.add_screenshot", "movies.change_screenshot", "movies.delete_screenshot", "movies.view_screenshot",

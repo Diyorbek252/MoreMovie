@@ -1,8 +1,9 @@
 """Dashboard formalari — film va janr tahriri."""
 
 from django import forms
+from django.forms import inlineformset_factory
 
-from movies.models import Actor, Category, Director, Genre, Movie
+from movies.models import Actor, Category, Director, Genre, Movie, MovieCast
 from series.models import Episode, Season, Series
 from shop.models import Product
 from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
@@ -122,6 +123,22 @@ class MovieForm(forms.ModelForm):
             instance.save()
             self.save_m2m()
         return instance
+
+
+MovieCastFormSet = inlineformset_factory(
+    Movie,
+    MovieCast,
+    fields=["actor", "character_name", "order"],
+    extra=1,
+    can_delete=True,
+    widgets={
+        "actor": forms.Select(attrs={"class": "select"}),
+        "character_name": forms.TextInput(
+            attrs={"class": "input", "placeholder": "Rol nomi (ixtiyoriy)"}
+        ),
+        "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+    },
+)
 
 
 class GenreForm(forms.ModelForm):

@@ -128,6 +128,51 @@
       </div>
     </div>
 
+    {# ==================== AKTYORLAR ==================== #}
+    {% if cast_formset %}
+      <div class="panel">
+        <div class="panel__head"><h2 class="panel__title">Aktyorlar</h2></div>
+
+        {{ cast_formset.management_form }}
+        {% if cast_formset.non_form_errors %}
+          <div class="alert alert--error">{{ cast_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="stack" style="gap: var(--s-3)">
+          {% for cast_form in cast_formset %}
+            <div class="row row--wrap" style="align-items: flex-start; gap: var(--s-3)">
+              {{ cast_form.id }}
+              <div class="field" style="min-width: 220px">
+                {% if forloop.first %}<label class="field__label">Aktyor</label>{% endif %}
+                {{ cast_form.actor }}
+                {% if cast_form.actor.errors %}
+                  <p class="field__error">{{ cast_form.actor.errors|first }}</p>
+                {% endif %}
+              </div>
+              <div class="field" style="min-width: 200px">
+                {% if forloop.first %}<label class="field__label">Rol nomi</label>{% endif %}
+                {{ cast_form.character_name }}
+              </div>
+              <div class="field" style="width: 100px">
+                {% if forloop.first %}<label class="field__label">Tartib</label>{% endif %}
+                {{ cast_form.order }}
+              </div>
+              {% if cast_form.instance.pk %}
+                <div class="field">
+                  {% if forloop.first %}<label class="field__label">O'chirish</label>{% endif %}
+                  <label class="checkbox">{{ cast_form.DELETE }}</label>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <p class="field__help" style="margin-top: var(--s-3)">
+          Saqlagandan keyin bo'sh qatorlar e'tiborsiz qoldiriladi — yana
+          aktyor qo'shish uchun saqlab, sahifani qayta oching.
+        </p>
+      </div>
+    {% endif %}
+
     {# ==================== HUQUQIY HOLAT ==================== #}
     <div class="panel">
       <div class="panel__head"><h2 class="panel__title">Huquqiy holat</h2></div>

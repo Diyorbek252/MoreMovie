@@ -44,6 +44,7 @@ from .forms import (
     EpisodeForm,
     GenreForm,
     HomepageSectionForm,
+    MovieCastFormSet,
     MovieForm,
     NotificationForm,
     ProductForm,
@@ -210,15 +211,36 @@ class MovieCreateView(DashboardPermissionMixin, CreateView):
 
 
 class MovieUpdateView(DashboardPermissionMixin, UpdateView):
+    """Film tahriri — shu bilan birga aktyorlar tarkibi (MovieCast) ham
+    shu sahifada, formset orqali boshqariladi (Django admin'dagi inline
+    bilan bir xil g'oya, faqat dashboard dizayn tizimida)."""
+
     required_perms = ["movies.change_movie"]
     model = Movie
     form_class = MovieForm
     template_name = "dashboard/movie_form.html"
     success_url = reverse_lazy("dashboard:movie_list")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if "cast_formset" not in context:
+            if self.request.method == "POST":
+                context["cast_formset"] = MovieCastFormSet(self.request.POST, instance=self.object)
+            else:
+                context["cast_formset"] = MovieCastFormSet(instance=self.object)
+        return context
+
     def form_valid(self, form):
+        cast_formset = MovieCastFormSet(self.request.POST, instance=self.object)
+        if not cast_formset.is_valid():
+            return self.render_to_response(
+                self.get_context_data(form=form, cast_formset=cast_formset)
+            )
+        response = super().form_valid(form)
+        cast_formset.instance = self.object
+        cast_formset.save()
         messages.success(self.request, f"«{form.instance.title}» yangilandi.")
-        return super().form_valid(form)
+        return response
 
 
 class MovieDeleteView(DashboardPermissionMixin, DeleteView):
