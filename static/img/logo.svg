@@ -9,8 +9,11 @@
 
       * "M"      — font-size 123  (Arial bosh harf balandligi ~0.716em
                    => 123 * 0.716 = 88), tayanch chizig'i y=99.
-      * "O"      — 88x88 kvadrat halqa (aylana emas, ataylab to'rtburchakroq:
-                   tashqi burchak radiusi 25.5 = o'lchamning ~29% i).
+      * "O"      — 88x88 kvadrat halqa (aylana emas, ataylab to'rtburchakroq).
+                   Burchak radiusi tashqi konturga nisbatan beriladi, lekin
+                   chiziq qalin (19) bo'lgani uchun ICHKI burchak radiusi =
+                   tashqi radius - stroke/2. Ichki burchak ham dumaloq
+                   ko'rinishi uchun tashqi rx ataylab kattaroq tanlangan.
       * "RE"/"VIE" — har biri 40 balandlikda (font-size 56), orasida 8
                    bo'shliq: 40 + 8 + 40 = 88. Ya'ni ikki qatorli blok
                    aynan "M" va "O" bilan bir xil balandlikda tugaydi.
@@ -45,7 +48,7 @@
 
   <!-- ============ O — to'rtburchak halqa + qizil play ============ -->
   <!-- Tashqi o'lcham 116..204 x 11..99 (88x88), chiziq qalinligi 19 -->
-  <rect x="125.5" y="20.5" width="69" height="69" rx="16" ry="16"
+  <rect x="125.5" y="20.5" width="69" height="69" rx="24" ry="24"
         fill="none" stroke="#FFFFFF" stroke-width="19"
         filter="url(#mm-glow-white)"/>
 
