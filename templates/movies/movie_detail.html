@@ -77,6 +77,9 @@
           <span class="badge badge--quality">{{ movie.get_quality_display }}</span>
           <span class="badge">{{ movie.release_year }}</span>
           <span class="badge">{{ movie.duration_display }}</span>
+          {% if movie.age_rating %}
+            <span class="badge badge--age">{{ movie.age_rating }}</span>
+          {% endif %}
 
           {% for genre in movie.genres.all %}
             <a class="chip" href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
