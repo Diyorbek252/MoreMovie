@@ -26,7 +26,7 @@ from django.views.generic import (
 )
 
 from core.models import ContactMessage
-from movies.models import Category, Director, Favorite, Genre, Movie, Watchlist
+from movies.models import Actor, Category, Director, Favorite, Genre, Movie, Watchlist
 from reviews.models import Review
 from series.models import Episode, Season, Series
 from shop.models import CinepointTransaction, Order, Product
@@ -36,6 +36,7 @@ from users.models import Profile
 
 from . import analytics
 from .forms import (
+    ActorForm,
     BalanceAdjustForm,
     BannerForm,
     CategoryForm,
@@ -390,6 +391,62 @@ class DirectorDeleteView(DashboardPermissionMixin, DeleteView):
 
     def form_valid(self, form):
         messages.success(self.request, f"«{self.object.full_name}» rejissyori o'chirildi.")
+        return super().form_valid(form)
+
+
+# ---------------------------------------------------------------------------
+# Aktyorlar
+# ---------------------------------------------------------------------------
+
+
+class ActorManageView(DashboardPermissionMixin, ListView):
+    """Aktyorlar ro'yxati + qo'shish formasi bir sahifada (Director bilan bir xil naqsh)."""
+
+    required_perms = ["movies.view_actor"]
+    model = Actor
+    template_name = "dashboard/actor_list.html"
+    context_object_name = "actors"
+
+    def get_queryset(self):
+        return Actor.objects.annotate(movie_total=Count("acted_movies", distinct=True)).order_by(
+            "full_name"
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = ActorForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = ActorForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"«{form.instance.full_name}» aktyori qo'shildi.")
+        else:
+            messages.error(request, "Aktyor qo'shilmadi — maydonlarni tekshiring.")
+        return redirect("dashboard:actor_list")
+
+
+class ActorUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["movies.change_actor"]
+    model = Actor
+    form_class = ActorForm
+    template_name = "dashboard/actor_form.html"
+    success_url = reverse_lazy("dashboard:actor_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Aktyor ma'lumotlari yangilandi.")
+        return super().form_valid(form)
+
+
+class ActorDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["movies.delete_actor"]
+    model = Actor
+    template_name = "dashboard/actor_confirm_delete.html"
+    success_url = reverse_lazy("dashboard:actor_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{self.object.full_name}» aktyori o'chirildi.")
         return super().form_valid(form)
 
 

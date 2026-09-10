@@ -57,6 +57,11 @@ urlpatterns = [
     path("directors/<int:pk>/edit/", views.DirectorUpdateView.as_view(), name="director_edit"),
     path("directors/<int:pk>/delete/", views.DirectorDeleteView.as_view(), name="director_delete"),
 
+    # --- Aktyorlar ---
+    path("actors/", views.ActorManageView.as_view(), name="actor_list"),
+    path("actors/<int:pk>/edit/", views.ActorUpdateView.as_view(), name="actor_edit"),
+    path("actors/<int:pk>/delete/", views.ActorDeleteView.as_view(), name="actor_delete"),
+
     # --- Foydalanuvchilar va moderatsiya ---
     path("users/", views.UserManageListView.as_view(), name="user_list"),
     path("reviews/", views.ReviewManageListView.as_view(), name="review_list"),
