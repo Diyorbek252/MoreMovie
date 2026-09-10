@@ -1,0 +1,81 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Rejissyorlar{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Rejissyorlar</h1>
+      <p class="dash-head__sub">{{ directors|length }} ta rejissyor</p>
+    </div>
+  </div>
+
+  {# --- Yangi rejissyor qo'shish --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Yangi rejissyor</h2></div>
+
+    {# enctype -- surat yuklash uchun majburiy #}
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-grid">
+        {% for field in form %}
+          <div class="field">
+            <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn--primary" type="submit" style="margin-top: var(--s-4)">
+        {% include "partials/icon.html" with name="plus" %} Qo'shish
+      </button>
+    </form>
+  </div>
+
+  {# --- Mavjud rejissyorlar --- #}
+  <div class="panel">
+    <div class="panel__head"><h2 class="panel__title">Mavjud rejissyorlar</h2></div>
+
+    {% if directors %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th></th><th>To'liq ism</th><th>Slug</th><th>Filmlar</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for director in directors %}
+              <tr>
+                <td>
+                  <div class="avatar avatar--sm">
+                    {% if director.photo %}
+                      <img src="{{ director.photo.url }}" alt="" width="32" height="32" loading="lazy">
+                    {% else %}{{ director.initials }}{% endif %}
+                  </div>
+                </td>
+                <td><strong>{{ director.full_name }}</strong></td>
+                <td class="dim">{{ director.slug }}</td>
+                <td class="muted">{{ director.movie_total }} ta</td>
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:director_edit' director.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:director_delete' director.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Hali rejissyor qo'shilmagan.</p>
+    {% endif %}
+  </div>
+
+{% endblock %}

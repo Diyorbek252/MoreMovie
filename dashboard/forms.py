@@ -2,7 +2,7 @@
 
 from django import forms
 
-from movies.models import Category, Genre, Movie
+from movies.models import Category, Director, Genre, Movie
 from series.models import Episode, Season, Series
 from shop.models import Product
 from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
@@ -144,6 +144,16 @@ class CategoryForm(forms.ModelForm):
             "name": forms.TextInput(attrs={"class": "input", "placeholder": "Kategoriya nomi"}),
             "description": forms.Textarea(attrs={"class": "textarea", "rows": 2}),
             "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+        }
+
+
+class DirectorForm(forms.ModelForm):
+    class Meta:
+        model = Director
+        fields = ["full_name", "photo", "bio"]
+        widgets = {
+            "full_name": forms.TextInput(attrs={"class": "input", "placeholder": "To'liq ism"}),
+            "bio": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
         }
 
 

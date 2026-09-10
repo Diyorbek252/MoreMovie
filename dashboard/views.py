@@ -26,7 +26,7 @@ from django.views.generic import (
 )
 
 from core.models import ContactMessage
-from movies.models import Category, Favorite, Genre, Movie, Watchlist
+from movies.models import Category, Director, Favorite, Genre, Movie, Watchlist
 from reviews.models import Review
 from series.models import Episode, Season, Series
 from shop.models import CinepointTransaction, Order, Product
@@ -39,6 +39,7 @@ from .forms import (
     BalanceAdjustForm,
     BannerForm,
     CategoryForm,
+    DirectorForm,
     EpisodeForm,
     GenreForm,
     HomepageSectionForm,
@@ -335,6 +336,60 @@ class CategoryDeleteView(DashboardPermissionMixin, DeleteView):
 
     def form_valid(self, form):
         messages.success(self.request, f"«{self.object.name}» kategoriyasi o'chirildi.")
+        return super().form_valid(form)
+
+
+# ---------------------------------------------------------------------------
+# Rejissyorlar
+# ---------------------------------------------------------------------------
+
+
+class DirectorManageView(DashboardPermissionMixin, ListView):
+    """Rejissyorlar ro'yxati + qo'shish formasi bir sahifada (Genre bilan bir xil naqsh)."""
+
+    required_perms = ["movies.view_director"]
+    model = Director
+    template_name = "dashboard/director_list.html"
+    context_object_name = "directors"
+
+    def get_queryset(self):
+        return Director.objects.annotate(movie_total=Count("directed_movies")).order_by("full_name")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = DirectorForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = DirectorForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"«{form.instance.full_name}» rejissyori qo'shildi.")
+        else:
+            messages.error(request, "Rejissyor qo'shilmadi — maydonlarni tekshiring.")
+        return redirect("dashboard:director_list")
+
+
+class DirectorUpdateView(DashboardPermissionMixin, UpdateView):
+    required_perms = ["movies.change_director"]
+    model = Director
+    form_class = DirectorForm
+    template_name = "dashboard/director_form.html"
+    success_url = reverse_lazy("dashboard:director_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Rejissyor ma'lumotlari yangilandi.")
+        return super().form_valid(form)
+
+
+class DirectorDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["movies.delete_director"]
+    model = Director
+    template_name = "dashboard/director_confirm_delete.html"
+    success_url = reverse_lazy("dashboard:director_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"«{self.object.full_name}» rejissyori o'chirildi.")
         return super().form_valid(form)
 
 

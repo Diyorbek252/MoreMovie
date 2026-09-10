@@ -1,0 +1,25 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block dash_title %}Rejissyorni o'chirish{% endblock %}
+
+{% block dash_content %}
+  <div class="panel" style="max-width: 560px">
+    <h1 class="dash-head__title" style="margin-bottom: var(--s-4)">Rejissyorni o'chirish</h1>
+
+    <div class="alert alert--error">
+      {% include "partials/icon.html" with name="alert" %}
+      <div>
+        <strong>«{{ object.full_name }}»</strong> o'chiriladi.
+        Filmlar o'chmaydi, lekin ularning rejissyor maydoni bo'shab qoladi.
+      </div>
+    </div>
+
+    <form method="post" style="margin-top: var(--s-5)">
+      {% csrf_token %}
+      <div class="row">
+        <button class="btn btn--danger btn--lg" type="submit">Ha, o'chirilsin</button>
+        <a class="btn btn--ghost btn--lg" href="{% url 'dashboard:director_list' %}">Bekor qilish</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

@@ -40,6 +40,8 @@ NAV_SECTIONS = [
                 perms=["movies.view_genre"], match_prefix="/dashboard/genres/"),
         NavItem("Kategoriyalar", "dashboard:category_list", "grid",
                 perms=["movies.view_category"], match_prefix="/dashboard/categories/"),
+        NavItem("Rejissyorlar", "dashboard:director_list", "users",
+                perms=["movies.view_director"], match_prefix="/dashboard/directors/"),
     ]),
     ("Moderatsiya", [
         NavItem("Foydalanuvchilar", "dashboard:user_list", "users",

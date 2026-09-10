@@ -52,6 +52,11 @@ urlpatterns = [
     path("categories/<int:pk>/edit/", views.CategoryUpdateView.as_view(), name="category_edit"),
     path("categories/<int:pk>/delete/", views.CategoryDeleteView.as_view(), name="category_delete"),
 
+    # --- Rejissyorlar ---
+    path("directors/", views.DirectorManageView.as_view(), name="director_list"),
+    path("directors/<int:pk>/edit/", views.DirectorUpdateView.as_view(), name="director_edit"),
+    path("directors/<int:pk>/delete/", views.DirectorDeleteView.as_view(), name="director_delete"),
+
     # --- Foydalanuvchilar va moderatsiya ---
     path("users/", views.UserManageListView.as_view(), name="user_list"),
     path("reviews/", views.ReviewManageListView.as_view(), name="review_list"),
