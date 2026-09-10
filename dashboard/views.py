@@ -198,36 +198,23 @@ class MovieManageListView(DashboardPermissionMixin, ListView):
         return context
 
 
-class MovieCreateView(DashboardPermissionMixin, CreateView):
-    required_perms = ["movies.add_movie"]
-    model = Movie
-    form_class = MovieForm
-    template_name = "dashboard/movie_form.html"
-    success_url = reverse_lazy("dashboard:movie_list")
+class MovieCastFormsetMixin:
+    """Film formasi bilan birga aktyorlar tarkibini (MovieCast) saqlaydi.
 
-    def form_valid(self, form):
-        messages.success(self.request, f"«{form.instance.title}» qo'shildi.")
-        return super().form_valid(form)
+    Yangi film qo'shishda `self.object` hali `None` — formset avval
+    filmga bog'lanmagan holda tekshiriladi, film saqlangandan keyin esa
+    `instance` unga ulanib, qatorlar yoziladi. Shu sabab bir xil mantiq
+    ham qo'shish, ham tahrirlash sahifasida ishlaydi.
+    """
 
-
-class MovieUpdateView(DashboardPermissionMixin, UpdateView):
-    """Film tahriri — shu bilan birga aktyorlar tarkibi (MovieCast) ham
-    shu sahifada, formset orqali boshqariladi (Django admin'dagi inline
-    bilan bir xil g'oya, faqat dashboard dizayn tizimida)."""
-
-    required_perms = ["movies.change_movie"]
-    model = Movie
-    form_class = MovieForm
-    template_name = "dashboard/movie_form.html"
-    success_url = reverse_lazy("dashboard:movie_list")
+    #: Muvaffaqiyatli saqlangandan keyingi xabar ("{title}" almashtiriladi).
+    cast_success_message = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if "cast_formset" not in context:
-            if self.request.method == "POST":
-                context["cast_formset"] = MovieCastFormSet(self.request.POST, instance=self.object)
-            else:
-                context["cast_formset"] = MovieCastFormSet(instance=self.object)
+            data = self.request.POST if self.request.method == "POST" else None
+            context["cast_formset"] = MovieCastFormSet(data, instance=self.object)
         return context
 
     def form_valid(self, form):
@@ -236,11 +223,34 @@ class MovieUpdateView(DashboardPermissionMixin, UpdateView):
             return self.render_to_response(
                 self.get_context_data(form=form, cast_formset=cast_formset)
             )
+
         response = super().form_valid(form)
         cast_formset.instance = self.object
         cast_formset.save()
-        messages.success(self.request, f"«{form.instance.title}» yangilandi.")
+
+        if self.cast_success_message:
+            messages.success(
+                self.request, self.cast_success_message.format(title=self.object.title)
+            )
         return response
+
+
+class MovieCreateView(MovieCastFormsetMixin, DashboardPermissionMixin, CreateView):
+    required_perms = ["movies.add_movie"]
+    model = Movie
+    form_class = MovieForm
+    template_name = "dashboard/movie_form.html"
+    success_url = reverse_lazy("dashboard:movie_list")
+    cast_success_message = "«{title}» qo'shildi."
+
+
+class MovieUpdateView(MovieCastFormsetMixin, DashboardPermissionMixin, UpdateView):
+    required_perms = ["movies.change_movie"]
+    model = Movie
+    form_class = MovieForm
+    template_name = "dashboard/movie_form.html"
+    success_url = reverse_lazy("dashboard:movie_list")
+    cast_success_message = "«{title}» yangilandi."
 
 
 class MovieDeleteView(DashboardPermissionMixin, DeleteView):
