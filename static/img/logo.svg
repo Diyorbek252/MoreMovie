@@ -1,20 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 140" role="img" aria-label="MORE-MOVIE">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 314 110" role="img" aria-label="MORE-MOVIE">
   <title>MORE-MOVIE</title>
 
   <!--
-    "M" va "REVIE" — tizim shrifti (Arial/Helvetica, bold) orqali chiziladi.
-    Bu <img src="..."> ichida ham ishonchli ishlaydi, chunki tashqi shrift
-    (Google Fonts) yuklashga urinmaydi — faqat brauzerda o'rnatilgan
-    standart shrift ishlatiladi, shu bilan hamma joyda bir xil ko'rinadi.
+    O'LCHAM QOIDASI (buzilmasin)
+    ============================
+    Barcha harflar bitta "cap height" chizig'iga bo'ysunadi: yuqori chekka
+    y=11, pastki chekka y=99 (balandligi 88).
 
-    "O" halqasi va ichidagi qizil play tugmasi qo'lda vektor sifatida
-    chizilgan — o'lchami "M" ning bosh harf balandligiga moslashtirilgan
-    (radius 30 + stroke 20 => tashqi diametr 80, "M" cap-height'iga teng).
+      * "M"      — font-size 123  (Arial bosh harf balandligi ~0.716em
+                   => 123 * 0.716 = 88), tayanch chizig'i y=99.
+      * "O"      — 88x88 kvadrat halqa (aylana emas, ataylab to'rtburchakroq:
+                   tashqi burchak radiusi 25.5 = o'lchamning ~29% i).
+      * "RE"/"VIE" — har biri 40 balandlikda (font-size 56), orasida 8
+                   bo'shliq: 40 + 8 + 40 = 88. Ya'ni ikki qatorli blok
+                   aynan "M" va "O" bilan bir xil balandlikda tugaydi.
+
+    Shu sabab hech bir harf boshqasidan baland yoki past bo'lib qolmaydi.
+    Barcha harflar bitta shrift oilasi va bitta qalinlikda (900) chiziladi —
+    tashqi shrift yuklanmaydi, shuning uchun <img src="..."> ichida ham
+    hamma joyda bir xil ko'rinadi.
   -->
 
   <defs>
-    <filter id="mm-glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
+    <filter id="mm-glow-white" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="mm-glow-red" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -23,17 +40,23 @@
   </defs>
 
   <!-- ================= M — oq ================= -->
-  <text x="2" y="112" font-family="Arial, Helvetica, sans-serif" font-weight="900"
-        font-size="112" fill="#FFFFFF" filter="url(#mm-glow)">M</text>
+  <text x="6" y="99" font-family="Arial, Helvetica, sans-serif" font-weight="900"
+        font-size="123" fill="#FFFFFF" filter="url(#mm-glow-white)">M</text>
 
-  <!-- ================= O — halqa + ichida qizil play ================= -->
-  <circle cx="140" cy="72" r="30" fill="none" stroke="#FFFFFF" stroke-width="20"
-          filter="url(#mm-glow)"/>
-  <polygon points="130,60 130,84 154,72" fill="#FF2A00"/>
+  <!-- ============ O — to'rtburchak halqa + qizil play ============ -->
+  <!-- Tashqi o'lcham 116..204 x 11..99 (88x88), chiziq qalinligi 19 -->
+  <rect x="125.5" y="20.5" width="69" height="69" rx="16" ry="16"
+        fill="none" stroke="#FFFFFF" stroke-width="19"
+        filter="url(#mm-glow-white)"/>
 
-  <!-- ================= RE / VIE — qizil, ikki qatorda ================= -->
-  <text x="194" y="62" font-family="Arial, Helvetica, sans-serif" font-weight="800"
-        font-size="52" letter-spacing="1" fill="#FF2A00">RE</text>
-  <text x="194" y="120" font-family="Arial, Helvetica, sans-serif" font-weight="800"
-        font-size="52" letter-spacing="1" fill="#FF2A00">VIE</text>
+  <!-- Halqa ichidagi bo'shliq 135..185 x 30..80, play uning markazida -->
+  <polygon points="149,39 149,71 177,55" fill="#FF2A00" stroke="#FF2A00"
+           stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- ============ RE / VIE — qizil, ikki qatorda ============ -->
+  <g fill="#FF2A00" font-family="Arial, Helvetica, sans-serif" font-weight="900"
+     font-size="56" filter="url(#mm-glow-red)">
+    <text x="216" y="51">RE</text>
+    <text x="216" y="99">VIE</text>
+  </g>
 </svg>
