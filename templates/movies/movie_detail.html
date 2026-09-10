@@ -285,13 +285,13 @@
       <div class="cast-rail">
         {% for member in movie.cast_members.all %}
           <div class="cast-card">
-            {% if member.person.photo %}
-              <img class="cast-card__photo" src="{{ member.person.photo.url }}"
-                   alt="{{ member.person.full_name }}" loading="lazy" width="132" height="132">
+            {% if member.actor.photo %}
+              <img class="cast-card__photo" src="{{ member.actor.photo.url }}"
+                   alt="{{ member.actor.full_name }}" loading="lazy" width="132" height="132">
             {% else %}
-              <div class="cast-card__photo cast-card__photo--initials">{{ member.person.initials }}</div>
+              <div class="cast-card__photo cast-card__photo--initials">{{ member.actor.initials }}</div>
             {% endif %}
-            <div class="cast-card__name">{{ member.person.full_name }}</div>
+            <div class="cast-card__name">{{ member.actor.full_name }}</div>
             {% if member.character_name %}
               <div class="cast-card__role">{{ member.character_name }}</div>
             {% endif %}

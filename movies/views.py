@@ -141,7 +141,7 @@ class MovieDetailView(DetailView):
         return (
             Movie.objects.published()
             .select_related("country", "language", "director")
-            .prefetch_related("genres", "screenshots", "cast_members__person")
+            .prefetch_related("genres", "screenshots", "cast_members__actor")
         )
 
     def get_context_data(self, **kwargs):

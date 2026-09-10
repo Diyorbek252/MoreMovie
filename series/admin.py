@@ -10,8 +10,8 @@ from .models import Episode, Season, Series, SeriesCast
 class SeriesCastInline(admin.TabularInline):
     model = SeriesCast
     extra = 3
-    autocomplete_fields = ["person"]
-    fields = ["person", "character_name", "order"]
+    autocomplete_fields = ["actor"]
+    fields = ["actor", "character_name", "order"]
 
 
 class SeasonInline(admin.TabularInline):

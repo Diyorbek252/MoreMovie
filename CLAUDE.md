@@ -52,8 +52,8 @@ Test superuser: `admin` / `MoreMovie2026!`
 config/     — settings (.env orqali), urls, wsgi/asgi
 core/       — home, about, contact, ContactMessage, context_processors
 users/      — User(AbstractUser), Profile, EmailOrUsernameBackend, BlockedUserMiddleware
-movies/     — Genre, Country, Language, Person, Movie, MovieCast, Screenshot,
-              Watchlist, Favorite, ViewHistory
+movies/     — Genre, Country, Language, Director, Actor, Movie, MovieCast,
+              Screenshot, Watchlist, Favorite, ViewHistory
 reviews/    — Rating (1-5), Review (moderatsiya bilan)
 dashboard/  — staff-only custom boshqaruv paneli (o'z modeli yo'q)
 templates/  — loyiha darajasida (app ichida emas)

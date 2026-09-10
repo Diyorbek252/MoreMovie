@@ -23,12 +23,13 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from movies.models import (
+    Actor,
     Country,
+    Director,
     Genre,
     Language,
     Movie,
     MovieCast,
-    Person,
 )
 
 try:
@@ -373,11 +374,11 @@ class Command(BaseCommand):
         genres = self._create_genres()
         countries = self._create_countries()
         languages = self._create_languages()
-        people = self._create_people()
+        directors, actors = self._create_people()
 
         created_count = 0
         for data in MOVIES:
-            movie, created = self._create_movie(data, genres, countries, languages, people)
+            movie, created = self._create_movie(data, genres, countries, languages, directors, actors)
             if created:
                 created_count += 1
                 self.stdout.write(self.style.SUCCESS(f"  + {movie.title}"))
@@ -425,21 +426,27 @@ class Command(BaseCommand):
         return result
 
     def _create_people(self):
-        result = {}
+        directors = {}
+        actors = {}
         for full_name in PEOPLE:
-            person, _ = Person.objects.get_or_create(full_name=full_name)
-            result[full_name] = person
-        self.stdout.write(f"Shaxslar: {len(result)} ta")
-        return result
+            directors[full_name], _ = Director.objects.get_or_create(full_name=full_name)
+            actors[full_name], _ = Actor.objects.get_or_create(full_name=full_name)
+        self.stdout.write(f"Rejissyorlar: {len(directors)} ta, aktyorlar: {len(actors)} ta")
+        return directors, actors
 
     # -- Film -------------------------------------------------------------
 
-    def _get_person(self, name, cache):
+    def _get_director(self, name, cache):
         if name not in cache:
-            cache[name], _ = Person.objects.get_or_create(full_name=name)
+            cache[name], _ = Director.objects.get_or_create(full_name=name)
         return cache[name]
 
-    def _create_movie(self, data, genres, countries, languages, people):
+    def _get_actor(self, name, cache):
+        if name not in cache:
+            cache[name], _ = Actor.objects.get_or_create(full_name=name)
+        return cache[name]
+
+    def _create_movie(self, data, genres, countries, languages, directors, actors):
         existing = Movie.objects.filter(title=data["title"]).first()
         if existing:
             return existing, False
@@ -465,7 +472,7 @@ class Command(BaseCommand):
             download_url=data["video"] if has_video else "",
             country=countries.get(data["country"]),
             language=languages.get(data["language"]),
-            director=self._get_person(data["director"], people),
+            director=self._get_director(data["director"], directors),
             is_featured=data["featured"],
             is_published=True,
             views_count=random.randint(120, 9800),
@@ -486,7 +493,7 @@ class Command(BaseCommand):
         for order, actor_name in enumerate(data["cast"]):
             MovieCast.objects.create(
                 movie=movie,
-                person=self._get_person(actor_name, people),
+                actor=self._get_actor(actor_name, actors),
                 character_name="",
                 order=order,
             )

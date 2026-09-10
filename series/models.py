@@ -11,13 +11,14 @@ from django.db import models
 from django.urls import reverse
 
 from movies.models import (
+    Actor,
     AgeRating,
     Category,
     Country,
+    Director,
     Genre,
     Language,
     Movie,
-    Person,
     TimeStampedModel,
     unique_slugify,
 )
@@ -98,7 +99,7 @@ class Series(TimeStampedModel):
         related_name="series", verbose_name="til",
     )
     director = models.ForeignKey(
-        Person, on_delete=models.SET_NULL, null=True, blank=True,
+        Director, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="directed_series", verbose_name="rejissyor",
     )
     genres = models.ManyToManyField(Genre, related_name="series", blank=True, verbose_name="janrlar")
@@ -106,7 +107,7 @@ class Series(TimeStampedModel):
         Category, related_name="series", blank=True, verbose_name="kategoriyalar",
     )
     cast = models.ManyToManyField(
-        Person, through="SeriesCast", related_name="acted_series",
+        Actor, through="SeriesCast", related_name="acted_series",
         blank=True, verbose_name="aktyorlar",
     )
 
@@ -156,8 +157,8 @@ class SeriesCast(models.Model):
     series = models.ForeignKey(
         Series, on_delete=models.CASCADE, related_name="cast_members", verbose_name="serial"
     )
-    person = models.ForeignKey(
-        Person, on_delete=models.CASCADE, related_name="series_roles", verbose_name="aktyor"
+    actor = models.ForeignKey(
+        Actor, on_delete=models.CASCADE, related_name="series_roles", verbose_name="aktyor"
     )
     character_name = models.CharField("rol nomi", max_length=150, blank=True)
     order = models.PositiveSmallIntegerField("tartib", default=0)
@@ -167,13 +168,13 @@ class SeriesCast(models.Model):
         verbose_name_plural = "serial aktyorlar tarkibi"
         ordering = ["order", "id"]
         constraints = [
-            models.UniqueConstraint(fields=["series", "person"], name="unique_series_person_role")
+            models.UniqueConstraint(fields=["series", "actor"], name="unique_series_actor_role")
         ]
 
     def __str__(self):
         if self.character_name:
-            return f"{self.person} — {self.character_name}"
-        return str(self.person)
+            return f"{self.actor} — {self.character_name}"
+        return str(self.actor)
 
 
 class Season(TimeStampedModel):

@@ -4,14 +4,15 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
+    Actor,
     Category,
     Country,
+    Director,
     Favorite,
     Genre,
     Language,
     Movie,
     MovieCast,
-    Person,
     Screenshot,
     ViewHistory,
     Watchlist,
@@ -21,8 +22,8 @@ from .models import (
 class MovieCastInline(admin.TabularInline):
     model = MovieCast
     extra = 3
-    autocomplete_fields = ["person"]
-    fields = ["person", "character_name", "order"]
+    autocomplete_fields = ["actor"]
+    fields = ["actor", "character_name", "order"]
 
 
 class ScreenshotInline(admin.TabularInline):
@@ -69,15 +70,22 @@ class LanguageAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
 
 
-@admin.register(Person)
-class PersonAdmin(admin.ModelAdmin):
-    list_display = ["full_name", "directed_count", "acted_count"]
+@admin.register(Director)
+class DirectorAdmin(admin.ModelAdmin):
+    list_display = ["full_name", "directed_count"]
     search_fields = ["full_name"]
     prepopulated_fields = {"slug": ("full_name",)}
 
-    @admin.display(description="rejissyor")
+    @admin.display(description="filmlar")
     def directed_count(self, obj):
         return obj.directed_movies.count()
+
+
+@admin.register(Actor)
+class ActorAdmin(admin.ModelAdmin):
+    list_display = ["full_name", "acted_count"]
+    search_fields = ["full_name"]
+    prepopulated_fields = {"slug": ("full_name",)}
 
     @admin.display(description="rollar")
     def acted_count(self, obj):

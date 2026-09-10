@@ -175,21 +175,49 @@ class Language(TimeStampedModel):
         super().save(*args, **kwargs)
 
 
-class Person(TimeStampedModel):
-    """Rejissyor va aktyorlar uchun umumiy model.
-
-    Bitta model ishlatiladi, chunki bir odam ham rejissyor, ham aktyor
-    bo'lishi mumkin. Qidiruv aktyor va rejissyor bo'yicha shu model orqali ishlaydi.
-    """
+class Director(TimeStampedModel):
+    """Film/serial rejissyori."""
 
     full_name = models.CharField("to'liq ism", max_length=150)
     slug = models.SlugField("slug", max_length=160, unique=True, blank=True)
-    photo = models.ImageField("surat", upload_to="people/", blank=True, null=True)
+    photo = models.ImageField("surat", upload_to="directors/", blank=True, null=True)
     bio = models.TextField("qisqacha", blank=True)
 
     class Meta:
-        verbose_name = "shaxs"
-        verbose_name_plural = "shaxslar"
+        verbose_name = "rejissyor"
+        verbose_name_plural = "rejissyorlar"
+        ordering = ["full_name"]
+        indexes = [models.Index(fields=["full_name"])]
+
+    def __str__(self):
+        return self.full_name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = unique_slugify(self, self.full_name)
+        super().save(*args, **kwargs)
+
+    @property
+    def initials(self):
+        parts = [p for p in self.full_name.split() if p]
+        if not parts:
+            return "?"
+        if len(parts) == 1:
+            return parts[0][:2].upper()
+        return (parts[0][0] + parts[-1][0]).upper()
+
+
+class Actor(TimeStampedModel):
+    """Film/serialda o'ynagan aktyor."""
+
+    full_name = models.CharField("to'liq ism", max_length=150)
+    slug = models.SlugField("slug", max_length=160, unique=True, blank=True)
+    photo = models.ImageField("surat", upload_to="actors/", blank=True, null=True)
+    bio = models.TextField("qisqacha", blank=True)
+
+    class Meta:
+        verbose_name = "aktyor"
+        verbose_name_plural = "aktyorlar"
         ordering = ["full_name"]
         indexes = [models.Index(fields=["full_name"])]
 
@@ -354,11 +382,11 @@ class Movie(TimeStampedModel):
         related_name="movies", verbose_name="til",
     )
     director = models.ForeignKey(
-        Person, on_delete=models.SET_NULL, null=True, blank=True,
+        Director, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="directed_movies", verbose_name="rejissyor",
     )
     cast = models.ManyToManyField(
-        Person, through="MovieCast", related_name="acted_movies",
+        Actor, through="MovieCast", related_name="acted_movies",
         blank=True, verbose_name="aktyorlar",
     )
 
@@ -538,8 +566,8 @@ class MovieCast(models.Model):
     movie = models.ForeignKey(
         Movie, on_delete=models.CASCADE, related_name="cast_members", verbose_name="film"
     )
-    person = models.ForeignKey(
-        Person, on_delete=models.CASCADE, related_name="roles", verbose_name="aktyor"
+    actor = models.ForeignKey(
+        Actor, on_delete=models.CASCADE, related_name="roles", verbose_name="aktyor"
     )
     character_name = models.CharField("rol nomi", max_length=150, blank=True)
     order = models.PositiveSmallIntegerField("tartib", default=0)
@@ -550,14 +578,14 @@ class MovieCast(models.Model):
         ordering = ["order", "id"]
         constraints = [
             models.UniqueConstraint(
-                fields=["movie", "person"], name="unique_movie_person_role"
+                fields=["movie", "actor"], name="unique_movie_actor_role"
             )
         ]
 
     def __str__(self):
         if self.character_name:
-            return f"{self.person} — {self.character_name}"
-        return str(self.person)
+            return f"{self.actor} — {self.character_name}"
+        return str(self.actor)
 
 
 class Screenshot(models.Model):

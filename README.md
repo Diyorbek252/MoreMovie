@@ -82,7 +82,7 @@ More_Movies/
 ├── config/          # settings (.env), urls, wsgi/asgi
 ├── core/            # home, about, contact, huquqiy sahifalar, sitemap
 ├── users/           # User(AbstractUser), Profile, auth, middleware
-├── movies/          # Movie, Genre, Person, Watchlist, Favorite, ViewHistory
+├── movies/          # Movie, Genre, Director, Actor, Watchlist, Favorite, ViewHistory
 ├── reviews/         # Rating (1-5), Review (moderatsiya bilan)
 ├── dashboard/       # staff-only boshqaruv paneli
 ├── templates/       # loyiha darajasidagi shablonlar
