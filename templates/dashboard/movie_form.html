@@ -138,38 +138,47 @@
           <div class="alert alert--error">{{ cast_formset.non_form_errors }}</div>
         {% endif %}
 
-        <div class="stack" style="gap: var(--s-3)">
+        <div class="row row--wrap" style="gap: var(--s-3); margin-bottom: var(--s-2)">
+          <div class="field" style="min-width: 220px"><label class="field__label">Aktyor</label></div>
+          <div class="field" style="min-width: 200px"><label class="field__label">Rol nomi</label></div>
+          <div class="field" style="width: 100px"><label class="field__label">Tartib</label></div>
+          <div class="field"><label class="field__label">O'chirish</label></div>
+        </div>
+
+        <div class="stack js-cast-rows" style="gap: var(--s-3)">
           {% for cast_form in cast_formset %}
-            <div class="row row--wrap" style="align-items: flex-start; gap: var(--s-3)">
+            <div class="row row--wrap js-cast-row" style="align-items: flex-start; gap: var(--s-3)">
               {{ cast_form.id }}
               <div class="field" style="min-width: 220px">
-                {% if forloop.first %}<label class="field__label">Aktyor</label>{% endif %}
                 {{ cast_form.actor }}
                 {% if cast_form.actor.errors %}
                   <p class="field__error">{{ cast_form.actor.errors|first }}</p>
                 {% endif %}
               </div>
-              <div class="field" style="min-width: 200px">
-                {% if forloop.first %}<label class="field__label">Rol nomi</label>{% endif %}
-                {{ cast_form.character_name }}
-              </div>
-              <div class="field" style="width: 100px">
-                {% if forloop.first %}<label class="field__label">Tartib</label>{% endif %}
-                {{ cast_form.order }}
-              </div>
-              {% if cast_form.instance.pk %}
-                <div class="field">
-                  {% if forloop.first %}<label class="field__label">O'chirish</label>{% endif %}
+              <div class="field" style="min-width: 200px">{{ cast_form.character_name }}</div>
+              <div class="field" style="width: 100px">{{ cast_form.order }}</div>
+              <div class="field">
+                {% if cast_form.instance.pk %}
                   <label class="checkbox">{{ cast_form.DELETE }}</label>
-                </div>
-              {% endif %}
+                {% endif %}
+              </div>
             </div>
           {% endfor %}
         </div>
-        <p class="field__help" style="margin-top: var(--s-3)">
-          Saqlagandan keyin bo'sh qatorlar e'tiborsiz qoldiriladi — yana
-          aktyor qo'shish uchun saqlab, sahifani qayta oching.
-        </p>
+
+        <button type="button" class="btn btn--ghost js-cast-add" style="margin-top: var(--s-4)">
+          {% include "partials/icon.html" with name="plus" %} Yana aktyor qo'shish
+        </button>
+
+        <template id="cast-empty-form">
+          <div class="row row--wrap js-cast-row" style="align-items: flex-start; gap: var(--s-3)">
+            {{ cast_formset.empty_form.id }}
+            <div class="field" style="min-width: 220px">{{ cast_formset.empty_form.actor }}</div>
+            <div class="field" style="min-width: 200px">{{ cast_formset.empty_form.character_name }}</div>
+            <div class="field" style="width: 100px">{{ cast_formset.empty_form.order }}</div>
+            <div class="field"></div>
+          </div>
+        </template>
       </div>
     {% endif %}
 

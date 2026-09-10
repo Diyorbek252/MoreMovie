@@ -181,6 +181,30 @@
   }
 
   /* --------------------------------------------------------------------
+     Aktyorlar formset'i — "Yana aktyor qo'shish" tugmasi bilan
+     cheksiz qator qo'shish (Django formset "empty_form" naqshi).
+     -------------------------------------------------------------------- */
+
+  document.addEventListener("click", function (event) {
+    const addButton = event.target.closest(".js-cast-add");
+    if (!addButton) return;
+
+    const template = document.getElementById("cast-empty-form");
+    const rows = document.querySelector(".js-cast-rows");
+    const totalForms = document.getElementById("id_cast_members-TOTAL_FORMS");
+    if (!template || !rows || !totalForms) return;
+
+    const index = parseInt(totalForms.value, 10);
+    const html = template.innerHTML.replaceAll("__prefix__", String(index));
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html.trim();
+    rows.appendChild(wrapper.firstElementChild);
+
+    totalForms.value = String(index + 1);
+  });
+
+  /* --------------------------------------------------------------------
      Rasm yuklashda oldindan ko'rish
      -------------------------------------------------------------------- */
 
