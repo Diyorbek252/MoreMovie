@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ actor.full_name }} — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ actor.full_name }} ishtirokidagi filmlar {{ SITE_NAME }} platformasida.{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head" style="text-align: left; align-items: center; display: flex; gap: var(--s-4)">
+    <div class="avatar avatar--lg">
+      {% if actor.photo %}
+        <img src="{{ actor.photo.url }}" alt="{{ actor.full_name }}">
+      {% else %}{{ actor.initials }}{% endif %}
+    </div>
+    <div>
+      <h1 class="page-head__title" style="margin-bottom: var(--s-2)">{{ actor.full_name }}</h1>
+      <p class="muted">
+        {{ page_obj.paginator.count }} ta film
+        {% if actor.bio %} — {{ actor.bio }}{% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% if movies %}
+    <div class="grid">
+      {% for movie in movies %}
+        {% include "partials/movie_card.html" with movie=movie %}
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="film" %}
+      <h2 class="empty__title">Bu aktyorning hali filmi yo'q</h2>
+      <a class="btn btn--primary" href="{% url 'movies:movie_list' %}">Barcha filmlar</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

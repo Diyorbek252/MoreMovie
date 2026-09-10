@@ -303,6 +303,28 @@
   });
 
   /* --------------------------------------------------------------------
+     Aktyorlar / rejissyor tablari — film va serial detali sahifasida
+     -------------------------------------------------------------------- */
+
+  document.addEventListener("click", function (event) {
+    const tabButton = event.target.closest(".people-tabs__btn");
+    if (!tabButton) return;
+
+    const tabs = tabButton.closest(".people-tabs");
+    const section = tabButton.closest(".section");
+    if (!tabs || !section) return;
+
+    tabs.querySelectorAll(".people-tabs__btn").forEach(function (btn) {
+      btn.classList.toggle("is-active", btn === tabButton);
+    });
+
+    const target = tabButton.dataset.peopleTab;
+    section.querySelectorAll("[data-people-panel]").forEach(function (panel) {
+      panel.hidden = panel.dataset.peoplePanel !== target;
+    });
+  });
+
+  /* --------------------------------------------------------------------
      Django messages -> toast
      -------------------------------------------------------------------- */
 

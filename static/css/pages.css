@@ -898,7 +898,34 @@
   margin-top: 2px;
 }
 
-/* --- Aktyorlar --- */
+/* --- Aktyorlar / rejissyor tablari --- */
+
+.people-tabs {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.people-tabs__btn {
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-full);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+
+.people-tabs__btn:hover {
+  color: var(--text);
+}
+
+.people-tabs__btn.is-active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
 
 .cast-rail {
   display: grid;

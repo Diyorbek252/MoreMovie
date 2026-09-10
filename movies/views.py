@@ -9,7 +9,7 @@ from django.views.generic import DetailView, ListView, RedirectView, TemplateVie
 
 from reviews.models import Rating, Review
 
-from .models import Category, Genre, Movie, ViewHistory
+from .models import Actor, Category, Director, Genre, Movie, ViewHistory
 
 
 class QueryStringMixin:
@@ -265,6 +265,50 @@ class CategoryDetailView(QueryStringMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["category"] = self.category
+        return context
+
+
+class DirectorDetailView(QueryStringMixin, ListView):
+    """Bitta rejissyor suratga olgan filmlar — Genre/CategoryDetailView bilan bir xil naqsh."""
+
+    template_name = "movies/director_detail.html"
+    context_object_name = "movies"
+    paginate_by = settings.MOVIES_PER_PAGE
+
+    def get_queryset(self):
+        self.director = get_object_or_404(Director, slug=self.kwargs["slug"])
+        return (
+            Movie.objects.published()
+            .with_relations()
+            .filter(director=self.director)
+            .order_by("-release_year", "-created_at")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["director"] = self.director
+        return context
+
+
+class ActorDetailView(QueryStringMixin, ListView):
+    """Bitta aktyor o'ynagan filmlar — Genre/CategoryDetailView bilan bir xil naqsh."""
+
+    template_name = "movies/actor_detail.html"
+    context_object_name = "movies"
+    paginate_by = settings.MOVIES_PER_PAGE
+
+    def get_queryset(self):
+        self.actor = get_object_or_404(Actor, slug=self.kwargs["slug"])
+        return (
+            Movie.objects.published()
+            .with_relations()
+            .filter(cast=self.actor)
+            .order_by("-release_year", "-created_at")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["actor"] = self.actor
         return context
 
 

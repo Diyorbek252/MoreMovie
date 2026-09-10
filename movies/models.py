@@ -197,6 +197,9 @@ class Director(TimeStampedModel):
             self.slug = unique_slugify(self, self.full_name)
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse("movies:director_detail", kwargs={"slug": self.slug})
+
     @property
     def initials(self):
         parts = [p for p in self.full_name.split() if p]
@@ -228,6 +231,9 @@ class Actor(TimeStampedModel):
         if not self.slug:
             self.slug = unique_slugify(self, self.full_name)
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("movies:actor_detail", kwargs={"slug": self.slug})
 
     @property
     def initials(self):

@@ -61,7 +61,9 @@
           {% if series.director %}
             <div class="fact">
               <div class="fact__label">Rejissyor</div>
-              <div class="fact__value">{{ series.director.full_name }}</div>
+              <div class="fact__value">
+                <a href="{{ series.director.get_absolute_url }}">{{ series.director.full_name }}</a>
+              </div>
             </div>
           {% endif %}
           {% if series.country %}
@@ -252,13 +254,19 @@
     </section>
   {% endif %}
 
-  {# ==================== AKTYORLAR ==================== #}
-  {% if series.cast_members.all %}
+  {# ==================== AKTYORLAR / REJISSYOR ==================== #}
+  {% if series.cast_members.all or series.director %}
     <section class="section">
-      <div class="section__head"><h2 class="section__title">Aktyorlar</h2></div>
-      <div class="cast-rail">
+      <div class="section__head">
+        <div class="people-tabs">
+          <button type="button" class="people-tabs__btn is-active" data-people-tab="cast">Aktyorlar</button>
+          <button type="button" class="people-tabs__btn" data-people-tab="director">Rejissyor</button>
+        </div>
+      </div>
+
+      <div class="cast-rail" data-people-panel="cast">
         {% for member in series.cast_members.all %}
-          <div class="cast-card">
+          <a class="cast-card" href="{{ member.actor.get_absolute_url }}">
             {% if member.actor.photo %}
               <img class="cast-card__photo" src="{{ member.actor.photo.url }}"
                    alt="{{ member.actor.full_name }}" loading="lazy" width="132" height="132">
@@ -269,8 +277,23 @@
             {% if member.character_name %}
               <div class="cast-card__role">{{ member.character_name }}</div>
             {% endif %}
-          </div>
+          </a>
         {% endfor %}
+      </div>
+
+      <div class="cast-rail" data-people-panel="director" hidden>
+        {% if series.director %}
+          <a class="cast-card" href="{{ series.director.get_absolute_url }}">
+            {% if series.director.photo %}
+              <img class="cast-card__photo" src="{{ series.director.photo.url }}"
+                   alt="{{ series.director.full_name }}" loading="lazy" width="132" height="132">
+            {% else %}
+              <div class="cast-card__photo cast-card__photo--initials">{{ series.director.initials }}</div>
+            {% endif %}
+            <div class="cast-card__name">{{ series.director.full_name }}</div>
+            <div class="cast-card__role">Rejissyor</div>
+          </a>
+        {% endif %}
       </div>
     </section>
   {% endif %}
