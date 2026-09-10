@@ -429,10 +429,10 @@
 
 .grid {
   display: grid;
-  /* 160px'da sifat + reyting belgilari (.card__tags) yon-yonma sig'may,
-     reyting kartadan tashqariga chiqib qolardi — 180px .rail kartalari
-     bilan bir xil kenglik, yetarli joy beradi. */
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  /* Sifat + reyting belgilari (.card__tags) har doim bitta qatorda
+     turishi uchun karta kamida ~210px bo'lishi kerak — eng uzun
+     kombinatsiya ("Full HD 1080p" + reyting) o'lchab aniqlangan. */
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: var(--s-4);
 }
 
@@ -451,7 +451,7 @@
      orasida taqsimlab, kartalarni ekranni to'ldirguncha cho'zib yuboradi.
      Shu sabab qat'iy piksel o'lchami beriladi — kartalar elementlar
      sonidan qat'i nazar bir xil o'lchamda qoladi. */
-  grid-auto-columns: 180px;
+  grid-auto-columns: 210px;
   gap: var(--s-4);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
