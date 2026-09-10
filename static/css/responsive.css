@@ -7,7 +7,7 @@
 /* --- Katta noutbuk --- */
 @media (max-width: 1280px) {
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   }
 
   /* .rail uchun "1fr" ishlatilmaydi — sabab: components.css dagi
@@ -70,7 +70,7 @@
 /* --- Planshet (portret) va katta telefon --- */
 @media (max-width: 768px) {
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
     gap: var(--s-3);
   }
 

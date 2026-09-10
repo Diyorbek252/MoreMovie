@@ -314,6 +314,11 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  /* Uzun sifat belgisi ("4K Ultra HD") + reyting tor kartada yon-yonma
+     sig'masa, kartadan tashqariga chiqib ketmasin — shu holatda reyting
+     keyingi qatorga tushadi. */
+  flex-wrap: wrap;
+  row-gap: var(--s-1);
   gap: var(--s-2);
   pointer-events: none;
 }
@@ -424,7 +429,10 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  /* 160px'da sifat + reyting belgilari (.card__tags) yon-yonma sig'may,
+     reyting kartadan tashqariga chiqib qolardi — 180px .rail kartalari
+     bilan bir xil kenglik, yetarli joy beradi. */
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--s-4);
 }
 
