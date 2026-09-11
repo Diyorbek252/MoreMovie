@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize static %}
+{% load static %}
 
 {% block title %}{{ movie.title }} ({{ movie.release_year }}) — {{ SITE_NAME }}{% endblock %}
 {% block meta_description %}{{ movie.meta_description_text }}{% endblock %}
@@ -197,10 +197,10 @@
             </div>
           {% endif %}
           <div class="fact">
-            <div class="fact__icon">{% include "partials/icon.html" with name="eye" %}</div>
+            <div class="fact__icon">{% include "partials/icon.html" with name="calendar" %}</div>
             <div>
-              <div class="fact__label">Ko'rishlar</div>
-              <div class="fact__value">{{ movie.views_count|intcomma }}</div>
+              <div class="fact__label">Chiqarilgan yili</div>
+              <div class="fact__value">{{ movie.release_year }}</div>
             </div>
           </div>
           <div class="fact fact--wide">
