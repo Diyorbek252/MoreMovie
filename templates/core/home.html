@@ -36,7 +36,7 @@
           {% if hero.imdb_rating %}
             <span class="badge badge--imdb" title="IMDb reytingi">IMDb {{ hero.imdb_rating }}</span>
           {% endif %}
-          <span class="badge badge--quality">{{ hero.best_quality_display }}</span>
+          <span class="badge badge--quality">{{ hero.quality_badges|join:" / " }}</span>
           <span>{{ hero.release_year }}</span>
           <span>{{ hero.duration_display }}</span>
           {% for genre in hero.genres.all|slice:":3" %}

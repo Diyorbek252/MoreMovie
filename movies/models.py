@@ -254,6 +254,11 @@ class Actor(TimeStampedModel):
 # tanlovi shu tartibga tayanadi (`Movie.Quality` qiymatlari bilan bir xil).
 QUALITY_ORDER = ("4K", "FHD", "HD", "SD")
 
+# Kartochkada bir nechta sifat birga ko'rsatilganda ("1080p / 720p") joy
+# tejash uchun qisqa kod — `get_quality_display()` kabi "Full HD 1080p"
+# emas, faqat "1080p".
+QUALITY_SHORT_LABELS = {"SD": "SD", "HD": "720p", "FHD": "1080p", "4K": "4K"}
+
 
 class MovieQuerySet(models.QuerySet):
     """Ko'p takrorlanadigan so'rovlarni bitta joyda saqlaymiz."""
@@ -565,11 +570,28 @@ class Movie(TimeStampedModel):
 
     @property
     def best_quality_display(self):
-        """Kartochka va pleerdagi sifat belgisi — mavjud eng yuqori sifat."""
+        """Pleerning sozlamalar belgisi — HOZIR ijro etilayotgan sifat
+        (JS tomonidan sifat almashtirilganda shu qiymat yangilanadi).
+        Boshlang'ich holatda eng yuqori sifat."""
         sources = self.video_sources
         if sources:
             return sources[0]["label"]
         return self.get_quality_display()
+
+    @property
+    def quality_badges(self):
+        """Kartochka/hero'da ko'rsatiladigan BARCHA sifatlar ro'yxati
+        (qisqa kodlar, yuqoridan pastga — masalan ["1080p", "720p"]).
+
+        `best_quality_display`dan farqi — faqat eng yaxshisini emas,
+        filmning nechta versiyasi bo'lsa hammasini qaytaradi. Video
+        manbasi umuman bo'lmasa (masalan trailer_only), `quality`
+        maydonidagi rejalashtirilgan sifatning o'zi qaytariladi.
+        """
+        sources = self.video_sources
+        if sources:
+            return [QUALITY_SHORT_LABELS.get(s["quality"], s["quality"]) for s in sources]
+        return [QUALITY_SHORT_LABELS.get(self.quality, self.quality)]
 
     # --- Ko'rsatish uchun yordamchilar ---
 

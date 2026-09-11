@@ -81,7 +81,7 @@
             <span class="badge badge--imdb" title="IMDb reytingi">IMDb {{ movie.imdb_rating }}</span>
           {% endif %}
 
-          <span class="badge badge--quality">{{ movie.best_quality_display }}</span>
+          <span class="badge badge--quality">{{ movie.quality_badges|join:" / " }}</span>
           <span class="badge">{{ movie.release_year }}</span>
 
           {% for genre in movie.genres.all %}

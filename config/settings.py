@@ -230,6 +230,16 @@ STORAGES = {
     },
 }
 
+# MUHIM: WhiteNoiseMiddleware standart holatda static fayllarni doim
+# STATIC_ROOT (staticfiles/) dan xizmat qiladi — DEBUG rejimida ham,
+# runserver ham. Agar `collectstatic` eskirgan bo'lsa, static/js|css
+# ga qilingan o'zgarishlar saytda umuman ko'rinmay qoladi (jim-jim,
+# xatosiz — shuning uchun sezish qiyin). Development'da shu sabab
+# to'g'ridan-to'g'ri manba papkasidan (static/) o'qishga majburlaymiz.
+if DEBUG:
+    WHITENOISE_USE_FINDERS = True
+    WHITENOISE_AUTOREFRESH = True
+
 # Yuklanadigan fayl hajmi chegarasi (poster / backdrop / avatar uchun yetarli).
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 MB
