@@ -318,20 +318,25 @@
   padding: var(--s-4);
 }
 
-/* Yuqori burchaklardagi belgilar */
+/* Yuqori burchaklardagi belgilar: chapda sifatlar ustuni, o'ngda IMDb.
+   Ikkalasi alohida flex ustuni bo'lgani uchun sifatlar soni (1-4 ta)
+   IMDb belgisining joyiga (har doim o'ng tepa) ta'sir qilmaydi. */
 .card__tags {
   position: absolute;
   inset: var(--s-3) var(--s-3) auto;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  /* Uzun sifat belgisi ("4K Ultra HD") + reyting tor kartada yon-yonma
-     sig'masa, kartadan tashqariga chiqib ketmasin — shu holatda reyting
-     keyingi qatorga tushadi. */
-  flex-wrap: wrap;
-  row-gap: var(--s-1);
   gap: var(--s-2);
   pointer-events: none;
+}
+
+/* Sifatlar — yuqoridan pastga (eng yaxshisi tepada), bir-biriga yaqin */
+.card__qualities {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 
 /* Hover overlay — endi faqat watchlist/favorite tugmalari bor, shuning
@@ -455,10 +460,10 @@
 
 .grid {
   display: grid;
-  /* Sifat + reyting belgilari (.card__tags) har doim bitta qatorda
-     turishi uchun karta kamida ~210px bo'lishi kerak — eng uzun
-     kombinatsiya ("Full HD 1080p" + reyting) o'lchab aniqlangan. */
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  /* Sifatlar endi ustun sifatida chapda joylashadi (.card__qualities),
+     IMDb esa o'ng tepada — kartaning eni shu ikkalasi bir-biriga
+     tegmasligi uchun kamida ~230px bo'lishi kerak. */
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: var(--s-4);
 }
 
@@ -477,7 +482,7 @@
      orasida taqsimlab, kartalarni ekranni to'ldirguncha cho'zib yuboradi.
      Shu sabab qat'iy piksel o'lchami beriladi — kartalar elementlar
      sonidan qat'i nazar bir xil o'lchamda qoladi. */
-  grid-auto-columns: 210px;
+  grid-auto-columns: 230px;
   gap: var(--s-4);
   overflow-x: auto;
   scroll-snap-type: x mandatory;

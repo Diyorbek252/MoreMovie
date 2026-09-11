@@ -7,14 +7,14 @@
 /* --- Katta noutbuk --- */
 @media (max-width: 1280px) {
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 
   /* .rail uchun "1fr" ishlatilmaydi — sabab: components.css dagi
      .rail qoidasidagi izohga qarang (kam elementda kartalar cho'zilib
      ketmasligi uchun). */
   .rail {
-    grid-auto-columns: 200px;
+    grid-auto-columns: 220px;
   }
 
   .rail--sm {
@@ -70,12 +70,12 @@
 /* --- Planshet (portret) va katta telefon --- */
 @media (max-width: 768px) {
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
     gap: var(--s-3);
   }
 
   .rail {
-    grid-auto-columns: 200px;
+    grid-auto-columns: 216px;
     gap: var(--s-3);
   }
 
@@ -173,19 +173,17 @@
   }
 
   /* Qat'iy 2 ustun juda tor telefonlarda (~375px va undan kichik)
-     kartani 170px'gacha torayttirib, sifat+reyting belgilarini bitta
-     qatorga sig'dira olmasdi. Endi minmax orqali: joy yetarli bo'lsa
-     (taxminan >=400px) 2 ustun, aks holda bitta to'liq enli karta. */
+     kartani torayttirib yuborardi. Endi minmax orqali: joy yetarli
+     bo'lsa (taxminan >=400px) 2 ustun, aks holda bitta to'liq enli
+     karta. Sifatlar endi ustun sifatida joylashgani uchun gorizontal
+     joy talabi kamaydi, lekin kartalar baribir biroz kattaroq. */
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: var(--s-3);
   }
 
   .rail {
-    /* 46vw juda tor telefonlarda (masalan 320px) sifat+reyting
-       belgilarini bitta qatorga sig'dira olmasdi — endi kamida
-       taxminan 200px'ga yaqin kafolatlanadi. */
-    grid-auto-columns: min(230px, 65vw);
+    grid-auto-columns: min(245px, 66vw);
   }
 
   .rail--sm {

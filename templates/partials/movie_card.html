@@ -25,9 +25,18 @@ har karta uchun alohida so'rov qilinmaydi.
       {% endif %}
     </a>
 
-    {# Yuqori burchaklar: sifat va reyting #}
+    {% comment %}
+      Yuqori burchaklar: sifatlar (yuqoridan pastga, eng yaxshisi tepada)
+      chapda, IMDb reytingi esa har doim o'ng tepada — ikkalasi alohida
+      ustun bo'lgani uchun sifatlar soni ko'p bo'lsa ham reyting joyidan
+      siljimaydi.
+    {% endcomment %}
     <div class="card__tags">
-      <span class="badge badge--quality">{{ movie.quality_badges|join:" / " }}</span>
+      <div class="card__qualities">
+        {% for quality in movie.quality_badges %}
+          <span class="badge badge--quality">{{ quality }}</span>
+        {% endfor %}
+      </div>
       {% if movie.imdb_rating %}
         <span class="badge badge--imdb" title="IMDb reytingi">IMDb {{ movie.imdb_rating }}</span>
       {% endif %}
