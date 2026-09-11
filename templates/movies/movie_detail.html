@@ -72,14 +72,6 @@
             {# Qiymat va "/5" bitta elementda — badge flex gap'i ajratmasligi uchun #}
             <span><span class="js-avg-rating">{{ movie.user_rating_display|default_if_none:"—" }}</span>/5</span>
           </span>
-          <span class="muted js-rating-count-wrap" style="font-size: var(--fs-sm)"
-                {% if not movie.rating_count %}hidden{% endif %}>
-            (<span class="js-rating-count">{{ movie.rating_count }}</span> baho)
-          </span>
-
-          {% if movie.imdb_rating %}
-            <span class="badge badge--imdb" title="IMDb reytingi">IMDb {{ movie.imdb_rating }}</span>
-          {% endif %}
 
           {% for quality in movie.quality_badges %}
             <span class="badge badge--quality">{{ quality }}</span>
@@ -178,6 +170,15 @@
               <div>
                 <div class="fact__label">Yosh chegarasi</div>
                 <div class="fact__value">{{ movie.age_rating }}</div>
+              </div>
+            </div>
+          {% endif %}
+          {% if movie.imdb_rating %}
+            <div class="fact">
+              <div class="fact__icon">{% include "partials/icon.html" with name="star" %}</div>
+              <div>
+                <div class="fact__label">IMDb reytingi</div>
+                <div class="fact__value">{{ movie.imdb_rating }}</div>
               </div>
             </div>
           {% endif %}
