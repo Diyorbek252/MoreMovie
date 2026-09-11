@@ -21,6 +21,12 @@
     grid-auto-columns: 116px;
   }
 
+  /* Tor noutbukda menyu ikonalarsiz — o'zbekcha yozuvlar uzunroq
+     ("Bosh sahifa"), joy tejash uchun faqat matn qoladi. */
+  .nav__link svg {
+    display: none;
+  }
+
   .rail-btn--prev { left: 0; }
   .rail-btn--next { right: 0; }
 }
