@@ -871,6 +871,15 @@
   margin-block: var(--s-4);
 }
 
+/* Janrlar — reyting/sifat belgilaridan alohida qator, o'zining chip
+   uslubida (qarang: .chip--genre, components.css). */
+.detail__genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-5);
+}
+
 .detail__desc {
   max-width: 760px;
   margin-bottom: var(--s-5);

@@ -277,6 +277,36 @@
   color: #fff;
 }
 
+/* Janr chipi (film/serial detali) — bazaviy .chip ustiga ikonka va
+   yengil "ko'tarilish" effekti qo'shadi. Dashboard filtr chip'lari
+   (.chip yolg'iz) o'zgarishsiz qoladi — bu modifikator faqat
+   .chip--genre bilan birga ishlatilganda ta'sir qiladi. */
+.chip--genre {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.chip--genre svg {
+  width: 13px;
+  height: 13px;
+  opacity: 0.55;
+  transition: opacity var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease);
+}
+
+.chip--genre:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-red);
+}
+
+.chip--genre:hover svg {
+  opacity: 1;
+  transform: rotate(-10deg);
+}
+
 /* --------------------------------------------------------------------------
    Film kartasi — butun saytda yagona variant
    -------------------------------------------------------------------------- */

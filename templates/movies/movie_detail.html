@@ -77,11 +77,17 @@
             <span class="badge badge--quality">{{ quality }}</span>
           {% endfor %}
           <span class="badge">{{ movie.release_year }}</span>
-
-          {% for genre in movie.genres.all %}
-            <a class="chip" href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
-          {% endfor %}
         </div>
+
+        {% if movie.genres.all %}
+          <div class="detail__genres">
+            {% for genre in movie.genres.all %}
+              <a class="chip chip--genre" href="{{ genre.get_absolute_url }}">
+                {% include "partials/icon.html" with name="tag" %} {{ genre.name }}
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
 
         <p class="detail__desc">{{ movie.description|linebreaksbr }}</p>
 
