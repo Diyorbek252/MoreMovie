@@ -36,10 +36,18 @@ class ReviewAdmin(admin.ModelAdmin):
 
     @admin.action(description="Tanlangan sharhlarni tasdiqlash")
     def approve_reviews(self, request, queryset):
+        movies = {review.movie for review in queryset}
         updated = queryset.update(status=Review.Status.APPROVED)
+        # queryset.update() save() ni chaqirmaydi — filmlarning o'rtacha
+        # reytingini qo'lda qayta hisoblaymiz.
+        for movie in movies:
+            movie.recalculate_rating()
         self.message_user(request, f"{updated} ta sharh tasdiqlandi.")
 
     @admin.action(description="Tanlangan sharhlarni rad etish")
     def reject_reviews(self, request, queryset):
+        movies = {review.movie for review in queryset}
         updated = queryset.update(status=Review.Status.REJECTED)
+        for movie in movies:
+            movie.recalculate_rating()
         self.message_user(request, f"{updated} ta sharh rad etildi.")

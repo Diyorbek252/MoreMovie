@@ -632,11 +632,23 @@ class Movie(TimeStampedModel):
     def recalculate_rating(self):
         """Reyting o'rtachasini qayta hisoblab, denormalizatsiya maydonlarini yangilaydi.
 
-        reviews.Rating modelidan save()/delete() da chaqiriladi.
+        Faqat moderatsiyadan o'tgan (tasdiqlangan) sharhi bor foydalanuvchilarning
+        bahosi hisobga olinadi — sharhsiz yoki hali tasdiqlanmagan/rad etilgan
+        sharh egalarining bahosi o'rtachaga kirmaydi.
+
+        reviews.Rating modelidan save()/delete() da, reviews.Review dan esa
+        sharh holati o'zgarganda (tasdiqlash/rad etish/o'chirish) chaqiriladi.
         """
         from django.db.models import Avg, Count
 
-        stats = self.ratings.aggregate(average=Avg("score"), total=Count("id"))
+        from reviews.models import Review
+
+        approved_user_ids = Review.objects.filter(
+            movie=self, status=Review.Status.APPROVED
+        ).values_list("user_id", flat=True)
+        stats = self.ratings.filter(user_id__in=approved_user_ids).aggregate(
+            average=Avg("score"), total=Count("id")
+        )
         self.avg_rating = round(stats["average"] or 0, 2)
         self.rating_count = stats["total"] or 0
         # update_fields — faqat shu ikki ustun yoziladi, save() signal zanjiri qisqaradi.

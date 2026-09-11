@@ -46,7 +46,10 @@ def rate_movie(request):
         user=request.user, movie=movie, defaults={"score": score}
     )
     # Rating.save() Movie.recalculate_rating() ni chaqirgan — yangi qiymatni o'qiymiz.
+    # Faqat moderatsiyadan o'tgan sharh egalarining bahosi hisoblanadi, shuning
+    # uchun bu baho o'rtachaga hali kirmagan bo'lishi mumkin (sharh tasdiqlanmagan).
     movie.refresh_from_db(fields=["avg_rating", "rating_count"])
+    display = movie.user_rating_display
 
     return JsonResponse(
         {
@@ -54,8 +57,9 @@ def rate_movie(request):
             "average": float(movie.avg_rating),
             "count": movie.rating_count,
             # Sahifada server chizgan qiymat bilan bir xil ko'rinishi uchun
-            # matn sifatida ("4.0", "4" emas).
-            "user_rating": f"{movie.user_rating_display:.1f}",
+            # matn sifatida ("4.0", "4" emas). Sayt o'rtachasi hali yo'q
+            # bo'lsa (masalan, sharh hali tasdiqlanmagan) — null.
+            "user_rating": f"{display:.1f}" if display is not None else None,
             "message": "Bahoyingiz qabul qilindi" if created else "Bahoyingiz yangilandi",
         }
     )

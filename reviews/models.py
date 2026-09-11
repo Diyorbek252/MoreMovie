@@ -90,6 +90,18 @@ class Review(models.Model):
     def __str__(self):
         return f"{self.user} — {self.movie} ({self.get_status_display()})"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Sharh holati (tasdiqlangan/rad etilgan/h.k.) filmning o'rtacha
+        # reytingiga ta'sir qiladi — faqat tasdiqlangan sharh egalarining
+        # bahosi hisoblanadi (Movie.recalculate_rating).
+        self.movie.recalculate_rating()
+
+    def delete(self, *args, **kwargs):
+        movie = self.movie
+        super().delete(*args, **kwargs)
+        movie.recalculate_rating()
+
     @property
     def is_visible(self):
         return self.status == self.Status.APPROVED
