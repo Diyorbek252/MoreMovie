@@ -58,12 +58,18 @@
           }
         });
 
-      // Kartalardagi doim ko'rinadigan "Watchlist'da" belgisi.
-      document
-        .querySelectorAll('.js-watchlist-badge[data-movie="' + movieId + '"]')
-        .forEach(function (badge) {
-          badge.hidden = !data.added;
-        });
+      // Kartalardagi doim ko'rinadigan "Watchlist'da" belgisi — FAQAT
+      // watchlist tugmasi bosilganda yangilanadi. Bu funksiya Favorite
+      // uchun ham chaqiriladi, o'sha holatda `data.added` FAVORITE
+      // holatiga tegishli — shart tekshirilmasa, favoritedan olib
+      // tashlash watchlist belgisini ham noto'g'ri yashirib qo'yardi.
+      if (selector === ".js-watchlist") {
+        document
+          .querySelectorAll('.js-watchlist-badge[data-movie="' + movieId + '"]')
+          .forEach(function (badge) {
+            badge.hidden = !data.added;
+          });
+      }
 
       MM.toast(data.message, data.added ? "success" : "info");
     } catch (error) {
