@@ -111,6 +111,20 @@
   color: #fff;
 }
 
+/* Faol holat (masalan Watchlist'ga qo'shilgan) — hover'dan KEYIN
+   turishi shart, aks holda ustiga sichqoncha borganda qizil fon
+   oqarib, oddiy ghost tugmaga o'xshab qolardi. */
+.btn--ghost.is-active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.btn--ghost.is-active:hover {
+  background: var(--red-bright);
+  border-color: var(--red-bright);
+}
+
 .btn--outline {
   border-color: var(--red);
   color: var(--red);
@@ -339,6 +353,24 @@
   gap: 4px;
 }
 
+/* "Watchlist'da" belgisi — o'ng tepada, doim ko'rinadi (hover shart emas) */
+.card__saved {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-full);
+  flex-shrink: 0;
+  background: var(--red);
+  color: #fff;
+  box-shadow: var(--shadow-red);
+}
+
+.card__saved svg {
+  width: 15px;
+  height: 15px;
+}
+
 /* Hover overlay — endi faqat watchlist/favorite tugmalari bor, shuning
    uchun pastga suriladi. `pointer-events: none` MUHIM: aks holda bu
    butun kartani qoplagan shaffof qatlam pastidagi poster havolasiga
@@ -460,9 +492,9 @@
 
 .grid {
   display: grid;
-  /* Sifatlar endi ustun sifatida chapda joylashadi (.card__qualities),
-     IMDb esa o'ng tepada — kartaning eni shu ikkalasi bir-biriga
-     tegmasligi uchun kamida ~230px bo'lishi kerak. */
+  /* Sifatlar ustun sifatida chapda (.card__qualities), Watchlist
+     belgisi esa o'ng tepada joylashadi — kartaning eni shu ikkalasi
+     bir-biriga tegmasligi uchun kamida ~230px bo'lishi kerak. */
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: var(--s-4);
 }

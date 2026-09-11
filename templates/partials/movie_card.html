@@ -25,12 +25,20 @@ har karta uchun alohida so'rov qilinmaydi.
       {% endif %}
     </a>
 
-    {# Yuqori chap burchak: sifatlar, yuqoridan pastga (eng yaxshisi tepada) #}
+    {% comment %}
+      Chapda sifatlar, o'ngda esa — Watchlist'ga qo'shilgan bo'lsa — doim
+      ko'rinadigan belgi (hover kerak emas, ro'yxatni ko'zdan kechirganda
+      ham qaysi filmlar allaqachon saqlanganini bilish uchun).
+    {% endcomment %}
     <div class="card__tags">
       <div class="card__qualities">
         {% for quality in movie.quality_badges %}
           <span class="badge badge--quality">{{ quality }}</span>
         {% endfor %}
+      </div>
+      <div class="card__saved js-watchlist-badge" data-movie="{{ movie.id }}"
+           title="Watchlist'da" {% if movie.id not in user_watchlist_ids %}hidden{% endif %}>
+        {% include "partials/icon.html" with name="bookmark-filled" %}
       </div>
     </div>
 
@@ -46,7 +54,12 @@ har karta uchun alohida so'rov qilinmaydi.
                   type="button" data-movie="{{ movie.id }}"
                   aria-label="Watchlist'ga qo'shish"
                   aria-pressed="{% if movie.id in user_watchlist_ids %}true{% else %}false{% endif %}">
-            {% include "partials/icon.html" with name="bookmark" %}
+            <span data-icon="outline" {% if movie.id in user_watchlist_ids %}hidden{% endif %}>
+              {% include "partials/icon.html" with name="bookmark" %}
+            </span>
+            <span data-icon="filled" {% if movie.id not in user_watchlist_ids %}hidden{% endif %}>
+              {% include "partials/icon.html" with name="bookmark-filled" %}
+            </span>
           </button>
           <button class="btn-icon js-favorite {% if movie.id in user_favorite_ids %}is-active{% endif %}"
                   type="button" data-movie="{{ movie.id }}"

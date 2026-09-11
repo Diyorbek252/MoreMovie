@@ -43,6 +43,26 @@
         .forEach(function (el) {
           el.classList.toggle("is-active", data.added);
           el.setAttribute("aria-pressed", String(data.added));
+
+          // Ikonka almashtirish (outline/filled) — player.js dagi
+          // play/pause bilan bir xil naqsh. Faqat shunday belgilangan
+          // tugmalarda ishlaydi, qolganlarida (masalan Favorite) hech
+          // narsa topilmagani uchun jim o'tkaziladi.
+          el.querySelectorAll("[data-icon]").forEach(function (holder) {
+            holder.hidden = (holder.dataset.icon === "filled") !== data.added;
+          });
+
+          const label = el.querySelector(".js-toggle-label");
+          if (label) {
+            label.textContent = data.added ? label.dataset.onLabel : label.dataset.offLabel;
+          }
+        });
+
+      // Kartalardagi doim ko'rinadigan "Watchlist'da" belgisi.
+      document
+        .querySelectorAll('.js-watchlist-badge[data-movie="' + movieId + '"]')
+        .forEach(function (badge) {
+          badge.hidden = !data.added;
         });
 
       MM.toast(data.message, data.added ? "success" : "info");
@@ -153,17 +173,17 @@
         starsInput.dataset.score = String(data.score);
         paint(data.score);
 
-        // Sahifadagi sayt bahosini yangilaymiz. Birinchi baho berilganda
-        // belgi hali yashirin bo'ladi — shu yerda ochamiz.
-        const avgEl = document.querySelector(".js-avg-rating");
-        if (avgEl) avgEl.textContent = data.user_rating;
+        // Sahifadagi sayt bahosini yangilaymiz. Bu faqat sharhi tasdiqlangan
+        // foydalanuvchilar hisobga olinganda mavjud bo'ladi (data.user_rating
+        // null bo'lishi mumkin — sharh hali moderatsiyada).
+        if (data.user_rating !== null) {
+          const avgEl = document.querySelector(".js-avg-rating");
+          if (avgEl) avgEl.textContent = data.user_rating;
 
-        const countEl = document.querySelector(".js-rating-count");
-        if (countEl) countEl.textContent = data.count;
-
-        document.querySelectorAll(".js-user-rating, .js-rating-count-wrap").forEach(
-          function (el) { el.hidden = false; }
-        );
+          document.querySelectorAll(".js-user-rating").forEach(
+            function (el) { el.hidden = false; }
+          );
+        }
 
         MM.toast(data.message, "success");
       } catch (error) {

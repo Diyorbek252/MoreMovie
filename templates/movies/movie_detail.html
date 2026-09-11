@@ -115,7 +115,15 @@
             <button class="btn btn--ghost btn--lg js-watchlist {% if movie.id in user_watchlist_ids %}is-active{% endif %}"
                     type="button" data-movie="{{ movie.id }}"
                     aria-pressed="{% if movie.id in user_watchlist_ids %}true{% else %}false{% endif %}">
-              {% include "partials/icon.html" with name="bookmark" %} Watchlist
+              <span data-icon="outline" {% if movie.id in user_watchlist_ids %}hidden{% endif %}>
+                {% include "partials/icon.html" with name="bookmark" %}
+              </span>
+              <span data-icon="filled" {% if movie.id not in user_watchlist_ids %}hidden{% endif %}>
+                {% include "partials/icon.html" with name="bookmark-filled" %}
+              </span>
+              <span class="js-toggle-label" data-on-label="Saqlangan" data-off-label="Watchlist">
+                {% if movie.id in user_watchlist_ids %}Saqlangan{% else %}Watchlist{% endif %}
+              </span>
             </button>
             <button class="btn-icon js-favorite {% if movie.id in user_favorite_ids %}is-active{% endif %}"
                     type="button" data-movie="{{ movie.id }}" aria-label="Sevimlilarga qo'shish"
