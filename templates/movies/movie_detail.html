@@ -156,12 +156,12 @@
 
         {# --- Ma'lumotlar jadvali --- #}
         <div class="facts">
-          {% if movie.country %}
+          {% if movie.countries.all %}
             <div class="fact">
               <div class="fact__icon">{% include "partials/icon.html" with name="globe" %}</div>
               <div>
                 <div class="fact__label">Davlat</div>
-                <div class="fact__value">{{ movie.country.name }}</div>
+                <div class="fact__value">{{ movie.countries.all|join:", " }}</div>
               </div>
             </div>
           {% endif %}

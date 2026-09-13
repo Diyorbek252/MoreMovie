@@ -101,7 +101,7 @@ def top_movies(limit=10, metric="views"):
 
     ``metric``: "views" | "downloads" | "rating"
     """
-    queryset = Movie.objects.published().select_related("country", "language")
+    queryset = Movie.objects.published().select_related("language").prefetch_related("countries")
 
     if metric == "downloads":
         return list(queryset.order_by("-downloads_count")[:limit])

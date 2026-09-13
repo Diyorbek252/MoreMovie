@@ -31,8 +31,8 @@ class SeriesQuerySet(models.QuerySet):
         return self.filter(is_published=True)
 
     def with_relations(self):
-        return self.select_related("country", "language").prefetch_related(
-            "genres", "directors"
+        return self.select_related("language").prefetch_related(
+            "genres", "directors", "countries"
         )
 
     def newest(self):
@@ -90,9 +90,9 @@ class Series(TimeStampedModel):
     )
 
     # --- Aloqalar ---
-    country = models.ForeignKey(
-        Country, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="series", verbose_name="davlat",
+    countries = models.ManyToManyField(
+        Country, related_name="series", blank=True, verbose_name="davlatlar",
+        help_text="Bir nechta davlat tanlash mumkin.",
     )
     language = models.ForeignKey(
         Language, on_delete=models.SET_NULL, null=True, blank=True,

@@ -188,7 +188,7 @@ class MovieManageListView(DashboardPermissionMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Movie.objects.select_related("country", "language").prefetch_related("directors")
+        queryset = Movie.objects.select_related("language").prefetch_related("directors", "countries")
 
         if query := self.request.GET.get("q", "").strip():
             # `directors` M2M orqali OR bilan filtrlash bir nechta mos
@@ -663,7 +663,7 @@ class SeriesManageListView(DashboardPermissionMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Series.objects.select_related("country", "language").prefetch_related("directors")
+        queryset = Series.objects.select_related("language").prefetch_related("directors", "countries")
 
         if query := self.request.GET.get("q", "").strip():
             # `directors` M2M orqali OR bilan filtrlash bir nechta mos

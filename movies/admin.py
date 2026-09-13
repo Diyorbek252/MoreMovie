@@ -119,13 +119,13 @@ class MovieAdmin(admin.ModelAdmin):
         "genres",
         "categories",
         "release_year",
-        "country",
+        "countries",
         "language",
     ]
     search_fields = ["title", "original_title", "description", "directors__full_name"]
     prepopulated_fields = {"slug": ("title",)}
-    autocomplete_fields = ["country", "language"]
-    filter_horizontal = ["genres", "categories", "directors"]
+    autocomplete_fields = ["language"]
+    filter_horizontal = ["genres", "categories", "directors", "countries"]
     inlines = [MovieCastInline, ScreenshotInline]
     readonly_fields = [
         "views_count", "downloads_count", "avg_rating", "rating_count",
@@ -166,7 +166,7 @@ class MovieAdmin(admin.ModelAdmin):
                 "fields": [
                     "genres",
                     "categories",
-                    "country",
+                    "countries",
                     "language",
                     "directors",
                     "release_year",
@@ -209,8 +209,8 @@ class MovieAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return (
             super().get_queryset(request)
-            .select_related("country", "language")
-            .prefetch_related("directors")
+            .select_related("language")
+            .prefetch_related("countries", "directors")
         )
 
     @admin.display(description="poster")

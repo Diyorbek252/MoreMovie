@@ -470,7 +470,6 @@ class Command(BaseCommand):
             # CC BY litsenziyasi yuklab olishga ham ruxsat beradi.
             is_download_allowed=has_video,
             download_url=data["video"] if has_video else "",
-            country=countries.get(data["country"]),
             language=languages.get(data["language"]),
             is_featured=data["featured"],
             is_published=True,
@@ -489,6 +488,8 @@ class Command(BaseCommand):
 
         movie.genres.set([genres[g] for g in data["genres"] if g in genres])
         movie.directors.set([self._get_director(data["director"], directors)])
+        country = countries.get(data["country"])
+        movie.countries.set([country] if country else [])
 
         for order, actor_name in enumerate(data["cast"]):
             MovieCast.objects.create(
