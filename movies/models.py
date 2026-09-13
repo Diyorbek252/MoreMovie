@@ -257,7 +257,7 @@ QUALITY_ORDER = ("4K", "FHD", "HD", "SD")
 # Kartochkada bir nechta sifat birga ko'rsatilganda ("1080p / 720p") joy
 # tejash uchun qisqa kod — `get_quality_display()` kabi "Full HD 1080p"
 # emas, faqat "1080p".
-QUALITY_SHORT_LABELS = {"SD": "SD", "HD": "720p", "FHD": "1080p", "4K": "4K"}
+QUALITY_SHORT_LABELS = {"SD": "480p", "HD": "720p", "FHD": "1080p", "4K": "4K"}
 
 
 class MovieQuerySet(models.QuerySet):
@@ -309,7 +309,7 @@ class Movie(TimeStampedModel):
     """Katalogdagi bitta film."""
 
     class Quality(models.TextChoices):
-        SD = "SD", "SD"
+        SD = "SD", "SD 480p"
         HD = "HD", "HD 720p"
         FULL_HD = "FHD", "Full HD 1080p"
         UHD = "4K", "4K Ultra HD"
