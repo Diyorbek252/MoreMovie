@@ -13,6 +13,7 @@ from django.views.generic import DetailView, ListView
 
 from movies.models import Genre
 from movies.views import QueryStringMixin
+from reviews.models import Rating, Review
 
 from .models import Episode, Series
 
@@ -137,5 +138,21 @@ class SeriesDetailView(DetailView):
             .order_by("-shared")
             .distinct()[:12]
         )
+
+        # Tasdiqlangan sharhlar — Movie bilan bir xil naqsh.
+        context["reviews"] = (
+            Review.objects.filter(series=series, status=Review.Status.APPROVED)
+            .select_related("user", "user__profile")
+            .order_by("-created_at")[:20]
+        )
+
+        if user.is_authenticated:
+            rating = Rating.objects.filter(user=user, series=series).first()
+            context["user_rating"] = rating.score if rating else 0
+            context["user_review"] = Review.objects.filter(user=user, series=series).first()
+        else:
+            context["user_rating"] = 0
+
+        context["star_range"] = [1, 2, 3, 4, 5]
 
         return context

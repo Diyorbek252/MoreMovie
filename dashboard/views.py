@@ -612,7 +612,7 @@ class ReviewManageListView(DashboardPermissionMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        queryset = Review.objects.select_related("user", "movie")
+        queryset = Review.objects.select_related("user", "movie", "series")
         status = self.request.GET.get("status", "pending")
         if status in dict(Review.Status.choices):
             queryset = queryset.filter(status=status)
@@ -1443,7 +1443,7 @@ def moderate_review(request, pk, action):
                 review.user,
                 settings.CINEPOINT_REVIEW_REWARD,
                 CinepointTransaction.Reason.REVIEW_APPROVED,
-                note=f"«{review.movie.title}» uchun sharh tasdiqlandi",
+                note=f"«{review.target.title}» uchun sharh tasdiqlandi",
                 related=review,
             )
 

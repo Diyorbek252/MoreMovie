@@ -171,10 +171,15 @@
       if (!button) return;
 
       const score = buttons.indexOf(button) + 1;
-      const movieId = starsInput.dataset.movie;
+      // Film sahifasida data-movie, serial sahifasida data-series —
+      // qaysi biri bo'lsa, shu kalit bilan yuboriladi (reviews.api ikkalasini
+      // ham qo'llab-quvvatlaydi).
+      const payload = starsInput.dataset.movie
+        ? { movie: starsInput.dataset.movie, score: score }
+        : { series: starsInput.dataset.series, score: score };
 
       try {
-        const data = await MM.postJSON(ENDPOINTS.rate, { movie: movieId, score: score });
+        const data = await MM.postJSON(ENDPOINTS.rate, payload);
 
         starsInput.dataset.score = String(data.score);
         paint(data.score);
@@ -220,11 +225,12 @@
 
       submit.classList.add("is-loading");
 
+      const reviewPayload = reviewForm.dataset.movie
+        ? { movie: reviewForm.dataset.movie, comment: comment }
+        : { series: reviewForm.dataset.series, comment: comment };
+
       try {
-        const data = await MM.postJSON(ENDPOINTS.review, {
-          movie: reviewForm.dataset.movie,
-          comment: comment,
-        });
+        const data = await MM.postJSON(ENDPOINTS.review, reviewPayload);
 
         MM.toast(data.message, "success");
 

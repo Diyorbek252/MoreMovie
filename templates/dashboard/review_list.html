@@ -38,7 +38,8 @@
 
             <strong>{{ review.user.username }}</strong>
             <span class="dim">→</span>
-            <a href="{{ review.movie.get_absolute_url }}">{{ review.movie.title }}</a>
+            <a href="{{ review.target.get_absolute_url }}">{{ review.target.title }}</a>
+            {% if review.series %}<span class="badge">Serial</span>{% endif %}
 
             {% if review.user_score %}
               <span class="badge badge--rating">

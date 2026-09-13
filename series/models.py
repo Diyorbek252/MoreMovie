@@ -117,6 +117,13 @@ class Series(TimeStampedModel):
     is_published = models.BooleanField("chop etilgan", default=False)
     views_count = models.PositiveIntegerField("ko'rishlar soni", default=0, editable=False)
 
+    # --- Denormalizatsiya (Movie bilan bir xil naqsh) ---
+    # Har detail sahifada AVG() hisoblamaslik uchun Rating saqlanganda yangilanadi.
+    avg_rating = models.DecimalField(
+        "o'rtacha reyting", max_digits=3, decimal_places=2, default=0, editable=False
+    )
+    rating_count = models.PositiveIntegerField("baholar soni", default=0, editable=False)
+
     objects = SeriesQuerySet.as_manager()
 
     class Meta:
@@ -146,6 +153,37 @@ class Series(TimeStampedModel):
     @property
     def episode_count(self):
         return Episode.objects.filter(season__series=self).count()
+
+    @property
+    def user_rating_display(self):
+        """Sayt foydalanuvchilarining o'rtacha bahosi — o'z shkalasida (1-5).
+
+        IMDb reytingi (`imdb_rating`, 0-10) bilan ATAYLAB aralashtirilmaydi —
+        Movie.user_rating_display bilan bir xil naqsh.
+        """
+        if not self.rating_count:
+            return None
+        return round(float(self.avg_rating), 1)
+
+    def recalculate_rating(self):
+        """Reyting o'rtachasini qayta hisoblab, denormalizatsiya
+        maydonlarini yangilaydi — Movie.recalculate_rating bilan bir xil
+        naqsh, faqat serial uchun."""
+        from django.db.models import Avg, Count
+
+        from reviews.models import Review
+
+        approved_user_ids = Review.objects.filter(
+            series=self, status=Review.Status.APPROVED
+        ).values_list("user_id", flat=True)
+        stats = self.ratings.filter(user_id__in=approved_user_ids).aggregate(
+            average=Avg("score"), total=Count("id")
+        )
+        self.avg_rating = round(stats["average"] or 0, 2)
+        self.rating_count = stats["total"] or 0
+        Series.objects.filter(pk=self.pk).update(
+            avg_rating=self.avg_rating, rating_count=self.rating_count
+        )
 
     def get_absolute_url(self):
         return reverse("series:series_detail", kwargs={"slug": self.slug})
