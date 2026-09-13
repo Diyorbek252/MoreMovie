@@ -53,7 +53,7 @@ class MovieListView(QueryStringMixin, ListView):
                 | Q(original_title__icontains=query)
                 | Q(description__icontains=query)
                 | Q(genres__name__icontains=query)
-                | Q(director__full_name__icontains=query)
+                | Q(directors__full_name__icontains=query)
                 | Q(cast__full_name__icontains=query)
             ).distinct()
 
@@ -140,8 +140,8 @@ class MovieDetailView(DetailView):
     def get_queryset(self):
         return (
             Movie.objects.published()
-            .select_related("country", "language", "director")
-            .prefetch_related("genres", "screenshots", "cast_members__actor", "videos")
+            .select_related("country", "language")
+            .prefetch_related("genres", "screenshots", "cast_members__actor", "videos", "directors")
         )
 
     def get_context_data(self, **kwargs):
@@ -173,13 +173,16 @@ class MovieDetailView(DetailView):
         )
 
         context["resume_at"] = 0
+        # `can_watch` (litsenziya) USTIGA premium-obuna tekshiruvi —
+        # pleer faqat shu bayroq True bo'lganda ko'rsatiladi.
+        context["can_play"] = movie.is_watchable_by(user)
 
         if user.is_authenticated:
             rating = Rating.objects.filter(user=user, movie=movie).first()
             context["user_rating"] = rating.score if rating else 0
             context["user_review"] = Review.objects.filter(user=user, movie=movie).first()
 
-            if movie.can_watch:
+            if context["can_play"]:
                 # Ko'rishlar hisoblagichi — F() bilan atomik oshiriladi
                 # (race condition yo'q). Faqat haqiqatan pleer
                 # ko'rsatiladigan holatda oshiriladi.
@@ -284,7 +287,7 @@ class DirectorDetailView(QueryStringMixin, ListView):
         return (
             Movie.objects.published()
             .with_relations()
-            .filter(director=self.director)
+            .filter(directors=self.director)
             .order_by("-release_year", "-created_at")
         )
 
@@ -336,7 +339,7 @@ class SearchView(QueryStringMixin, ListView):
                 | Q(original_title__icontains=self.query)
                 | Q(description__icontains=self.query)
                 | Q(genres__name__icontains=self.query)
-                | Q(director__full_name__icontains=self.query)
+                | Q(directors__full_name__icontains=self.query)
                 | Q(cast__full_name__icontains=self.query)
             )
             .distinct()
@@ -362,12 +365,11 @@ def search_suggest(request):
 
     movies = (
         Movie.objects.published()
-        .select_related("director")
         .filter(
             Q(title__icontains=query)
             | Q(original_title__icontains=query)
             | Q(genres__name__icontains=query)
-            | Q(director__full_name__icontains=query)
+            | Q(directors__full_name__icontains=query)
             | Q(cast__full_name__icontains=query)
         )
         .distinct()

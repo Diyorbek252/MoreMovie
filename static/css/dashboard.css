@@ -548,3 +548,135 @@
     font-size: var(--fs-2xl);
   }
 }
+
+/* --------------------------------------------------------------------------
+   Fonda video yuklash paneli (static/js/upload-manager.js)
+   Dashboardning istalgan sahifasida pastki o'ng burchakda turadi.
+   -------------------------------------------------------------------------- */
+
+.upload-panel {
+  position: fixed;
+  right: var(--s-4);
+  bottom: var(--s-4);
+  z-index: var(--z-toast);
+  width: min(360px, calc(100vw - var(--s-6)));
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-cine);
+  overflow: hidden;
+}
+
+.upload-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.upload-panel__title {
+  font-size: var(--fs-sm);
+}
+
+.upload-panel__toggle {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.upload-panel__toggle:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.upload-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.upload-panel.is-collapsed .upload-panel__body {
+  display: none;
+}
+
+.upload-item {
+  max-height: 160px;
+  transition: opacity 400ms var(--ease), max-height 400ms var(--ease),
+              margin 400ms var(--ease), padding 400ms var(--ease);
+}
+
+/* Yuklab bo'lingach bir necha soniyadan keyin shu holatga o'tadi —
+   JS (upload-manager.js) qo'shadi, o'zi asta yo'qolishini boshlaydi. */
+.upload-item.is-fading {
+  opacity: 0;
+  max-height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.upload-item__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-2);
+}
+
+.upload-item__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-item__percent {
+  flex-shrink: 0;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+.upload-item__bar {
+  height: 6px;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.upload-item__bar span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--red), var(--red-hot));
+  transition: width 200ms linear;
+}
+
+.upload-item__meta {
+  margin-top: var(--s-2);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.upload-item.is-done .upload-item__percent { color: var(--success); }
+.upload-item.is-done .upload-item__bar span { background: var(--success); }
+
+.upload-item.is-failed .upload-item__percent { color: var(--danger); }
+.upload-item.is-failed .upload-item__bar span { background: var(--danger); }

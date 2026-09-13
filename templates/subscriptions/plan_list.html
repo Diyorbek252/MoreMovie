@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Obuna — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} obuna rejalari — premium filmlarni ko'rish uchun tanlang.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--s-6); padding-bottom: var(--s-8)">
+
+  <div class="page-head" style="padding-bottom: var(--s-6)">
+    <h1 class="page-head__title">Obuna rejalari</h1>
+    <p class="muted" style="max-width: 60ch; margin: var(--s-2) auto 0">
+      Premium filmlarni ochish va reklamasiz tomosha qilish uchun o'zingizga mos rejani tanlang.
+    </p>
+    {% if active_subscription %}
+      <p style="margin-top: var(--s-4)">
+        <span class="badge badge--warning">
+          {% include "partials/icon.html" with name="crown" %} Joriy reja: {{ active_subscription.plan.name }}
+        </span>
+        <a href="{% url 'subscriptions:my_subscription' %}" style="margin-left: var(--s-3); color: var(--red); font-weight: 600">
+          Mening obunam →
+        </a>
+      </p>
+    {% endif %}
+  </div>
+
+  {% if plans %}
+    <div class="plan-grid">
+      {% for plan in plans %}
+        <article class="plan-card {% if plan.is_highlighted %}plan-card--featured{% endif %}">
+          {% if plan.is_highlighted %}
+            <div class="plan-card__ribbon">Eng ommabop</div>
+          {% endif %}
+
+          <h2 class="plan-card__name">{{ plan.name }}</h2>
+          {% if plan.tagline %}<p class="plan-card__tagline">{{ plan.tagline }}</p>{% endif %}
+
+          {% with price=plan.cheapest_price %}
+            {% if price %}
+              <div class="plan-card__price">
+                <span class="plan-card__amount">{{ price.price|intcomma }}</span> so'm
+                <span class="plan-card__period">/ {{ price.label|lower }}dan boshlab</span>
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          {% if plan.feature_list %}
+            <ul class="plan-features">
+              {% for feature in plan.feature_list %}
+                <li>{% include "partials/icon.html" with name="check" %} {{ feature }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          {% if user.is_authenticated %}
+            <a class="btn {% if plan.is_highlighted %}btn--primary{% else %}btn--ghost{% endif %} btn--block"
+               href="{% url 'subscriptions:subscription_request' plan.slug %}">
+              Rejani tanlash
+            </a>
+          {% else %}
+            <a class="btn {% if plan.is_highlighted %}btn--primary{% else %}btn--ghost{% endif %} btn--block"
+               href="{% url 'users:login' %}?next={{ request.path }}">
+              Kirish kerak
+            </a>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="crown" %}
+      <h2 class="empty__title">Hozircha obuna rejasi yo'q</h2>
+      <p>Tez orada obuna rejalari qo'shiladi.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

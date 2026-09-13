@@ -1,0 +1,94 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block dash_title %}Obuna so'rovlari{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Obuna so'rovlari</h1>
+      <p class="dash-head__sub">{{ page_obj.paginator.count }} ta yozuv</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <a class="chip {% if current_status == 'pending' %}is-active{% endif %}"
+       href="?status=pending">Kutilmoqda ({{ counts.pending }})</a>
+    <a class="chip {% if current_status == 'active' %}is-active{% endif %}"
+       href="?status=active">Faol ({{ counts.active }})</a>
+    <a class="chip {% if current_status == 'rejected' %}is-active{% endif %}"
+       href="?status=rejected">Rad etilgan ({{ counts.rejected }})</a>
+    <a class="chip {% if current_status == 'expired' %}is-active{% endif %}"
+       href="?status=expired">Tugagan ({{ counts.expired }})</a>
+  </div>
+
+  <div class="panel">
+    {% if subscriptions %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Foydalanuvchi</th>
+              <th>Reja</th>
+              <th>Summa</th>
+              <th>To'lov haqida</th>
+              <th>Chek</th>
+              <th>Sana</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for subscription in subscriptions %}
+              <tr data-order="{{ subscription.id }}">
+                <td class="table__title">{{ subscription.user.username }}</td>
+                <td class="muted">{{ subscription.plan_name }} ({{ subscription.duration_days }} kun)</td>
+                <td class="muted">{{ subscription.price_paid|intcomma }} so'm</td>
+                <td class="muted">{{ subscription.payment_note|default:"—" }}</td>
+                <td>
+                  {% if subscription.payment_receipt %}
+                    <a class="btn btn--sm btn--ghost" href="{{ subscription.payment_receipt.url }}" target="_blank" rel="noopener">
+                      {% include "partials/icon.html" with name="eye" %} Ko'rish
+                    </a>
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td class="dim" style="font-size: var(--fs-xs)">{{ subscription.created_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                  {% if subscription.status == "pending" %}
+                    <div class="table__actions">
+                      <button class="btn btn--sm btn--primary js-order-action"
+                              data-url="{% url 'dashboard:api_subscription_approve' subscription.pk %}">
+                        {% include "partials/icon.html" with name="check" %} Tasdiqlash
+                      </button>
+                      <button class="btn btn--sm btn--danger js-order-action"
+                              data-confirm="Bu so'rov rad etiladi va foydalanuvchiga xabar boradi. Davom etamizmi?"
+                              data-url="{% url 'dashboard:api_subscription_reject' subscription.pk %}">
+                        Rad etish
+                      </button>
+                    </div>
+                  {% elif subscription.status == "active" %}
+                    <span class="badge badge--success">Faol · {{ subscription.days_left }} kun qoldi</span>
+                  {% elif subscription.status == "rejected" %}
+                    <span class="badge badge--red">Rad etilgan</span>
+                  {% else %}
+                    <span class="badge badge--warning">Tugagan</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% include "partials/pagination.html" %}
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="crown" %}
+        <h2 class="empty__title">Bu bo'limda so'rov yo'q</h2>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

@@ -16,8 +16,12 @@
     <a class="btn btn--ghost" href="{% url 'dashboard:movie_list' %}">← Ro'yxatga qaytish</a>
   </div>
 
-  {# enctype — poster/backdrop/video yuklash uchun majburiy #}
-  <form method="post" enctype="multipart/form-data" novalidate>
+  {% comment %}
+    enctype — poster/backdrop/video yuklash uchun majburiy.
+    id="movie-form" — upload-manager.js katta video tanlanganini shu
+    orqali aniqlaydi va faylni POST'dan ajratib, fonda yuklaydi.
+  {% endcomment %}
+  <form id="movie-form" method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
     {% if form.non_field_errors %}
@@ -61,6 +65,16 @@
     {# ==================== MEDIA ==================== #}
     <div class="panel">
       <div class="panel__head"><h2 class="panel__title">Media</h2></div>
+
+      <div class="license-note" style="margin-bottom: var(--s-4)">
+        {% include "partials/icon.html" with name="info" %}
+        <div>
+          <strong>Katta video tanlansa kutib o'tirish shart emas.</strong>
+          «Saqlash» bosilganda film darhol saqlanadi va siz dashboardga
+          o'tasiz — video esa fonda, pastki o'ng burchakdagi panelda
+          yuklanib turadi. Yuklash tugaguncha dashboarddan chiqib ketmang.
+        </div>
+      </div>
 
       <div class="form-grid">
         {% for field in form %}
@@ -198,9 +212,16 @@
         {% if form.categories.errors %}<p class="field__error">{{ form.categories.errors|first }}</p>{% endif %}
       </div>
 
+      <div class="field" style="margin-bottom: var(--s-4)">
+        <label class="field__label">{{ form.directors.label }}</label>
+        <ul class="checks">{{ form.directors }}</ul>
+        {% if form.directors.errors %}<p class="field__error">{{ form.directors.errors|first }}</p>
+        {% else %}<p class="field__help">{{ form.directors.help_text }}</p>{% endif %}
+      </div>
+
       <div class="form-grid">
         {% for field in form %}
-          {% if field.name == "country" or field.name == "language" or field.name == "director" or field.name == "release_year" or field.name == "release_date" or field.name == "duration_minutes" or field.name == "quality" or field.name == "age_rating" or field.name == "imdb_rating" %}
+          {% if field.name == "country" or field.name == "language" or field.name == "release_year" or field.name == "release_date" or field.name == "duration_minutes" or field.name == "quality" or field.name == "age_rating" or field.name == "imdb_rating" %}
             <div class="field">
               <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
               {{ field }}

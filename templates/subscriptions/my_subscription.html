@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Mening obunam — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}Joriy obuna holatingiz va so'rovlar tarixi.{% endblock %}
+
+{% block content %}
+<div class="container sub-page">
+
+  <div class="sub-page__head">
+    <h1 class="page-head__title" style="margin: 0">Mening obunam</h1>
+    {% if active_subscription %}
+      <a class="btn btn--ghost" href="{% url 'subscriptions:plan_list' %}">Rejalarni ko'rish</a>
+    {% endif %}
+  </div>
+
+  {% if active_subscription %}
+    {% comment %}
+      Faol obuna kartasi — sahifaning markazi. Oltin ohang (--warning)
+      premiumni bildiradi; qizil (asosiy harakat rangi) bilan
+      raqobatlashmasligi uchun ataylab shu rang tanlangan.
+    {% endcomment %}
+    <section class="sub-hero">
+      <div class="sub-hero__glow" aria-hidden="true"></div>
+
+      <div class="sub-hero__top">
+        <div class="sub-hero__id">
+          <span class="sub-hero__crown">
+            {% include "partials/icon.html" with name="crown" %}
+          </span>
+          <div>
+            <p class="sub-hero__label">Joriy reja</p>
+            <h2 class="sub-hero__plan">{{ active_subscription.plan.name }}</h2>
+            {% if active_subscription.plan.tagline %}
+              <p class="sub-hero__tagline">{{ active_subscription.plan.tagline }}</p>
+            {% endif %}
+          </div>
+        </div>
+        <span class="badge badge--success sub-hero__status">Faol</span>
+      </div>
+
+      <div class="sub-hero__progress">
+        <div class="sub-hero__bar">
+          <span style="width: {{ active_subscription.percent_left }}%"></span>
+        </div>
+        <div class="sub-hero__progress-meta">
+          <strong>{{ active_subscription.days_left }} kun qoldi</strong>
+          <span>{{ active_subscription.ends_at|date:"d.m.Y" }} gacha</span>
+        </div>
+      </div>
+
+      <div class="sub-stats">
+        <div class="sub-stat">
+          <p class="sub-stat__label">Boshlangan</p>
+          <p class="sub-stat__value">{{ active_subscription.starts_at|date:"d.m.Y" }}</p>
+        </div>
+        <div class="sub-stat">
+          <p class="sub-stat__label">Tugaydi</p>
+          <p class="sub-stat__value">{{ active_subscription.ends_at|date:"d.m.Y" }}</p>
+        </div>
+        <div class="sub-stat">
+          <p class="sub-stat__label">To'langan</p>
+          <p class="sub-stat__value">{{ active_subscription.price_paid|intcomma }} so'm</p>
+        </div>
+      </div>
+
+      {% if active_subscription.plan.feature_list %}
+        <ul class="sub-perks">
+          {% for feature in active_subscription.plan.feature_list %}
+            <li>{% include "partials/icon.html" with name="check" %} {{ feature }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <a class="btn btn--primary btn--block sub-hero__cta"
+         href="{% url 'subscriptions:plan_list' %}">
+        {% include "partials/icon.html" with name="crown" %} Obunani uzaytirish
+      </a>
+    </section>
+  {% else %}
+    <section class="sub-empty">
+      <span class="sub-empty__icon">{% include "partials/icon.html" with name="crown" %}</span>
+      <h2 class="sub-empty__title">Faol obunangiz yo'q</h2>
+      <p class="sub-empty__text">
+        Premium filmlarni ochish va reklamasiz tomosha qilish uchun o'zingizga mos rejani tanlang.
+      </p>
+      <a class="btn btn--primary btn--lg" href="{% url 'subscriptions:plan_list' %}">
+        Rejalarni ko'rish
+      </a>
+    </section>
+  {% endif %}
+
+  {% if subscriptions %}
+    <section class="sub-history">
+      <h2 class="sub-history__title">So'rovlar tarixi</h2>
+
+      <div class="sub-timeline">
+        {% for subscription in subscriptions %}
+          <article class="sub-entry sub-entry--{{ subscription.status }}">
+            <span class="sub-entry__dot" aria-hidden="true"></span>
+
+            <div class="sub-entry__body">
+              <div class="sub-entry__head">
+                <h3 class="sub-entry__plan">{{ subscription.plan_name }}</h3>
+                {% if subscription.status == "pending" %}
+                  <span class="badge badge--warning">Tasdiq kutilmoqda</span>
+                {% elif subscription.status == "active" %}
+                  <span class="badge badge--success">Faol</span>
+                {% elif subscription.status == "rejected" %}
+                  <span class="badge badge--red">Rad etilgan</span>
+                {% elif subscription.status == "expired" %}
+                  <span class="badge">Muddati tugagan</span>
+                {% else %}
+                  <span class="badge">Bekor qilingan</span>
+                {% endif %}
+              </div>
+
+              <div class="sub-entry__meta">
+                <span>{% include "partials/icon.html" with name="calendar" %} {{ subscription.duration_days }} kun</span>
+                <span>{% include "partials/icon.html" with name="coin" %} {{ subscription.price_paid|intcomma }} so'm</span>
+                <span>{% include "partials/icon.html" with name="clock" %} {{ subscription.created_at|date:"d.m.Y H:i" }}</span>
+              </div>
+
+              {% if subscription.status == "rejected" and subscription.admin_note %}
+                <p class="sub-entry__note">
+                  {% include "partials/icon.html" with name="info" %} {{ subscription.admin_note }}
+                </p>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+</div>
+{% endblock %}

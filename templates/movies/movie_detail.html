@@ -19,7 +19,11 @@
     "description": "{{ movie.meta_description_text|escapejs }}",
     "datePublished": "{{ movie.release_year }}",
     {% if movie.poster %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ movie.poster.url }}",{% endif %}
-    {% if movie.director %}"director": {"@type": "Person", "name": "{{ movie.director.full_name|escapejs }}"},{% endif %}
+    {% if movie.directors.all %}"director": [
+      {% for director in movie.directors.all %}
+        {"@type": "Person", "name": "{{ director.full_name|escapejs }}"}{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ],{% endif %}
     {% if movie.rating_count %}"aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "{{ movie.avg_rating }}",
@@ -224,7 +228,7 @@
 {% endcomment %}
 <div class="container">
   <section class="section" id="player" data-movie="{{ movie.id }}" data-resume="{{ resume_at }}">
-    {% if movie.can_watch %}
+    {% if can_play %}
       {% if user.is_authenticated %}
         <div class="player">
           <video preload="metadata"
@@ -317,6 +321,8 @@
           </div>
         </div>
       {% endif %}
+    {% elif movie.can_watch and movie.is_premium %}
+      {% include "partials/premium_lock.html" %}
     {% elif movie.trailer_url %}
       <div class="video-frame">
         <iframe src="{{ movie.trailer_url }}" title="{{ movie.title }} treyleri"
@@ -330,7 +336,7 @@
 <div class="container">
 
   {# ==================== AKTYORLAR / REJISSYOR ==================== #}
-  {% if movie.cast_members.all or movie.director %}
+  {% if movie.cast_members.all or movie.directors.all %}
     <section class="section">
       <div class="section__head">
         <div class="people-tabs">
@@ -361,18 +367,18 @@
       </div>
 
       <div class="cast-rail" data-people-panel="director" hidden>
-        {% if movie.director %}
-          <a class="cast-card" href="{{ movie.director.get_absolute_url }}">
-            {% if movie.director.photo %}
-              <img class="cast-card__photo" src="{{ movie.director.photo.url }}"
-                   alt="{{ movie.director.full_name }}" loading="lazy" width="132" height="132">
+        {% for director in movie.directors.all %}
+          <a class="cast-card" href="{{ director.get_absolute_url }}">
+            {% if director.photo %}
+              <img class="cast-card__photo" src="{{ director.photo.url }}"
+                   alt="{{ director.full_name }}" loading="lazy" width="132" height="132">
             {% else %}
-              <div class="cast-card__photo cast-card__photo--initials">{{ movie.director.initials }}</div>
+              <div class="cast-card__photo cast-card__photo--initials">{{ director.initials }}</div>
             {% endif %}
-            <div class="cast-card__name">{{ movie.director.full_name }}</div>
+            <div class="cast-card__name">{{ director.full_name }}</div>
             <div class="cast-card__role">Rejissyor</div>
           </a>
-        {% endif %}
+        {% endfor %}
       </div>
     </section>
   {% endif %}
@@ -383,7 +389,7 @@
     bo'limining o'zida ko'rsatiladi (bitta filmda ikkalasi ham
     takrorlanmasligi uchun).
   {% endcomment %}
-  {% if movie.can_watch and movie.trailer_url %}
+  {% if can_play and movie.trailer_url %}
     <section class="section" id="trailer">
       <div class="section__head"><h2 class="section__title">Treyler</h2></div>
       <div class="video-frame">
@@ -512,7 +518,7 @@
 {% endblock %}
 
 {% block extra_js %}
-  {% if movie.can_watch and user.is_authenticated %}
+  {% if can_play and user.is_authenticated %}
     <script src="{% static 'js/player.js' %}" defer></script>
   {% endif %}
 {% endblock %}

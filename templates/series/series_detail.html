@@ -277,7 +277,7 @@
   {% endif %}
 
   {# ==================== AKTYORLAR / REJISSYOR ==================== #}
-  {% if series.cast_members.all or series.director %}
+  {% if series.cast_members.all or series.directors.all %}
     <section class="section">
       <div class="section__head">
         <div class="people-tabs">
@@ -308,18 +308,18 @@
       </div>
 
       <div class="cast-rail" data-people-panel="director" hidden>
-        {% if series.director %}
-          <a class="cast-card" href="{{ series.director.get_absolute_url }}">
-            {% if series.director.photo %}
-              <img class="cast-card__photo" src="{{ series.director.photo.url }}"
-                   alt="{{ series.director.full_name }}" loading="lazy" width="132" height="132">
+        {% for director in series.directors.all %}
+          <a class="cast-card" href="{{ director.get_absolute_url }}">
+            {% if director.photo %}
+              <img class="cast-card__photo" src="{{ director.photo.url }}"
+                   alt="{{ director.full_name }}" loading="lazy" width="132" height="132">
             {% else %}
-              <div class="cast-card__photo cast-card__photo--initials">{{ series.director.initials }}</div>
+              <div class="cast-card__photo cast-card__photo--initials">{{ director.initials }}</div>
             {% endif %}
-            <div class="cast-card__name">{{ series.director.full_name }}</div>
+            <div class="cast-card__name">{{ director.full_name }}</div>
             <div class="cast-card__role">Rejissyor</div>
           </a>
-        {% endif %}
+        {% endfor %}
       </div>
     </section>
   {% endif %}

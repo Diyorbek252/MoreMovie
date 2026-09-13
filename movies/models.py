@@ -272,8 +272,8 @@ class MovieQuerySet(models.QuerySet):
         `videos` ham shu yerda — kartadagi sifat belgisi va `can_watch`
         tekshiruvi qo'shimcha sifatlarni ham hisobga oladi.
         """
-        return self.select_related("country", "language", "director").prefetch_related(
-            "genres", "videos"
+        return self.select_related("country", "language").prefetch_related(
+            "genres", "videos", "directors"
         )
 
     def trending(self):
@@ -401,9 +401,9 @@ class Movie(TimeStampedModel):
         Language, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="movies", verbose_name="til",
     )
-    director = models.ForeignKey(
-        Director, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="directed_movies", verbose_name="rejissyor",
+    directors = models.ManyToManyField(
+        Director, related_name="directed_movies", blank=True, verbose_name="rejissyorlar",
+        help_text="Bir nechta rejissyor tanlash mumkin.",
     )
     cast = models.ManyToManyField(
         Actor, through="MovieCast", related_name="acted_movies",
@@ -533,6 +533,21 @@ class Movie(TimeStampedModel):
             and self.is_download_allowed
             and bool(self.download_url)
         )
+
+    def is_watchable_by(self, user):
+        """`can_watch` USTIGA obuna tekshiruvi qo'shadi — hech qachon uning
+        o'rniga emas. Litsenziya ruxsat bermasa (`can_watch=False`), obuna
+        ham hech narsani ocha olmaydi.
+        """
+        if not self.can_watch:
+            return False
+        if not self.is_premium:
+            return True
+        # Lokal import — aylanma import: subscriptions.models
+        # movies.models'dan TimeStampedModel oladi.
+        from subscriptions.services import has_premium_access
+
+        return has_premium_access(user)
 
     @property
     def video_sources(self):

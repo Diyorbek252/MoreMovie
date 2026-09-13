@@ -38,6 +38,10 @@ ROLES = {
         # Do'kon — mahsulotlar to'liq CRUD
         "shop.add_product", "shop.change_product", "shop.delete_product", "shop.view_product",
         "shop.view_order",
+        # Obuna rejalari — to'liq CRUD
+        "subscriptions.add_plan", "subscriptions.change_plan",
+        "subscriptions.delete_plan", "subscriptions.view_plan",
+        "subscriptions.view_subscription",
     ],
     "Moderator": [
         "dashboard.access_dashboard",
@@ -48,6 +52,8 @@ ROLES = {
         # Buyurtmalarni yetkazish/bekor qilish va balansni qo'lda tuzatish
         "shop.view_order", "shop.change_order",
         "dashboard.manage_balance",
+        # Obuna so'rovlarini tasdiqlash/rad etish
+        "subscriptions.view_subscription", "subscriptions.change_subscription",
     ],
     "Editor": [
         "dashboard.access_dashboard",

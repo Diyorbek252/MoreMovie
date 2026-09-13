@@ -130,6 +130,40 @@
       </div>
     </div>
 
+    <div class="panel">
+      <div class="panel__head"><h2 class="panel__title">Obuna to'lovi</h2></div>
+
+      <div class="license-note" style="margin-bottom: var(--s-4)">
+        {% include "partials/icon.html" with name="info" %}
+        <div>
+          Bu ma'lumotlar obuna sahifasida foydalanuvchiga ko'rsatiladi —
+          foydalanuvchi shu karta raqamiga o'tkazma qiladi va chek yuklaydi.
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label class="field__label" for="{{ form.payment_card_number.id_for_label }}">
+            {{ form.payment_card_number.label }}
+          </label>
+          {{ form.payment_card_number }}
+        </div>
+        <div class="field">
+          <label class="field__label" for="{{ form.payment_card_holder.id_for_label }}">
+            {{ form.payment_card_holder.label }}
+          </label>
+          {{ form.payment_card_holder }}
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: var(--s-4)">
+        <label class="field__label" for="{{ form.payment_instructions.id_for_label }}">
+          {{ form.payment_instructions.label }}
+        </label>
+        {{ form.payment_instructions }}
+      </div>
+    </div>
+
     <div class="row">
       <button class="btn btn--primary btn--lg" type="submit">Saqlash</button>
     </div>

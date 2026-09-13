@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ plan.name }} — obuna | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ plan.name }} rejasiga obuna bo'lish uchun to'lov ma'lumotlari.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--s-6); padding-bottom: var(--s-8); max-width: var(--container-narrow)">
+
+  <div class="page-head" style="text-align: left; padding-bottom: var(--s-5)">
+    <h1 class="page-head__title" style="margin-bottom: var(--s-2)">«{{ plan.name }}» rejasiga obuna</h1>
+    <p class="muted">Muddatni tanlang, to'lovni amalga oshiring va chek skrinshotini yuklang.</p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="panel" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert--error">
+        {% include "partials/icon.html" with name="alert" %}
+        <div>{{ form.non_field_errors }}</div>
+      </div>
+    {% endif %}
+
+    {# ==================== MUDDAT TANLASH ==================== #}
+    <div class="field" style="margin-bottom: var(--s-5)">
+      <label class="field__label">Muddatni tanlang</label>
+      <div class="duration-toggle">
+        {% for price in prices %}
+          <label class="duration-toggle__option">
+            <input type="radio" name="price" value="{{ price.pk }}"
+                   {% if selected_price.pk == price.pk %}checked{% endif %}>
+            <span class="duration-toggle__label">{{ price.label }}</span>
+            <span class="duration-toggle__price">
+              {{ price.price|intcomma }} so'm
+              {% if price.discount_percent %}
+                <span class="duration-toggle__discount">-{{ price.discount_percent }}%</span>
+              {% endif %}
+            </span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ==================== TO'LOV KO'RSATMASI ==================== #}
+    <div class="license-note" style="margin-bottom: var(--s-5)">
+      {% include "partials/icon.html" with name="info" %}
+      <div>
+        <strong>To'lov qanday amalga oshiriladi?</strong>
+        {% if site_settings.payment_card_number %}
+          <p style="margin: var(--s-2) 0 0">
+            Quyidagi kartaga tanlangan summani o'tkazing:<br>
+            <strong style="font-size: var(--fs-lg); letter-spacing: 0.05em">{{ site_settings.payment_card_number }}</strong><br>
+            {{ site_settings.payment_card_holder }}
+          </p>
+        {% endif %}
+        {% if site_settings.payment_instructions %}
+          <p style="margin-top: var(--s-2)">{{ site_settings.payment_instructions }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% for field in form %}
+      <div class="field" style="margin-bottom: var(--s-4)">
+        <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+        {% if field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
+      </div>
+    {% endfor %}
+
+    <div class="row">
+      <button class="btn btn--primary btn--lg" type="submit">So'rovni yuborish</button>
+      <a class="btn btn--ghost btn--lg" href="{% url 'subscriptions:plan_list' %}">Bekor qilish</a>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     "reviews.apps.ReviewsConfig",
     "siteconfig.apps.SiteConfigConfig",
     "shop.apps.ShopConfig",
+    "subscriptions.apps.SubscriptionsConfig",
     "dashboard.apps.DashboardConfig",
 ]
 

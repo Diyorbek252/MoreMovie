@@ -1,0 +1,83 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block dash_title %}Obuna rejalari{% endblock %}
+
+{% block dash_content %}
+
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-head__title">Obuna rejalari</h1>
+      <p class="dash-head__sub">{{ plans|length }} ta reja</p>
+    </div>
+    <a class="btn btn--primary" href="{% url 'dashboard:plan_add' %}">
+      {% include "partials/icon.html" with name="plus" %} Reja qo'shish
+    </a>
+  </div>
+
+  <div class="panel">
+    {% if plans %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nomi</th>
+              <th>Daraja</th>
+              <th>Narxlar</th>
+              <th>Premium filmlar</th>
+              <th>Faol</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for plan in plans %}
+              <tr>
+                <td class="table__title">
+                  {{ plan.name }}
+                  {% if plan.is_highlighted %}<span class="badge badge--warning">Ajratilgan</span>{% endif %}
+                </td>
+                <td class="muted">{{ plan.level }}</td>
+                <td class="muted">
+                  {% for price in plan.prices.all %}
+                    {{ price.label }}: {{ price.price|intcomma }} so'm{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    —
+                  {% endfor %}
+                </td>
+                <td class="muted">
+                  {% if plan.allows_premium_movies %}Ha{% else %}Yo'q{% endif %}
+                </td>
+                <td>
+                  <button class="switch js-toggle {% if plan.is_active %}is-on{% endif %}"
+                          type="button" role="switch"
+                          aria-checked="{% if plan.is_active %}true{% else %}false{% endif %}"
+                          aria-label="Faollik holati"
+                          data-url="{% url 'dashboard:api_toggle_plan' plan.pk %}"></button>
+                </td>
+                <td>
+                  <div class="table__actions">
+                    <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:plan_edit' plan.pk %}"
+                       aria-label="Tahrirlash">
+                      {% include "partials/icon.html" with name="edit" %}
+                    </a>
+                    <a class="btn btn--sm btn--danger" href="{% url 'dashboard:plan_delete' plan.pk %}"
+                       aria-label="O'chirish">
+                      {% include "partials/icon.html" with name="trash" %}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        {% include "partials/icon.html" with name="crown" %}
+        <h2 class="empty__title">Hali reja qo'shilmagan</h2>
+        <a class="btn btn--primary" href="{% url 'dashboard:plan_add' %}">Birinchi rejani qo'shish</a>
+      </div>
+    {% endif %}
+  </div>
+
+{% endblock %}

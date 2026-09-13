@@ -62,9 +62,9 @@
 
                 <td class="table__title">
                   <a href="{{ movie.get_absolute_url }}">{{ movie.title }}</a>
-                  {% if movie.director %}
+                  {% if movie.directors.all %}
                     <div class="dim" style="font-size: var(--fs-xs); font-weight: 400">
-                      {{ movie.director.full_name }}
+                      {{ movie.directors.all|join:", " }}
                     </div>
                   {% endif %}
                 </td>

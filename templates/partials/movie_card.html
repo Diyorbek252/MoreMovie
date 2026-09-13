@@ -32,6 +32,11 @@ har karta uchun alohida so'rov qilinmaydi.
     {% endcomment %}
     <div class="card__tags">
       <div class="card__qualities">
+        {% if movie.is_premium %}
+          <span class="badge badge--premium">
+            {% include "partials/icon.html" with name="crown" %} Premium
+          </span>
+        {% endif %}
         {% for quality in movie.quality_badges %}
           <span class="badge badge--quality">{{ quality }}</span>
         {% endfor %}

@@ -55,5 +55,12 @@ Har bir dashboard sahifasi shundan meros oladi va `dash_content` blokini to'ldir
 
 {% block extra_js %}
   <script src="{% static 'js/dashboard.js' %}" defer></script>
+  {% comment %}
+    Katta videolarni fonda yuklash — film formasida faylni POST'dan
+    ajratib oladi, dashboardda esa progress paneli bilan yuklaydi.
+    Barcha dashboard sahifalarida kerak: yuklash boshqa bo'limga
+    o'tilganda ham davom etaversin.
+  {% endcomment %}
+  <script src="{% static 'js/upload-manager.js' %}" defer></script>
   {% block dash_js %}{% endblock %}
 {% endblock %}

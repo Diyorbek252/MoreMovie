@@ -26,12 +26,16 @@ from django.views.generic import (
 )
 
 from core.models import ContactMessage
-from movies.models import Actor, Category, Director, Favorite, Genre, Movie, Watchlist
+from movies.models import (
+    Actor, Category, Director, Favorite, Genre, Movie, MovieVideo, Watchlist,
+)
 from reviews.models import Review
 from series.models import Episode, Season, Series
 from shop.models import CinepointTransaction, Order, Product
 from shop.services import InsufficientBalanceError, adjust_balance, has_earned
 from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
+from subscriptions.models import Plan, Subscription
+from subscriptions.services import activate_subscription, reject_subscription
 from users.models import Profile
 
 from . import analytics
@@ -48,8 +52,11 @@ from .forms import (
     MovieForm,
     MovieVideoFormSet,
     NotificationForm,
+    PlanForm,
+    PlanPriceFormSet,
     ProductForm,
     SeasonForm,
+    SeriesCastFormSet,
     SeriesForm,
     SiteSettingsForm,
 )
@@ -95,6 +102,15 @@ class DashboardIndexView(StaffRequiredMixin, TemplateView):
             "products_total": Product.objects.count(),
             "orders_pending": Order.objects.filter(status=Order.Status.PENDING).count(),
             "cinepoints_circulating": Profile.objects.aggregate(total=Sum("balance"))["total"] or 0,
+            "subscriptions_pending": Subscription.objects.filter(
+                status=Subscription.Status.PENDING
+            ).count(),
+            "subscribers_active": Subscription.objects.filter(
+                status=Subscription.Status.ACTIVE, ends_at__gt=timezone.now()
+            ).count(),
+            "subscription_revenue": Subscription.objects.filter(
+                status=Subscription.Status.ACTIVE
+            ).aggregate(total=Sum("price_paid"))["total"] or 0,
         }
 
         # Eng mashhur 10 film.
@@ -172,12 +188,15 @@ class MovieManageListView(DashboardPermissionMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Movie.objects.select_related("country", "language", "director")
+        queryset = Movie.objects.select_related("country", "language").prefetch_related("directors")
 
         if query := self.request.GET.get("q", "").strip():
+            # `directors` M2M orqali OR bilan filtrlash bir nechta mos
+            # rejissyor bo'lsa bitta filmni takrorlab qaytarishi mumkin —
+            # `distinct()` shart.
             queryset = queryset.filter(
-                Q(title__icontains=query) | Q(director__full_name__icontains=query)
-            )
+                Q(title__icontains=query) | Q(directors__full_name__icontains=query)
+            ).distinct()
 
         status = self.request.GET.get("status")
         if status == "published":
@@ -226,6 +245,36 @@ class MovieRelatedFormsetsMixin:
             context.setdefault(name, formset)
         return context
 
+    def _wants_json(self):
+        """Katta video tanlangan bo'lsa forma `fetch` orqali yuboriladi.
+
+        Bunda fayl POST'ga qo'shilmaydi (shuning uchun saqlash bir zumda
+        o'tadi) va javobdagi `movie_id` orqali fayl dashboardda fonda
+        yuklanadi — qarang: ``static/js/upload-manager.js``.
+        """
+        return self.request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+    def _json_errors(self, form, formsets):
+        """Xatolarni maydon nomi -> xabarlar ko'rinishida qaytaradi.
+
+        Formset maydonlari uchun kalit HTML'dagi `name` atributi bilan bir
+        xil (`videos-0-video_url`) — JS xatoni to'g'ri maydon yoniga qo'ya
+        olishi uchun.
+        """
+        errors = {field: [str(e) for e in errs] for field, errs in form.errors.items()}
+
+        for formset in formsets.values():
+            for index, member in enumerate(formset.forms):
+                for field, errs in member.errors.items():
+                    key = f"{formset.prefix}-{index}-{field}"
+                    errors[key] = [str(e) for e in errs]
+            if formset.non_form_errors():
+                errors.setdefault("__all__", []).extend(
+                    str(e) for e in formset.non_form_errors()
+                )
+
+        return JsonResponse({"ok": False, "errors": errors}, status=400)
+
     def form_valid(self, form):
         formsets = self._formsets(bound=True)
         # Ikkalasi ham tekshiriladi (qisqa tutashuvsiz) — aks holda
@@ -233,6 +282,8 @@ class MovieRelatedFormsetsMixin:
         results = [formset.is_valid() for formset in formsets.values()]
 
         if not all(results):
+            if self._wants_json():
+                return self._json_errors(form, formsets)
             return self.render_to_response(self.get_context_data(form=form, **formsets))
 
         response = super().form_valid(form)
@@ -244,7 +295,20 @@ class MovieRelatedFormsetsMixin:
             messages.success(
                 self.request, self.success_message.format(title=self.object.title)
             )
+
+        if self._wants_json():
+            return JsonResponse({
+                "ok": True,
+                "movie_id": self.object.pk,
+                "movie_title": self.object.title,
+                "redirect": str(self.success_url),
+            })
         return response
+
+    def form_invalid(self, form):
+        if self._wants_json():
+            return self._json_errors(form, self._formsets(bound=True))
+        return super().form_invalid(form)
 
 
 class MovieCreateView(MovieRelatedFormsetsMixin, DashboardPermissionMixin, CreateView):
@@ -599,12 +663,15 @@ class SeriesManageListView(DashboardPermissionMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Series.objects.select_related("country", "language", "director")
+        queryset = Series.objects.select_related("country", "language").prefetch_related("directors")
 
         if query := self.request.GET.get("q", "").strip():
+            # `directors` M2M orqali OR bilan filtrlash bir nechta mos
+            # rejissyor bo'lsa bitta serialni takrorlab qaytarishi mumkin —
+            # `distinct()` shart.
             queryset = queryset.filter(
-                Q(title__icontains=query) | Q(director__full_name__icontains=query)
-            )
+                Q(title__icontains=query) | Q(directors__full_name__icontains=query)
+            ).distinct()
 
         status = self.request.GET.get("status")
         if status == "published":
@@ -624,28 +691,55 @@ class SeriesManageListView(DashboardPermissionMixin, ListView):
         return context
 
 
-class SeriesCreateView(DashboardPermissionMixin, CreateView):
+class SeriesRelatedFormsetMixin:
+    """Serial formasi bilan birga aktyorlar tarkibini (`SeriesCast`) saqlaydi.
+
+    `MovieRelatedFormsetsMixin` bilan bir xil naqsh, faqat bitta formset
+    uchun — yangi serial qo'shishda `self.object` hali `None`, serial
+    saqlangandan keyin aktyorlar unga bog'lanadi.
+    """
+
+    success_message = ""
+
+    def get_cast_formset(self, bound):
+        data = self.request.POST if bound else None
+        return SeriesCastFormSet(data, instance=self.object)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("cast_formset", self.get_cast_formset(self.request.method == "POST"))
+        return context
+
+    def form_valid(self, form):
+        cast_formset = self.get_cast_formset(bound=True)
+        if not cast_formset.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, cast_formset=cast_formset))
+
+        response = super().form_valid(form)
+        cast_formset.instance = self.object
+        cast_formset.save()
+
+        if self.success_message:
+            messages.success(self.request, self.success_message.format(title=self.object.title))
+        return response
+
+
+class SeriesCreateView(SeriesRelatedFormsetMixin, DashboardPermissionMixin, CreateView):
     required_perms = ["series.add_series"]
     model = Series
     form_class = SeriesForm
     template_name = "dashboard/series_form.html"
     success_url = reverse_lazy("dashboard:series_list")
-
-    def form_valid(self, form):
-        messages.success(self.request, f"«{form.instance.title}» qo'shildi.")
-        return super().form_valid(form)
+    success_message = "«{title}» qo'shildi."
 
 
-class SeriesUpdateView(DashboardPermissionMixin, UpdateView):
+class SeriesUpdateView(SeriesRelatedFormsetMixin, DashboardPermissionMixin, UpdateView):
     required_perms = ["series.change_series"]
     model = Series
     form_class = SeriesForm
     template_name = "dashboard/series_form.html"
     success_url = reverse_lazy("dashboard:series_list")
-
-    def form_valid(self, form):
-        messages.success(self.request, f"«{form.instance.title}» yangilandi.")
-        return super().form_valid(form)
+    success_message = "«{title}» yangilandi."
 
 
 class SeriesDeleteView(DashboardPermissionMixin, DeleteView):
@@ -1001,6 +1095,129 @@ class OrderManageListView(DashboardPermissionMixin, ListView):
 
 
 # ---------------------------------------------------------------------------
+# Obunalar — rejalar va so'rovlar
+# ---------------------------------------------------------------------------
+
+
+class PlanRelatedFormsetMixin:
+    """Reja formasi bilan birga muddat narxlarini (`PlanPrice`) saqlaydi.
+
+    `MovieRelatedFormsetsMixin` bilan bir xil naqsh, faqat bitta formset
+    uchun — yangi reja qo'shishda `self.object` hali `None`, reja
+    saqlangandan keyin narxlar unga bog'lanadi.
+    """
+
+    success_message = ""
+
+    def get_price_formset(self, bound):
+        data = self.request.POST if bound else None
+        return PlanPriceFormSet(data, instance=self.object)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("price_formset", self.get_price_formset(self.request.method == "POST"))
+        return context
+
+    def form_valid(self, form):
+        price_formset = self.get_price_formset(bound=True)
+        if not price_formset.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, price_formset=price_formset))
+
+        response = super().form_valid(form)
+        price_formset.instance = self.object
+        price_formset.save()
+
+        if self.success_message:
+            messages.success(self.request, self.success_message.format(name=self.object.name))
+        return response
+
+
+class PlanManageListView(DashboardPermissionMixin, ListView):
+    required_perms = ["subscriptions.view_plan"]
+    model = Plan
+    template_name = "dashboard/plan_list.html"
+    context_object_name = "plans"
+
+    def get_queryset(self):
+        return Plan.objects.all().prefetch_related("prices")
+
+
+class PlanCreateView(PlanRelatedFormsetMixin, DashboardPermissionMixin, CreateView):
+    required_perms = ["subscriptions.add_plan"]
+    model = Plan
+    form_class = PlanForm
+    template_name = "dashboard/plan_form.html"
+    success_url = reverse_lazy("dashboard:plan_list")
+    success_message = "«{name}» rejasi qo'shildi."
+
+
+class PlanUpdateView(PlanRelatedFormsetMixin, DashboardPermissionMixin, UpdateView):
+    required_perms = ["subscriptions.change_plan"]
+    model = Plan
+    form_class = PlanForm
+    template_name = "dashboard/plan_form.html"
+    success_url = reverse_lazy("dashboard:plan_list")
+    success_message = "«{name}» rejasi yangilandi."
+
+
+class PlanDeleteView(DashboardPermissionMixin, DeleteView):
+    required_perms = ["subscriptions.delete_plan"]
+    model = Plan
+    template_name = "dashboard/plan_confirm_delete.html"
+    success_url = reverse_lazy("dashboard:plan_list")
+
+    def form_valid(self, form):
+        # Subscription.plan = PROTECT — obuna tarixi bor reja o'chirilsa
+        # ProtectedError ko'tariladi. Product o'chirishdagi bir xil naqsh.
+        name = self.object.name
+        try:
+            self.object.delete()
+        except ProtectedError:
+            messages.error(
+                self.request,
+                f"«{name}» rejasini o'chirib bo'lmaydi — unga bog'liq obunalar mavjud. "
+                "Uni o'chirish o'rniga «Faol emas» qiling.",
+            )
+            return redirect("dashboard:plan_list")
+
+        messages.success(self.request, f"«{name}» rejasi o'chirildi.")
+        return redirect(self.success_url)
+
+
+class SubscriptionManageListView(DashboardPermissionMixin, ListView):
+    """Obuna so'rovlari — buyurtmalar ro'yxati bilan bir xil naqsh."""
+
+    required_perms = ["subscriptions.view_subscription"]
+    model = Subscription
+    template_name = "dashboard/subscription_list.html"
+    context_object_name = "subscriptions"
+    paginate_by = 25
+
+    def get_queryset(self):
+        queryset = Subscription.objects.select_related("user", "plan")
+        status = self.request.GET.get("status", "pending")
+        if status in dict(Subscription.Status.choices):
+            queryset = queryset.filter(status=status)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_status"] = self.request.GET.get("status", "pending")
+        context["status_choices"] = Subscription.Status.choices
+
+        rows = Subscription.objects.values("status").annotate(total=Count("id"))
+        counts = {value: 0 for value, _ in Subscription.Status.choices}
+        counts.update({row["status"]: row["total"] for row in rows})
+        context["counts"] = counts
+
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        context["querystring"] = params.urlencode()
+
+        return context
+
+
+# ---------------------------------------------------------------------------
 # Bosh sahifa bo'limlari
 # ---------------------------------------------------------------------------
 
@@ -1335,6 +1552,102 @@ def cancel_order(request, pk):
     )
 
     return JsonResponse({"status": order.status, "message": "Buyurtma bekor qilindi va cinepoint qaytarildi."})
+
+
+@require_POST
+@dashboard_perm_required("movies.change_movie")
+def upload_movie_video(request, pk):
+    """Katta video faylni film saqlangandan KEYIN, fonda yuklash.
+
+    Film qo'shish formasi videoni o'zi bilan birga yubormaydi — aks holda
+    admin 5GB fayl yuklanguncha forma sahifasida kutib qolardi. Fayl
+    brauzerda (IndexedDB) saqlanib, dashboardga o'tilgach shu endpoint'ga
+    progress bilan yuklanadi (qarang: static/js/upload-manager.js).
+
+    `quality` berilmasa asosiy `Movie.video_file` ga yoziladi; berilsa
+    o'sha sifat uchun `MovieVideo` qatori yaratiladi/yangilanadi.
+    """
+    movie = get_object_or_404(Movie, pk=pk)
+    upload = request.FILES.get("video")
+
+    if not upload:
+        return JsonResponse({"error": "Fayl yuborilmadi."}, status=400)
+
+    quality = request.POST.get("quality", "").strip()
+    labels = dict(Movie.Quality.choices)
+
+    if quality:
+        if quality not in labels:
+            return JsonResponse({"error": "Noma'lum sifat."}, status=400)
+        # Bir xil sifat ikki marta yuklansa yangi qator yaratilmaydi —
+        # mavjudi yangilanadi (video_url tozalanadi: fayl undan ustun).
+        MovieVideo.objects.update_or_create(
+            movie=movie,
+            quality=quality,
+            defaults={"video_file": upload, "video_url": ""},
+        )
+        message = f"«{movie.title}» — {labels[quality]} video yuklandi."
+    else:
+        movie.video_file = upload
+        movie.save(update_fields=["video_file", "updated_at"])
+        message = f"«{movie.title}» uchun video yuklandi."
+
+    return JsonResponse({"ok": True, "message": message})
+
+
+@require_POST
+@dashboard_perm_required("subscriptions.change_plan")
+def toggle_plan_active(request, pk):
+    """Rejani faollashtirish / o'chirish (AJAX)."""
+    plan = get_object_or_404(Plan, pk=pk)
+    plan.is_active = not plan.is_active
+    plan.save(update_fields=["is_active", "updated_at"])
+
+    note = "faollashtirildi" if plan.is_active else "o'chirildi"
+    return JsonResponse({"state": plan.is_active, "message": f"«{plan.name}» {note}"})
+
+
+@require_POST
+@dashboard_perm_required("subscriptions.change_subscription")
+def approve_subscription(request, pk):
+    """Obuna so'rovini tasdiqlash (AJAX) — muddat hisoblanadi, foydalanuvchiga
+    bildirishnoma boradi (qarang: subscriptions.services.activate_subscription)."""
+    subscription = get_object_or_404(Subscription, pk=pk)
+
+    if subscription.status != Subscription.Status.PENDING:
+        return JsonResponse({"error": "Bu so'rov allaqachon ko'rib chiqilgan."}, status=400)
+
+    activate_subscription(subscription, admin=request.user)
+    return JsonResponse(
+        {
+            "status": subscription.status,
+            "message": f"{subscription.user.username} uchun obuna faollashtirildi.",
+        }
+    )
+
+
+@require_POST
+@dashboard_perm_required("subscriptions.change_subscription")
+def reject_subscription_view(request, pk):
+    """Obuna so'rovini rad etish (AJAX) — sabab bilan foydalanuvchiga xabar boradi."""
+    subscription = get_object_or_404(Subscription, pk=pk)
+
+    if subscription.status != Subscription.Status.PENDING:
+        return JsonResponse({"error": "Bu so'rov allaqachon ko'rib chiqilgan."}, status=400)
+
+    reason = _payload_reason(request)
+    reject_subscription(subscription, admin=request.user, reason=reason)
+    return JsonResponse({"status": subscription.status, "message": "So'rov rad etildi."})
+
+
+def _payload_reason(request):
+    """AJAX so'rovdan (JSON yoki form-data) `reason` maydonini o'qiydi."""
+    if request.content_type and "application/json" in request.content_type:
+        try:
+            return json.loads(request.body or "{}").get("reason", "")
+        except json.JSONDecodeError:
+            return ""
+    return request.POST.get("reason", "")
 
 
 @require_POST

@@ -472,7 +472,6 @@ class Command(BaseCommand):
             download_url=data["video"] if has_video else "",
             country=countries.get(data["country"]),
             language=languages.get(data["language"]),
-            director=self._get_director(data["director"], directors),
             is_featured=data["featured"],
             is_published=True,
             views_count=random.randint(120, 9800),
@@ -489,6 +488,7 @@ class Command(BaseCommand):
         movie.save()
 
         movie.genres.set([genres[g] for g in data["genres"] if g in genres])
+        movie.directors.set([self._get_director(data["director"], directors)])
 
         for order, actor_name in enumerate(data["cast"]):
             MovieCast.objects.create(

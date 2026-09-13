@@ -51,6 +51,21 @@ class SiteSettings(models.Model):
         help_text="Texnik xizmat rejimida foydalanuvchiga ko'rsatiladigan matn.",
     )
 
+    # --- Obuna to'lovi ---
+    # Obuna to'lovi qo'lda amalga oshiriladi (to'lov shlyuzi yo'q) —
+    # foydalanuvchi shu ma'lumotlar bo'yicha o'tkazma qiladi.
+    payment_card_number = models.CharField(
+        "karta raqami", max_length=25, blank=True,
+        help_text="Obuna to'lovi uchun ko'rsatiladigan karta raqami.",
+    )
+    payment_card_holder = models.CharField(
+        "karta egasi", max_length=100, blank=True,
+    )
+    payment_instructions = models.TextField(
+        "to'lov ko'rsatmasi", blank=True,
+        help_text="Obuna sahifasida foydalanuvchiga ko'rsatiladigan qo'shimcha izoh.",
+    )
+
     updated_at = models.DateTimeField("yangilangan", auto_now=True)
 
     class Meta:

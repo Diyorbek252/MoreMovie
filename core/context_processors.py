@@ -4,6 +4,7 @@ from django.conf import settings
 
 from movies.models import Favorite, Genre, Watchlist
 from siteconfig.models import NotificationRecipient
+from subscriptions.services import get_active_subscription
 
 
 def site_globals(request):
@@ -25,6 +26,9 @@ def site_globals(request):
         "unread_notifications_count": 0,
         # Navbar'dagi cinepoint chipi uchun.
         "cinepoint_balance": 0,
+        # Navbar'dagi oltin Premium chipi va qulflangan filmlar uchun.
+        "active_subscription": None,
+        "has_premium_access": False,
     }
 
     user = getattr(request, "user", None)
@@ -40,5 +44,9 @@ def site_globals(request):
         ).count()
         # Profile signal orqali har bir User uchun kafolatlangan.
         context["cinepoint_balance"] = user.profile.balance
+
+        subscription = get_active_subscription(user)
+        context["active_subscription"] = subscription
+        context["has_premium_access"] = bool(subscription and subscription.plan.allows_premium_movies)
 
     return context

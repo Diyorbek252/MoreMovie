@@ -89,6 +89,22 @@ urlpatterns = [
     ),
     path("shop/orders/", views.OrderManageListView.as_view(), name="shop_order_list"),
 
+    # --- Obunalar: rejalar va so'rovlar ---
+    path("subscriptions/plans/", views.PlanManageListView.as_view(), name="plan_list"),
+    path("subscriptions/plans/add/", views.PlanCreateView.as_view(), name="plan_add"),
+    path(
+        "subscriptions/plans/<int:pk>/edit/",
+        views.PlanUpdateView.as_view(), name="plan_edit",
+    ),
+    path(
+        "subscriptions/plans/<int:pk>/delete/",
+        views.PlanDeleteView.as_view(), name="plan_delete",
+    ),
+    path(
+        "subscriptions/requests/",
+        views.SubscriptionManageListView.as_view(), name="subscription_list",
+    ),
+
     # --- Bosh sahifa bo'limlari ---
     path("homepage/", views.HomepageSectionListView.as_view(), name="homepage_sections"),
     path(
@@ -116,6 +132,19 @@ urlpatterns = [
     path("api/shop/product/<int:pk>/toggle/", views.toggle_product_active, name="api_toggle_product"),
     path("api/shop/order/<int:pk>/deliver/", views.mark_order_delivered, name="api_order_deliver"),
     path("api/shop/order/<int:pk>/cancel/", views.cancel_order, name="api_order_cancel"),
+    path(
+        "api/movie/<int:pk>/video/",
+        views.upload_movie_video, name="api_upload_movie_video",
+    ),
+    path("api/plan/<int:pk>/toggle/", views.toggle_plan_active, name="api_toggle_plan"),
+    path(
+        "api/subscription/<int:pk>/approve/",
+        views.approve_subscription, name="api_subscription_approve",
+    ),
+    path(
+        "api/subscription/<int:pk>/reject/",
+        views.reject_subscription_view, name="api_subscription_reject",
+    ),
     path("api/review/<int:pk>/<str:action>/", views.moderate_review, name="api_moderate_review"),
     path("api/banner/<int:pk>/toggle/", views.toggle_banner, name="api_toggle_banner"),
     path("api/homepage/<int:pk>/toggle/", views.toggle_section, name="api_toggle_section"),

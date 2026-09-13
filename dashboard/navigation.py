@@ -13,6 +13,7 @@ from django.urls import NoReverseMatch, reverse
 from core.models import ContactMessage
 from reviews.models import Review
 from shop.models import Order
+from subscriptions.models import Subscription
 
 
 @dataclass
@@ -62,6 +63,14 @@ NAV_SECTIONS = [
                 perms=["shop.view_order"], match_prefix="/dashboard/shop/orders/",
                 count_key="orders_pending"),
     ]),
+    ("Obunalar", [
+        NavItem("Rejalar", "dashboard:plan_list", "crown",
+                perms=["subscriptions.view_plan"], match_prefix="/dashboard/subscriptions/plans/"),
+        NavItem("So'rovlar", "dashboard:subscription_list", "shield",
+                perms=["subscriptions.view_subscription"],
+                match_prefix="/dashboard/subscriptions/requests/",
+                count_key="subscriptions_pending"),
+    ]),
     ("Sayt", [
         NavItem("Bosh sahifa", "dashboard:homepage_sections", "grid",
                 perms=["dashboard.manage_homepage"], match_prefix="/dashboard/homepage/"),
@@ -87,6 +96,9 @@ def get_nav_counts():
         "reviews_pending": Review.objects.filter(status=Review.Status.PENDING).count(),
         "messages_unread": ContactMessage.objects.filter(is_read=False).count(),
         "orders_pending": Order.objects.filter(status=Order.Status.PENDING).count(),
+        "subscriptions_pending": Subscription.objects.filter(
+            status=Subscription.Status.PENDING
+        ).count(),
     }
 
 

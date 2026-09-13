@@ -58,9 +58,9 @@
 
                 <td class="table__title">
                   {{ series.title }}
-                  {% if series.director %}
+                  {% if series.directors.all %}
                     <div class="dim" style="font-size: var(--fs-xs); font-weight: 400">
-                      {{ series.director.full_name }}
+                      {{ series.directors.all|join:", " }}
                     </div>
                   {% endif %}
                 </td>

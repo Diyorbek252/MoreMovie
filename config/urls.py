@@ -30,6 +30,7 @@ urlpatterns = [
     path("", include("reviews.urls")),
     path("", include("siteconfig.urls")),
     path("", include("shop.urls")),
+    path("", include("subscriptions.urls")),
     path("dashboard/", include("dashboard.urls")),
 
     # --- SEO ---

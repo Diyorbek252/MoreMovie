@@ -4,9 +4,10 @@ from django import forms
 from django.forms import inlineformset_factory
 
 from movies.models import Actor, Category, Director, Genre, Movie, MovieCast, MovieVideo
-from series.models import Episode, Season, Series
+from series.models import Episode, Season, Series, SeriesCast
 from shop.models import Product
 from siteconfig.models import Banner, HomepageSection, Notification, SiteSettings
+from subscriptions.models import Plan, PlanPrice
 
 
 class MovieForm(forms.ModelForm):
@@ -24,7 +25,7 @@ class MovieForm(forms.ModelForm):
             "trailer_url", "video_url", "video_file", "download_url",
             "release_year", "release_date", "duration_minutes", "quality",
             "age_rating", "imdb_rating",
-            "genres", "categories", "country", "language", "director",
+            "genres", "categories", "country", "language", "directors",
             "license_type", "license_note", "is_download_allowed",
             "is_featured", "is_trending", "is_premium", "is_published",
         ]
@@ -61,7 +62,7 @@ class MovieForm(forms.ModelForm):
             "categories": forms.CheckboxSelectMultiple(),
             "country": forms.Select(attrs={"class": "select"}),
             "language": forms.Select(attrs={"class": "select"}),
-            "director": forms.Select(attrs={"class": "select"}),
+            "directors": forms.CheckboxSelectMultiple(),
             "license_type": forms.Select(attrs={"class": "select"}),
             "license_note": forms.TextInput(
                 attrs={"class": "input", "placeholder": "Masalan: CC BY 4.0, Blender Foundation"}
@@ -231,10 +232,10 @@ class SeriesForm(forms.ModelForm):
         model = Series
         fields = [
             "title", "original_title", "slug",
-            "description", "short_description",
+            "short_description",
             "poster", "backdrop", "trailer_url",
             "release_year", "end_year", "imdb_rating", "age_rating", "status",
-            "genres", "categories", "country", "language", "director",
+            "genres", "categories", "country", "language", "directors",
             "is_featured", "is_trending", "is_published",
         ]
         widgets = {
@@ -245,8 +246,7 @@ class SeriesForm(forms.ModelForm):
             "slug": forms.TextInput(
                 attrs={"class": "input", "placeholder": "bo'sh qoldirilsa avtomatik"}
             ),
-            "description": forms.Textarea(attrs={"class": "textarea", "rows": 6}),
-            "short_description": forms.Textarea(attrs={"class": "textarea", "rows": 2}),
+            "short_description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
             "trailer_url": forms.URLInput(
                 attrs={"class": "input", "placeholder": "https://www.youtube.com/embed/..."}
             ),
@@ -263,13 +263,17 @@ class SeriesForm(forms.ModelForm):
             "categories": forms.CheckboxSelectMultiple(),
             "country": forms.Select(attrs={"class": "select"}),
             "language": forms.Select(attrs={"class": "select"}),
-            "director": forms.Select(attrs={"class": "select"}),
+            "directors": forms.CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["slug"].required = False
         self.fields["genres"].required = True
+        # Forma endi to'liq "tavsif"ni yig'maydi — shu bo'sh qolmasligi
+        # uchun "qisqa tavsif" majburiy (MovieForm bilan bir xil naqsh).
+        self.fields["short_description"].required = True
+        self.fields["short_description"].help_text = "Kartalar va serial sahifasida ko'rsatiladi."
 
     def clean(self):
         """end_year berilgan bo'lsa, release_year dan kichik bo'lmasligi kerak."""
@@ -283,6 +287,36 @@ class SeriesForm(forms.ModelForm):
             )
 
         return cleaned
+
+    def save(self, commit=True):
+        """`description` endi formada yo'q — bo'sh qolib ketmasligi uchun
+        (serial sahifasi shu maydonni ko'rsatadi) "qisqa tavsif"dan
+        to'ldiramiz, faqat u hali bo'sh bo'lsa (masalan eski yozuvni
+        tahrirlashda mavjud to'liq tavsif saqlanib qoladi).
+        """
+        instance = super().save(commit=False)
+        if not instance.description:
+            instance.description = instance.short_description
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
+
+SeriesCastFormSet = inlineformset_factory(
+    Series,
+    SeriesCast,
+    fields=["actor", "character_name", "order"],
+    extra=1,
+    can_delete=True,
+    widgets={
+        "actor": forms.Select(attrs={"class": "select"}),
+        "character_name": forms.TextInput(
+            attrs={"class": "input", "placeholder": "Rol nomi (ixtiyoriy)"}
+        ),
+        "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+    },
+)
 
 
 class SeasonForm(forms.ModelForm):
@@ -342,6 +376,7 @@ class SiteSettingsForm(forms.ModelForm):
             "copyright_text",
             "seo_title", "seo_description", "seo_keywords", "google_analytics_id",
             "maintenance_mode", "maintenance_message",
+            "payment_card_number", "payment_card_holder", "payment_instructions",
         ]
         widgets = {
             "site_name": forms.TextInput(attrs={"class": "input"}),
@@ -365,6 +400,16 @@ class SiteSettingsForm(forms.ModelForm):
             "maintenance_message": forms.Textarea(
                 attrs={"class": "textarea", "rows": 3,
                        "placeholder": "Sayt texnik xizmat ko'rsatish tufayli vaqtincha yopiq."}
+            ),
+            "payment_card_number": forms.TextInput(
+                attrs={"class": "input", "placeholder": "8600 1234 5678 9012"}
+            ),
+            "payment_card_holder": forms.TextInput(
+                attrs={"class": "input", "placeholder": "IZDANOV IZDAN"}
+            ),
+            "payment_instructions": forms.Textarea(
+                attrs={"class": "textarea", "rows": 3,
+                       "placeholder": "O'tkazmadan so'ng chek skrinshotini yuklang."}
             ),
         }
 
@@ -468,6 +513,55 @@ class ProductForm(forms.ModelForm):
             ),
             "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
         }
+
+
+class PlanForm(forms.ModelForm):
+    class Meta:
+        model = Plan
+        fields = [
+            "name", "tagline", "description", "features", "level",
+            "allows_premium_movies", "has_badge", "is_ad_free",
+            "is_highlighted", "is_active", "order",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "input", "placeholder": "Masalan: Premium"}),
+            "tagline": forms.TextInput(
+                attrs={"class": "input", "placeholder": "Eng ommabop tanlov"}
+            ),
+            "description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
+            "features": forms.Textarea(
+                attrs={
+                    "class": "textarea", "rows": 5,
+                    "placeholder": "Har qatorda bitta imkoniyat\nPremium filmlar\nReklamasiz",
+                }
+            ),
+            "level": forms.NumberInput(attrs={"class": "input", "min": 0}),
+            "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+        }
+
+
+class PlanPriceForm(forms.ModelForm):
+    class Meta:
+        model = PlanPrice
+        fields = ["label", "duration_days", "price", "old_price", "is_active", "order"]
+        widgets = {
+            "label": forms.TextInput(attrs={"class": "input", "placeholder": "1 oy"}),
+            "duration_days": forms.NumberInput(attrs={"class": "input", "min": 1}),
+            "price": forms.NumberInput(attrs={"class": "input", "min": 1}),
+            "old_price": forms.NumberInput(
+                attrs={"class": "input", "min": 1, "placeholder": "Ixtiyoriy"}
+            ),
+            "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+        }
+
+
+PlanPriceFormSet = inlineformset_factory(
+    Plan,
+    PlanPrice,
+    form=PlanPriceForm,
+    extra=1,
+    can_delete=True,
+)
 
 
 class BalanceAdjustForm(forms.Form):

@@ -86,8 +86,8 @@ class SeriesDetailView(DetailView):
     def get_queryset(self):
         return (
             Series.objects.published()
-            .select_related("country", "language", "director")
-            .prefetch_related("genres", "cast_members__actor")
+            .select_related("country", "language")
+            .prefetch_related("genres", "cast_members__actor", "directors")
         )
 
     def get_context_data(self, **kwargs):

@@ -106,6 +106,14 @@
           <span id="cinepoint-balance">{{ cinepoint_balance }}</span>
         </a>
 
+        {% if has_premium_access %}
+          <a class="btn-icon premium-chip" href="{% url 'subscriptions:my_subscription' %}"
+             aria-label="Premium obuna" title="Premium obuna">
+            {% include "partials/icon.html" with name="crown" %}
+            <span>Premium</span>
+          </a>
+        {% endif %}
+
         {# Foydalanuvchi menyusi #}
         <div class="user-menu" id="user-menu">
           <button class="avatar" type="button" id="user-menu-toggle"
@@ -132,6 +140,9 @@
             </a>
             <a class="user-menu__item" href="{% url 'shop:order_history' %}" role="menuitem">
               {% include "partials/icon.html" with name="coin" %} Xaridlarim
+            </a>
+            <a class="user-menu__item" href="{% url 'subscriptions:my_subscription' %}" role="menuitem">
+              {% include "partials/icon.html" with name="crown" %} Mening obunam
             </a>
             <a class="user-menu__item" href="{% url 'users:profile_edit' %}" role="menuitem">
               {% include "partials/icon.html" with name="settings" %} Sozlamalar
@@ -202,6 +213,9 @@
       <a class="drawer__link" href="{% url 'users:watchlist' %}">Watchlist</a>
       <a class="drawer__link" href="{% url 'users:favorites' %}">Favorites</a>
       <a class="drawer__link" href="{% url 'shop:order_history' %}">Xaridlarim ({{ cinepoint_balance }} cinepoint)</a>
+      <a class="drawer__link" href="{% url 'subscriptions:my_subscription' %}">
+        Mening obunam{% if has_premium_access %} (Premium){% endif %}
+      </a>
       <a class="drawer__link" href="{% url 'users:profile' %}">Profil</a>
       {% if user.is_staff %}
         {% if request.resolver_match.app_name == "dashboard" %}

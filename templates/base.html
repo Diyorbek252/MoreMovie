@@ -75,6 +75,14 @@
   data-url-notifications="{% url 'siteconfig:api_notifications' %}"
   data-url-notifications-read-all="{% url 'siteconfig:api_notifications_read_all' %}"
   data-url-purchase="{% url 'shop:api_purchase' %}"
+  {% endif %}
+  {% comment %}
+    Fonda video yuklash endpointi — faqat xodimlarga kerak. URL'dagi `0`
+    yuklash paytida haqiqiy film id'siga almashtiriladi
+    (static/js/upload-manager.js).
+  {% endcomment %}
+  {% if user.is_staff %}
+  data-url-upload-video="{% url 'dashboard:api_upload_movie_video' 0 %}"
   {% endif %}>
 
   {# --- Yuklanish ekrani. JS uni birinchi bo'yashdan keyin yashiradi. --- #}

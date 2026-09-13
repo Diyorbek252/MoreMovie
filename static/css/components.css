@@ -1061,3 +1061,590 @@
   height: 32px;
   font-size: var(--fs-xs);
 }
+
+/* --------------------------------------------------------------------------
+   Obuna — premium nishoni, reja kartalari, muddat tanlash, paywall
+   -------------------------------------------------------------------------- */
+
+/* Premium = oltin (--warning) — cinepoint tangasi bilan bir xil rang,
+   qizil (asosiy harakat rangi) bilan raqobatlashmasin. */
+.badge--premium {
+  background: rgba(245, 166, 35, 0.15);
+  border-color: var(--warning);
+  color: var(--warning);
+  font-weight: 700;
+}
+
+.badge--premium svg {
+  width: 12px;
+  height: 12px;
+}
+
+.premium-chip {
+  width: auto;
+  height: 38px;
+  padding: 0 var(--s-3);
+  gap: var(--s-2);
+  border-radius: var(--r-full);
+  color: var(--warning);
+  border: 1px solid rgba(245, 166, 35, 0.35);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.premium-chip svg {
+  color: var(--warning);
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s-5);
+  align-items: stretch;
+}
+
+.plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-6) var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  transition: transform var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease);
+}
+
+.plan-card--featured {
+  border-color: var(--warning);
+  box-shadow: 0 8px 28px rgba(245, 166, 35, 0.25);
+}
+
+.plan-card:hover {
+  transform: translateY(-4px);
+}
+
+.plan-card__ribbon {
+  position: absolute;
+  top: var(--s-4);
+  right: var(--s-4);
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-full);
+  background: var(--warning);
+  color: var(--bg);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.plan-card__name {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+.plan-card__tagline {
+  margin: calc(var(--s-2) * -1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.plan-card__price {
+  color: var(--text);
+}
+
+.plan-card__amount {
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+}
+
+.plan-card__period {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.plan-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  flex: 1;
+}
+
+.plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.plan-features svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--success);
+}
+
+/* Muddat tanlash — CSS'ning o'zi radio holatiga qarab uslub beradi,
+   JS shart emas: forma to'g'ridan-to'g'ri ishlaydi. */
+.duration-toggle {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--s-3);
+}
+
+.duration-toggle__option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.duration-toggle__option input {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+  accent-color: var(--warning);
+}
+
+.duration-toggle__option:has(input:checked) {
+  border-color: var(--warning);
+  background: rgba(245, 166, 35, 0.08);
+}
+
+.duration-toggle__label {
+  font-weight: 600;
+}
+
+.duration-toggle__price {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.duration-toggle__discount {
+  margin-left: var(--s-2);
+  color: var(--success);
+  font-weight: 700;
+}
+
+/* Pleer o'rnida chiqadigan Premium paywall — `.player`ning shakli
+   bilan bir xil (16:9, o'sha border-radius). */
+.premium-lock {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-height: 82vh;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #000;
+  box-shadow: var(--shadow-cine);
+  display: grid;
+  place-items: center;
+}
+
+.premium-lock__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.3);
+}
+
+.premium-lock__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  max-width: 44ch;
+  text-align: center;
+  color: var(--text);
+}
+
+.premium-lock__icon svg {
+  width: 44px;
+  height: 44px;
+  color: var(--warning);
+}
+
+.premium-lock__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+}
+
+.premium-lock__text {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   "Mening obunam" sahifasi
+   -------------------------------------------------------------------------- */
+
+.sub-page {
+  max-width: var(--container-narrow);
+  padding-top: var(--s-6);
+  padding-bottom: var(--s-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.sub-page__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+/* --- Faol obuna kartasi --- */
+
+.sub-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding: var(--s-6);
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(245, 166, 35, 0.35);
+  background: linear-gradient(150deg, var(--surface), var(--bg-3));
+  box-shadow: var(--shadow-md);
+}
+
+/* Dekorativ oltin yorug'lik — kartaning yuqori o'ng burchagida. */
+.sub-hero__glow {
+  position: absolute;
+  top: -120px;
+  right: -80px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 166, 35, 0.22), transparent 70%);
+  pointer-events: none;
+}
+
+.sub-hero > *:not(.sub-hero__glow) {
+  position: relative;
+  z-index: 1;
+}
+
+.sub-hero__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+}
+
+.sub-hero__id {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.sub-hero__crown {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: var(--r-full);
+  background: rgba(245, 166, 35, 0.14);
+  border: 1px solid rgba(245, 166, 35, 0.4);
+}
+
+.sub-hero__crown svg {
+  width: 26px;
+  height: 26px;
+  color: var(--warning);
+}
+
+.sub-hero__label {
+  margin: 0 0 2px;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sub-hero__plan {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.sub-hero__tagline {
+  margin: var(--s-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.sub-hero__status {
+  flex-shrink: 0;
+}
+
+/* --- Qolgan muddat chizig'i --- */
+
+.sub-hero__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.sub-hero__bar {
+  height: 8px;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.sub-hero__bar span {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--warning), #ffd07a);
+}
+
+.sub-hero__progress-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font-size: var(--fs-sm);
+}
+
+.sub-hero__progress-meta strong {
+  color: var(--warning);
+}
+
+.sub-hero__progress-meta span {
+  color: var(--text-muted);
+}
+
+/* --- Sana / summa ustunlari --- */
+
+.sub-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--s-4);
+  padding: var(--s-4) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.sub-stat__label {
+  margin: 0 0 var(--s-1);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sub-stat__value {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sub-perks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+}
+
+.sub-perks li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.sub-perks svg {
+  width: 15px;
+  height: 15px;
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.sub-hero__cta {
+  margin-top: calc(var(--s-1) * -1);
+}
+
+/* --- Obunasi yo'q holati --- */
+
+.sub-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-5);
+  text-align: center;
+  border-radius: var(--r-lg);
+  border: 1px dashed var(--border-strong);
+  background: linear-gradient(150deg, var(--bg-3), var(--surface));
+}
+
+.sub-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-full);
+  background: rgba(245, 166, 35, 0.12);
+}
+
+.sub-empty__icon svg {
+  width: 30px;
+  height: 30px;
+  color: var(--warning);
+}
+
+.sub-empty__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+}
+
+.sub-empty__text {
+  margin: 0 0 var(--s-2);
+  max-width: 46ch;
+  color: var(--text-muted);
+}
+
+/* --- Tarix (timeline) --- */
+
+.sub-history__title {
+  margin: 0 0 var(--s-4);
+  font-size: var(--fs-lg);
+}
+
+.sub-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding-left: var(--s-5);
+}
+
+/* Vertikal chiziq — barcha nuqtalarni bog'lab turadi. */
+.sub-timeline::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 5px;
+  width: 2px;
+  background: var(--border);
+}
+
+.sub-entry {
+  position: relative;
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.sub-entry:hover {
+  border-color: var(--border-strong);
+}
+
+.sub-entry__dot {
+  position: absolute;
+  top: 20px;
+  left: calc(var(--s-5) * -1 + 1px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  box-shadow: 0 0 0 4px var(--bg);
+}
+
+.sub-entry--active .sub-entry__dot { background: var(--success); }
+.sub-entry--pending .sub-entry__dot { background: var(--warning); }
+.sub-entry--rejected .sub-entry__dot { background: var(--red); }
+
+.sub-entry__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-2);
+}
+
+.sub-entry__plan {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 700;
+}
+
+.sub-entry__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.sub-entry__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sub-entry__meta svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.6;
+}
+
+.sub-entry__note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin: var(--s-3) 0 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  background: var(--red-soft);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.sub-entry__note svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--red);
+}
+
+@media (max-width: 560px) {
+  .sub-hero {
+    padding: var(--s-5) var(--s-4);
+  }
+
+  .sub-hero__plan {
+    font-size: var(--fs-xl);
+  }
+}

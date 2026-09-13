@@ -1,0 +1,21 @@
+{% comment %}
+  Pleer o'rnida ko'rsatiladigan paywall — film Premium deb belgilangan
+  (movie.is_premium) va joriy foydalanuvchida shu huquqni beruvchi faol
+  obuna yo'q holatda. `movie.can_watch` UCHUN allaqachon True bo'lgani
+  uchun (litsenziya/video muammosi emas) faqat obuna kerakligi aytiladi.
+{% endcomment %}
+<div class="premium-lock">
+  {% if movie.backdrop %}
+    <img class="premium-lock__bg" src="{{ movie.backdrop.url }}" alt="" width="1600" height="900">
+  {% endif %}
+  <div class="premium-lock__content">
+    <div class="premium-lock__icon">{% include "partials/icon.html" with name="crown" %}</div>
+    <h3 class="premium-lock__title">Bu film Premium obuna uchun</h3>
+    <p class="premium-lock__text">
+      «{{ movie.title }}» filmini tomosha qilish uchun Premium obunaga ega bo'lishingiz kerak.
+    </p>
+    <a class="btn btn--primary btn--lg" href="{% url 'subscriptions:plan_list' %}">
+      {% include "partials/icon.html" with name="crown" %} Obuna rejalarini ko'rish
+    </a>
+  </div>
+</div>
