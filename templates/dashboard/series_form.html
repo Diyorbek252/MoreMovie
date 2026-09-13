@@ -229,7 +229,7 @@
                 <th></th>
               </tr>
             </thead>
-            <tbody data-formset-rows="series_cast">
+            <tbody data-formset-rows="cast_members">
               {% for cast_form in cast_formset %}
                 <tr data-formset-row>
                   {{ cast_form.id }}
@@ -256,12 +256,12 @@
           </table>
         </div>
 
-        <button type="button" class="btn btn--ghost" data-formset-add="series_cast"
+        <button type="button" class="btn btn--ghost" data-formset-add="cast_members"
                 style="margin-top: var(--s-4)">
           {% include "partials/icon.html" with name="plus" %} Yana aktyor qo'shish
         </button>
 
-        <template id="series_cast-empty-form">
+        <template id="cast_members-empty-form">
           <tr data-formset-row>
             {{ cast_formset.empty_form.id }}
             <td>{{ cast_formset.empty_form.actor }}</td>

@@ -339,7 +339,7 @@ class EpisodeForm(forms.ModelForm):
     class Meta:
         model = Episode
         fields = [
-            "episode_number", "title", "description", "thumbnail",
+            "episode_number", "title", "description",
             "video_url", "video_file", "download_url", "is_download_allowed",
             "duration_minutes", "quality", "language", "air_date", "is_published",
         ]

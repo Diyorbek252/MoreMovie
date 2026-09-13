@@ -270,6 +270,22 @@ class Episode(TimeStampedModel):
         return bool(self.video_file or self.video_url)
 
     @property
+    def display_thumbnail_url(self):
+        """Ko'rsatiladigan rasm — har bir epizod uchun alohida rasm
+        so'ralmaydi. O'zining kadr rasmi bo'lmasa, serialning backdrop
+        (yoki poster) rasmi ishlatiladi — bir marta yuklangan rasm
+        shu serialning barcha epizodlariga qo'llaniladi.
+        """
+        if self.thumbnail:
+            return self.thumbnail.url
+        series = self.season.series
+        if series.backdrop:
+            return series.backdrop.url
+        if series.poster:
+            return series.poster.url
+        return ""
+
+    @property
     def can_watch(self):
         """Movie.can_watch bilan bir xil rol o'ynaydi — litsenziya
         tushunchasi yo'qligi sababli faqat chop etilgan va video manbasi

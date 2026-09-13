@@ -130,8 +130,7 @@
       {% if user.is_authenticated %}
         <div class="player">
           <video preload="metadata"
-                 {% if current_episode.thumbnail %}poster="{{ current_episode.thumbnail.url }}"
-                 {% elif series.backdrop %}poster="{{ series.backdrop.url }}"{% endif %}
+                 {% if current_episode.display_thumbnail_url %}poster="{{ current_episode.display_thumbnail_url }}"{% endif %}
                  playsinline>
             <source src="{{ current_episode.video_source }}">
             Brauzeringiz video ko'rsatishni qo'llab-quvvatlamaydi.

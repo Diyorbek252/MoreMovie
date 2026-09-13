@@ -32,8 +32,8 @@
             {% for episode in episodes %}
               <tr>
                 <td>
-                  {% if episode.thumbnail %}
-                    <img class="table__poster" src="{{ episode.thumbnail.url }}" alt="" loading="lazy">
+                  {% if episode.display_thumbnail_url %}
+                    <img class="table__poster" src="{{ episode.display_thumbnail_url }}" alt="" loading="lazy">
                   {% else %}
                     <div class="table__poster"></div>
                   {% endif %}
