@@ -322,7 +322,7 @@
         </div>
       {% endif %}
     {% elif movie.can_watch and movie.is_premium %}
-      {% include "partials/premium_lock.html" %}
+      {% include "partials/premium_lock.html" with title=movie.title backdrop=movie.backdrop noun="film" suffix=" filmini tomosha qilish" %}
     {% elif movie.trailer_url %}
       <div class="video-frame">
         <iframe src="{{ movie.trailer_url }}" title="{{ movie.title }} treyleri"

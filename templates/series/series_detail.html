@@ -135,7 +135,7 @@
 {% endcomment %}
 <div class="container">
   <section class="section" id="player">
-    {% if current_episode and current_episode.can_watch %}
+    {% if can_play %}
       {% if user.is_authenticated %}
         <div class="player">
           <video preload="metadata"
@@ -214,6 +214,8 @@
           </div>
         </div>
       {% endif %}
+    {% elif current_episode.can_watch and series.is_premium %}
+      {% include "partials/premium_lock.html" with title=series.title backdrop=series.backdrop noun="serial" suffix=" serialini tomosha qilish" %}
     {% elif series.trailer_url %}
       <div class="video-frame">
         <iframe src="{{ series.trailer_url }}" title="{{ series.title }} treyleri"

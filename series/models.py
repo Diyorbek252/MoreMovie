@@ -114,6 +114,10 @@ class Series(TimeStampedModel):
     # --- Holat ---
     is_featured = models.BooleanField("tanlangan", default=False)
     is_trending = models.BooleanField("trendda", default=False)
+    is_premium = models.BooleanField(
+        "premium", default=False,
+        help_text="Faqat faol Premium obunasi bor foydalanuvchilar tomosha qila oladi.",
+    )
     is_published = models.BooleanField("chop etilgan", default=False)
     views_count = models.PositiveIntegerField("ko'rishlar soni", default=0, editable=False)
 
@@ -133,6 +137,7 @@ class Series(TimeStampedModel):
         indexes = [
             models.Index(fields=["is_published", "-created_at"]),
             models.Index(fields=["is_published", "is_featured"]),
+            models.Index(fields=["is_published", "is_premium"]),
             models.Index(fields=["title"]),
         ]
 
@@ -329,6 +334,20 @@ class Episode(TimeStampedModel):
         tushunchasi yo'qligi sababli faqat chop etilgan va video manbasi
         bor epizodlar tomosha qilinadi."""
         return self.is_published and self.has_video_source
+
+    def is_watchable_by(self, user):
+        """`can_watch` USTIGA obuna tekshiruvi qo'shadi — Movie.is_watchable_by
+        bilan bir xil naqsh. "Premium" belgisi butun serialga qo'yiladi
+        (`Series.is_premium`) — bitta seriyaning barcha epizodlari birga
+        ochiladi yoki birga yopiq turadi.
+        """
+        if not self.can_watch:
+            return False
+        if not self.season.series.is_premium:
+            return True
+        from subscriptions.services import has_premium_access
+
+        return has_premium_access(user)
 
     @property
     def video_source(self):

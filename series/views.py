@@ -12,14 +12,23 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import DetailView, ListView
 
 from movies.models import Genre
-from movies.views import QueryStringMixin
+from movies.views import CatalogRedirectView, QueryStringMixin
 from reviews.models import Rating, Review
 
 from .models import Episode, Series
 
 
+class SeriesListRedirectView(CatalogRedirectView):
+    """`/series/` -> umumiy katalog, «Seriallar» turi tanlangan holda."""
+
+    content_type = "series"
+
+
 class SeriesListView(QueryStringMixin, ListView):
-    """Barcha seriallar — qidiruv, janr filtri va saralash bilan."""
+    """Barcha seriallar — qidiruv, janr filtri va saralash bilan.
+
+    ESLATMA: URL'ga ulanmagan -- qarang `SeriesListRedirectView`.
+    """
 
     model = Series
     template_name = "series/series_list.html"
@@ -107,7 +116,9 @@ class SeriesDetailView(DetailView):
         # etilgan epizod.
         published_episodes = Episode.objects.filter(
             season__series=series, season__is_published=True, is_published=True
-        ).select_related("season").order_by("season__number", "episode_number")
+        ).select_related("season", "season__series").order_by(
+            "season__number", "episode_number"
+        )
 
         current_episode = None
         episode_id = self.request.GET.get("episode")
@@ -117,8 +128,12 @@ class SeriesDetailView(DetailView):
             current_episode = published_episodes.first()
 
         context["current_episode"] = current_episode
+        # `can_watch` (chop etilgan + video bor) USTIGA obuna tekshiruvi —
+        # pleer faqat shu bayroq True bo'lganda ko'rsatiladi (Movie bilan
+        # bir xil naqsh).
+        context["can_play"] = bool(current_episode and current_episode.is_watchable_by(user))
 
-        if current_episode and current_episode.can_watch and user.is_authenticated:
+        if current_episode and context["can_play"] and user.is_authenticated:
             # Ko'rishlar hisoblagichi — F() bilan atomik oshiriladi. Movie'dan
             # farqli — bu yerda resume/ViewHistory kuzatilmaydi (ViewHistory
             # faqat Movie'ga bog'langan), shuning uchun pleer har doim

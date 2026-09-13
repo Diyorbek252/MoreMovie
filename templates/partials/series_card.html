@@ -3,6 +3,10 @@ Serial kartasi — Movie uchun partials/movie_card.html bilan bir xil
 naqsh. Watchlist/Favorite tugmalari yo'q — bu modellar hozircha faqat
 Movie'ga bog'langan.
 
+Reyting kartaning pastki qismida, yil va janr yonida ko'rsatiladi —
+IMDb emas, sayt foydalanuvchilarining bahosi (`user_rating_display`),
+xuddi movie_card.html dagidek.
+
 Ishlatish:
     {% include "partials/series_card.html" with series=series %}
 {% endcomment %}
@@ -18,14 +22,15 @@ Ishlatish:
       {% endif %}
     </a>
 
-    <div class="card__tags">
-      {% if series.imdb_rating %}
-        <span class="badge badge--rating">
-          {% include "partials/icon.html" with name="star" %}
-          {{ series.imdb_rating }}
-        </span>
-      {% endif %}
-    </div>
+    {% if series.is_premium %}
+      <div class="card__tags">
+        <div class="card__qualities">
+          <span class="badge badge--premium">
+            {% include "partials/icon.html" with name="crown" %} Premium
+          </span>
+        </div>
+      </div>
+    {% endif %}
   </div>
 
   <div class="card__body">
@@ -37,6 +42,13 @@ Ishlatish:
       {% with genre=series.genres.all|first %}
         {% if genre %}<span>{{ genre.name }}</span>{% endif %}
       {% endwith %}
+      {% if series.user_rating_display %}
+        {# Sayt foydalanuvchilarining bahosi — IMDb'dan alohida, 1-5 shkalada #}
+        <span class="card__score" title="Sayt foydalanuvchilari bahosi">
+          {% include "partials/icon.html" with name="star" %}
+          {{ series.user_rating_display }}
+        </span>
+      {% endif %}
     </div>
   </div>
 </article>
