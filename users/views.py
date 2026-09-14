@@ -86,8 +86,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         # Oxirgi ko'rilgan filmlar.
         context["recent_history"] = (
             ViewHistory.objects.filter(user=user)
-            .select_related("movie", "movie__country", "movie__language")
-            .prefetch_related("movie__genres", "movie__directors")[:12]
+            .select_related("movie", "movie__language")
+            .prefetch_related("movie__genres", "movie__directors", "movie__countries")[:12]
         )
 
         # Foydalanuvchining sharhlari — holati bilan birga.
@@ -131,8 +131,8 @@ class WatchlistView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return (
             Watchlist.objects.filter(user=self.request.user)
-            .select_related("movie", "movie__country", "movie__language")
-            .prefetch_related("movie__genres", "movie__directors")
+            .select_related("movie", "movie__language")
+            .prefetch_related("movie__genres", "movie__directors", "movie__countries")
         )
 
 
@@ -146,6 +146,6 @@ class FavoritesView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return (
             Favorite.objects.filter(user=self.request.user)
-            .select_related("movie", "movie__country", "movie__language")
-            .prefetch_related("movie__genres", "movie__directors")
+            .select_related("movie", "movie__language")
+            .prefetch_related("movie__genres", "movie__directors", "movie__countries")
         )

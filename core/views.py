@@ -124,8 +124,8 @@ class HomeView(TemplateView):
         if is_active("continue") and user.is_authenticated:
             context["continue_watching"] = (
                 ViewHistory.objects.filter(user=user, is_finished=False, progress_seconds__gt=30)
-                .select_related("movie", "movie__country", "movie__language")
-                .prefetch_related("movie__genres", "movie__directors")[:12]
+                .select_related("movie", "movie__language")
+                .prefetch_related("movie__genres", "movie__directors", "movie__countries")[:12]
             )
 
         return context
