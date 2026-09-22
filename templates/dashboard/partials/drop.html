@@ -1,0 +1,60 @@
+{% comment %}
+Fayl tanlash maydoni — sudrab tashlash, oldindan ko'rish va joriy faylni
+o'chirish bilan. Maydonning widget'i `DropFileInput` bo'lishi kerak
+(u faqat toza `<input type="file">` chiqaradi, qolgani shu yerda chiziladi).
+
+    {% include "dashboard/partials/drop.html" with field=form.poster kind="poster" icon="image" lead="Poster" hint="Vertikal 2:3 — 500×750 px" current=object.poster only %}
+
+`kind`  — ramka nisbati: "poster" (2:3), "backdrop" (16:9), "video" (past panel).
+`current` — mavjud fayl (FieldFile) yoki bo'sh.
+{% endcomment %}
+<div class="field" data-field="{{ field.name }}">
+  <label class="field__label" for="{{ field.id_for_label }}">
+    <span>{{ field.label }}</span>
+    {% if hint %}<em class="field__hint">{{ hint }}</em>{% endif %}
+  </label>
+
+  <div class="drop drop--{{ kind }}{% if current %} is-filled{% endif %}" data-drop>
+    {# Haqiqiy input — ko'rinmas, lekin formaga fayl shu orqali tushadi. #}
+    <span class="drop__native">{{ field }}</span>
+
+    <button type="button" class="drop__frame" data-drop-open
+            aria-label="{{ lead }} uchun fayl tanlash">
+      {% if kind == "video" %}
+        <span class="drop__icon">{% include "partials/icon.html" with name=icon %}</span>
+      {% else %}
+        <img class="drop__img" src="{% if current %}{{ current.url }}{% endif %}" alt=""
+             data-drop-img {% if not current %}hidden{% endif %}>
+        <span class="drop__icon">{% include "partials/icon.html" with name=icon %}</span>
+      {% endif %}
+      <span class="drop__lead">{{ lead }}</span>
+      <span class="drop__sub" data-drop-sub>Bosing yoki faylni tashlang</span>
+    </button>
+
+    <div class="drop__foot">
+      {# Tor ustunda matn qisqaradi — to'liq nomi sichqoncha ustida ko'rinadi. #}
+      <span class="drop__meta" data-drop-meta
+            title="{% if current %}{{ current.name }}{% endif %}">
+        {% if current %}Joriy: {{ current.name|cut:"videos/"|cut:"posters/"|cut:"backdrops/" }}{% else %}Fayl tanlanmagan{% endif %}
+      </span>
+      <div class="drop__tools">
+        <button type="button" class="btn btn--sm btn--ghost" data-drop-clear hidden>
+          {% include "partials/icon.html" with name="x" %} Bekor
+        </button>
+        {% if current %}
+          {# ClearableFileInput POST'da shu belgini o'qiydi (`<name>-clear`). #}
+          <label class="checkbox drop__wipe">
+            <input type="checkbox" name="{{ field.html_name }}-clear"
+                   id="{{ field.id_for_label }}-clear"> Joriy faylni o'chirish
+          </label>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if field.errors %}
+    <p class="field__error">{{ field.errors|first }}</p>
+  {% elif help %}
+    <p class="field__help" id="{{ field.auto_id }}_helptext">{{ help }}</p>
+  {% endif %}
+</div>

@@ -223,6 +223,149 @@
   });
 
   /* --------------------------------------------------------------------
+     Premyeralar — markazlashgan cheksiz («loop») karusel
+
+     Kartalar ustma-ust turadi (uslublar: pages.css, `.premiere-stage`),
+     bu skript esa har biriga `data-pos` atributini qo'yadi:
+
+          -2      -1       0      +1      +2
+        sahna    chap   MARKAZ   o'ng    sahna
+       tashqari                        tashqari
+
+     Yorqin karta DOIM markazda; belgilangan oraliqda navbat keyingi
+     kartaga o'tadi va oxirgisidan keyin yana birinchisi keladi —
+     ya'ni aylanishning boshi ham, oxiri ham yo'q.
+
+     `data-pos` FAQAT shu yerdan qo'yiladi: agar JS ishlamasa atribut
+     umuman bo'lmaydi va CSS kartalarni oddiy ustun qilib ko'rsatadi
+     (zaxira ko'rinish, pages.css dagi `:not([data-pos])` qoidasi).
+     -------------------------------------------------------------------- */
+
+  // Bitta karta necha vaqt markazda turadi.
+  const SPOTLIGHT_MS = 4000;
+
+  // Bo'lim ekranga kirgach shuncha kutib, keyin aylanish boshlanadi --
+  // foydalanuvchi avval sahnani ko'rib olsin.
+  const SPOTLIGHT_START_DELAY = 900;
+
+  // Foydalanuvchi aralashgandan keyin aylanish shuncha vaqt to'xtab
+  // turadi (o'qiyotgan kartasi tortib olinmasin).
+  const SPOTLIGHT_RESUME_MS = 9000;
+
+  document.querySelectorAll(".premiere-stage").forEach(function (stage) {
+    const slides = Array.prototype.slice.call(stage.querySelectorAll(".premiere-slide"));
+    if (!slides.length) return;
+
+    const total = slides.length;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const wrap = stage.closest(".rail-wrap") || stage;
+
+    let index = 0;
+    let timer = null;
+    let resumeTimer = null;
+
+    /**
+     * Kartaning markazga nisbatan o'rni.
+     * Modul arifmetikasi aylanishni ta'minlaydi: oxirgi kartaning
+     * "keyingisi" — birinchisi.
+     * @returns {number} -2 | -1 | 0 | 1 | 2
+     */
+    const positionOf = function (slideIndex) {
+      const offset = (slideIndex - index + total) % total;
+
+      if (offset === 0) return 0;
+      // Ikkita karta bo'lganda ikkinchisi faqat O'NGDA turadi: aks holda
+      // bitta karta bir vaqtning o'zida ham chapda, ham o'ngda bo'lardi.
+      if (offset === 1) return 1;
+      if (offset === total - 1) return -1;
+
+      // Qolganlari sahnadan tashqarida — qaysi tomonga yaqin bo'lsa,
+      // o'sha tomonda kutib turadi va navbati kelganda chetdan suzib
+      // kiradi.
+      return offset <= total / 2 ? 2 : -2;
+    };
+
+    const paint = function () {
+      slides.forEach(function (slide, slideIndex) {
+        slide.setAttribute("data-pos", String(positionOf(slideIndex)));
+      });
+    };
+
+    const go = function (step) {
+      index = (index + step + total) % total;
+      paint();
+    };
+
+    const start = function () {
+      // Harakatni kamaytirish so'ralganda karta birinchisida qotib
+      // qoladi — o'z-o'zidan almashinuv bo'lmaydi.
+      if (reduced || timer || total < 2) return;
+      timer = setInterval(function () { go(1); }, SPOTLIGHT_MS);
+    };
+
+    const stop = function () {
+      clearInterval(timer);
+      timer = null;
+    };
+
+    /** Foydalanuvchi aralashdi — vaqtincha to'xtatamiz. */
+    const pause = function () {
+      stop();
+      clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(start, SPOTLIGHT_RESUME_MS);
+    };
+
+    // Boshlang'ich holat darhol chiziladi: sahna hech qachon "bo'sh"
+    // ko'rinmasin (kutish faqat AYLANISHGA tegishli).
+    paint();
+
+    // Sichqoncha sahna ustida bo'lganda aylanmaydi.
+    wrap.addEventListener("pointerenter", stop);
+    wrap.addEventListener("pointerleave", start);
+
+    /* O'q tugmalari. Bu sahna suriladigan tasma emas, shuning uchun
+       main.js dagi umumiy `.rail-wrap` mantig'i (u `.rail` ni qidiradi)
+       bu yerga tegmaydi — tugmalarni o'zimiz ulaymiz. */
+    const prev = wrap.querySelector('[data-rail="prev"]');
+    const next = wrap.querySelector('[data-rail="next"]');
+
+    if (prev) prev.addEventListener("click", function () { go(-1); pause(); });
+    if (next) next.addEventListener("click", function () { go(1); pause(); });
+
+    // Yon kartani bosish ham uni markazga olib keladi.
+    slides.forEach(function (slide, slideIndex) {
+      slide.addEventListener("pointerdown", function () {
+        if (slideIndex !== index) {
+          index = slideIndex;
+          paint();
+        }
+        pause();
+      });
+    });
+
+    /* Bo'lim ekranda ko'ringandagina aylanadi: ko'rinmayotgan sahnani
+       almashtirib turishning ma'nosi yo'q (va telefon batareyasini
+       yeydi). */
+    if ("IntersectionObserver" in window) {
+      const stageObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              setTimeout(start, SPOTLIGHT_START_DELAY);
+            } else {
+              stop();
+            }
+          });
+        },
+        { threshold: 0.25 }
+      );
+      stageObserver.observe(stage);
+    } else {
+      setTimeout(start, SPOTLIGHT_START_DELAY);
+    }
+  });
+
+  /* --------------------------------------------------------------------
      Reveal animatsiyasi — ko'rinish maydoniga kirganda
      -------------------------------------------------------------------- */
 
@@ -321,6 +464,31 @@
     const target = tabButton.dataset.peopleTab;
     section.querySelectorAll("[data-people-panel]").forEach(function (panel) {
       panel.hidden = panel.dataset.peoplePanel !== target;
+    });
+  });
+
+  /* --------------------------------------------------------------------
+     Fasl tablari — serial detali sahifasida. Bir vaqtda faqat bitta
+     faslning epizodlari ko'rinadi (yuqoridagi aktyor tablari bilan bir
+     xil naqsh).
+     -------------------------------------------------------------------- */
+
+  document.addEventListener("click", function (event) {
+    const seasonTab = event.target.closest(".season-tab");
+    if (!seasonTab) return;
+
+    const box = seasonTab.closest(".episodes");
+    if (!box) return;
+
+    box.querySelectorAll(".season-tab").forEach(function (tab) {
+      const active = tab === seasonTab;
+      tab.classList.toggle("is-active", active);
+      tab.setAttribute("aria-selected", String(active));
+    });
+
+    const target = seasonTab.dataset.seasonTab;
+    box.querySelectorAll("[data-season-panel]").forEach(function (panel) {
+      panel.hidden = panel.dataset.seasonPanel !== target;
     });
   });
 

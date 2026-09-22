@@ -21,6 +21,18 @@
     grid-auto-columns: 116px;
   }
 
+  /* Yil chipsi faqat raqamdan iborat — film kartasidan ancha tor. */
+  .rail--years {
+    grid-auto-columns: 124px;
+  }
+
+  /* Premyera sahnasi -- markazdagi kartaning kengligi. Sahnaning
+     qolgan o'lchamlari (balandlik, yon kartalar siljishi) shundan
+     hisoblanadi, shuning uchun bu yerda BITTA qiymat yetarli.
+     `.premiere-stage` suriladigan tasma emas, ya'ni bare `.rail`
+     qoidalari unga umuman tegmaydi. */
+  .premiere-stage { --card-w: 480px; }
+
   /* Tor noutbukda menyu ikonalarsiz — o'zbekcha yozuvlar uzunroq
      ("Bosh sahifa"), joy tejash uchun faqat matn qoladi. */
   .nav__link svg {
@@ -88,6 +100,15 @@
   .rail--sm {
     grid-auto-columns: 104px;
   }
+
+  .rail--years {
+    grid-auto-columns: 118px;
+  }
+
+  /* Bu blok keng oraliqni qamraydi (481-768px), shuning uchun qat'iy
+     piksel emas: 481px da 440px lik karta konteynerdan (449px) kengroq
+     bo'lib, sahnadan chiqib ketardi. */
+  .premiere-stage { --card-w: min(440px, 80vw); }
 
   /* Auth sahifasida chap dekorativ panel yashiriladi */
   .auth {
@@ -195,6 +216,24 @@
   .rail--sm {
     grid-auto-columns: 38vw;
   }
+
+  /* Telefonda janr kartasi film kartasidek keng bo'lishi shart emas —
+     ikkitasi bir ekranga sig'adi; yillar esa uchtadan ko'rinadi. */
+  .rail--genres {
+    grid-auto-columns: min(224px, 64vw);
+  }
+
+  .rail--years {
+    grid-auto-columns: min(112px, 30vw);
+  }
+
+  /* Telefonda bitta slayd deyarli butun ekranni egallaydi, chetida
+     keyingisining bir qismi ko'rinib turadi (surish mumkinligi
+     belgisi) -- Premyeralar shu yerda alohida ajralib turishi kerak.
+     84vw ATAYLAB o'zgarmadi: 390px lik telefonda u allaqachon chegarada.
+     Faqat yuqori chegara ko'tarildi -- kattaroq telefonlarda slayd
+     o'sadi, kichiklarida esa chet avvalgidek qoladi. */
+  .premiere-stage { --card-w: min(360px, 84vw); }
 
   /* Kichik ekranda hover overlay foydasiz — o'chiriladi */
   .card__overlay {

@@ -5,7 +5,7 @@
 
 .dash {
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 250px minmax(0, 1fr);
   gap: var(--s-6);
   align-items: start;
   padding-block: var(--s-5) var(--s-8);
@@ -341,7 +341,7 @@
 }
 
 .form-grid--full {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* Janrlar checkbox ro'yxati */
@@ -511,7 +511,7 @@
 
 @media (max-width: 1024px) {
   .dash {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* Yon menyu gorizontal chiziqqa aylanadi */
@@ -537,7 +537,7 @@
 
 @media (max-width: 480px) {
   .dash-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .dash-stat {
@@ -680,3 +680,1095 @@
 
 .upload-item.is-failed .upload-item__percent { color: var(--danger); }
 .upload-item.is-failed .upload-item__bar span { background: var(--danger); }
+
+/* ==========================================================================
+   FILM / SERIAL FORMASI — bosqichli tahrirlash oynasi
+   (templates/dashboard/movie_form.html + static/js/movie-form.js)
+
+   Forma bitta `<form>` bo'lib qoladi; `.mform__step` lar faqat ko'rinish
+   darajasida almashadi. Barcha ranglar variables.css dan.
+   ========================================================================== */
+
+.mform {
+  display: block;
+}
+
+/* --- Yopishqoq bosh qism: sarlavha + tablar --- */
+
+.mform__head {
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 20;
+  margin-bottom: var(--s-5);
+  padding-block: var(--s-3);
+  /* Panel chetlaridan tashqariga chiqib, butun ustunni yopadi */
+  background: linear-gradient(180deg, var(--bg) 72%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.mform__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.mform__back {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all var(--dur-fast) var(--ease);
+}
+
+.mform__back:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  transform: translateX(-2px);
+}
+
+.mform__back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mform__id {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mform__title {
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Bir qatorda qoladi: uzun serial/epizod nomi kesiladi, forma esa tor
+   ekranda ham gorizontal aylanmaydi. */
+.mform__sub {
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Chop etilgan / qoralama holati nuqtasi */
+.mform__dot {
+  display: inline-block;
+  vertical-align: middle;
+  width: 7px;
+  height: 7px;
+  margin-right: 3px;
+  border-radius: var(--r-full);
+  background: var(--text-faint);
+}
+
+.mform__dot.is-on {
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.18);
+}
+
+.mform__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-shrink: 0;
+}
+
+/* --- Bosqich tablari --- */
+
+.mform__tabs {
+  display: flex;
+  gap: var(--s-1);
+  margin-top: var(--s-2);
+  padding: var(--s-1);
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.mform__tabs::-webkit-scrollbar { display: none; }
+
+.mtab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: 1;
+  justify-content: center;
+  padding: var(--s-3) var(--s-3);
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+
+.mtab svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.mtab:hover {
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.mtab.is-active {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+/* Xatosi bor bo'lim — tab ustida qizil nuqta */
+.mtab.is-invalid::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2);
+}
+
+/* --- Bo'limlar --- */
+
+.mform__step[hidden] { display: none; }
+
+.mform__step.is-active {
+  animation: step-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* --- Pastki navigatsiya --- */
+
+.mform__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--border);
+}
+
+.mform__progress {
+  margin-right: auto;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   Panel va maydon qo'shimchalari
+   -------------------------------------------------------------------------- */
+
+.panel__sub {
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+.mt-4 { margin-top: var(--s-4); }
+
+.form-grid--2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.form-grid--3 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+
+/* Yorliq ichida chap — nom, o'ng — kichik izoh/hisoblagich */
+.field__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.field__req {
+  margin-left: 3px;
+  color: var(--red);
+  font-weight: 700;
+}
+
+.field__hint {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  font-style: normal;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.field__hint.is-warn { color: var(--warning); }
+
+.field--narrow { max-width: 110px; }
+
+.textarea--sm { min-height: 84px; }
+
+/* Slug — prefiks bilan yopishgan maydon */
+
+.slug-box {
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.slug-box:focus-within { border-color: var(--red); }
+
+.slug-box__prefix {
+  display: grid;
+  place-items: center;
+  padding-inline: var(--s-4);
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.slug-box .input {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.slug-box .input:focus { background: transparent; }
+
+/* --------------------------------------------------------------------------
+   Fayl maydoni (dropzone)
+   -------------------------------------------------------------------------- */
+
+.media-grid {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 200px;
+  gap: var(--s-5);
+  align-items: start;
+}
+
+.media-grid--video {
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* Haqiqiy `<input type="file">` — ko'rinmaydi, lekin formaga tushadi */
+.drop__native input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.drop__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1.5px dashed var(--border-strong);
+  color: var(--text-dim);
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease);
+}
+
+.drop--poster .drop__frame { aspect-ratio: 2 / 3; }
+.drop--backdrop .drop__frame { aspect-ratio: 16 / 9; }
+.drop--video .drop__frame { min-height: 132px; }
+
+.drop__frame:hover,
+.drop.is-over .drop__frame {
+  border-color: var(--red);
+  background: var(--red-soft);
+  color: var(--text-muted);
+}
+
+.drop__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drop__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.drop__icon svg { width: 20px; height: 20px; }
+
+.drop__lead {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.drop__sub {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+
+/* Rasm tanlangach matnlar rasm ustida o'qilishi uchun pastga qorong'i parda */
+.drop.is-filled .drop__icon { display: none; }
+
+.drop--poster.is-filled .drop__lead,
+.drop--poster.is-filled .drop__sub,
+.drop--backdrop.is-filled .drop__lead,
+.drop--backdrop.is-filled .drop__sub {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.drop--poster.is-filled .drop__frame::after,
+.drop--backdrop.is-filled .drop__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.drop--poster.is-filled .drop__frame:hover::after,
+.drop--backdrop.is-filled .drop__frame:hover::after,
+.drop--poster.is-filled .drop__frame:hover .drop__lead,
+.drop--poster.is-filled .drop__frame:hover .drop__sub,
+.drop--backdrop.is-filled .drop__frame:hover .drop__lead,
+.drop--backdrop.is-filled .drop__frame:hover .drop__sub {
+  opacity: 1;
+}
+
+.drop--video.is-filled .drop__frame {
+  border-style: solid;
+  border-color: var(--success);
+  background: rgba(46, 204, 113, 0.08);
+}
+
+.drop__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 24px;
+}
+
+.drop__meta {
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drop__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-shrink: 0;
+}
+
+.drop__wipe {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.drop__wipe input { width: 15px; height: 15px; }
+
+/* Formset qatoridagi ixcham fayl tugmasi */
+.file-slim {
+  width: 100%;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+
+.file-slim::file-selector-button {
+  margin-right: var(--s-3);
+  padding: 6px var(--s-3);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.file-slim::file-selector-button:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* --------------------------------------------------------------------------
+   Jonli karta ko'rinishi
+   -------------------------------------------------------------------------- */
+
+.mpreview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  position: sticky;
+  top: calc(var(--nav-h) + 140px);
+}
+
+.mpreview__cap {
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mpreview__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+}
+
+.mpreview__poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.mpreview__poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mpreview__blank {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-faint);
+}
+
+.mpreview__blank svg { width: 32px; height: 32px; }
+
+.mpreview__q {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  background: rgba(0, 0, 0, 0.72);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.mpreview__title {
+  font-size: var(--fs-sm);
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.mpreview__meta {
+  display: flex;
+  gap: var(--s-2);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+
+.mpreview__meta span:first-child::after {
+  content: "·";
+  margin-left: var(--s-2);
+  color: var(--text-faint);
+}
+
+.mpreview__meta span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Ko'p tanlovli ro'yxat (janr / kategoriya / rejissyor)
+   -------------------------------------------------------------------------- */
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--s-4);
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+}
+
+.picker.has-error { border-color: var(--danger); }
+
+.picker__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.picker__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.picker__count {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.picker__count.is-on {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.picker__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.picker__search > svg {
+  position: absolute;
+  left: var(--s-3);
+  width: 15px;
+  height: 15px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+
+.picker__input {
+  width: 100%;
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-6);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+}
+
+.picker__input:focus {
+  outline: none;
+  border-color: var(--red);
+}
+
+.picker__input::placeholder { color: var(--text-faint); }
+
+.picker__reset {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.picker__reset:hover { color: var(--red); }
+
+/* Django `CheckboxSelectMultiple` ni chip ro'yxatiga aylantiradi:
+   tashqi <div id="id_genres"> -> har bir variant uchun <div><label>. */
+.picker__list {
+  /* Ro'yxat uzun bo'lsa pastda "davomi bor" degan yumshoq soya qoladi */
+  position: relative;
+}
+
+.picker__list::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 24px;
+  background: linear-gradient(180deg, transparent, var(--bg-3));
+  pointer-events: none;
+}
+
+.picker__list > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: var(--s-2);
+  max-height: 190px;
+  padding-right: 2px;
+  padding-bottom: var(--s-3);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.picker__list > div > div[hidden] { display: none; }
+
+.picker__list label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--s-3);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--dur-fast) var(--ease);
+}
+
+.picker__list label:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.picker__list label.is-on {
+  background: var(--red-soft);
+  border-color: var(--red);
+  color: var(--red);
+  font-weight: 600;
+}
+
+/* Chip ichidagi checkbox — kichik doira belgisi */
+.picker__list input[type="checkbox"] {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  cursor: pointer;
+}
+
+.picker__list label.is-on input[type="checkbox"] {
+  border-color: var(--red);
+  background: var(--red)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E")
+    center / 10px no-repeat;
+}
+
+.picker__none {
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+
+/* --------------------------------------------------------------------------
+   Toggle qatorlari (chop etish holati, yuklab olish ruxsati)
+   -------------------------------------------------------------------------- */
+
+.toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s-3);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease);
+}
+
+.toggle-row:hover { border-color: var(--border-strong); }
+
+/* Huquqiy qoidaga zid tanlov — server ham rad etadi */
+.toggle-row.is-blocked {
+  border-color: var(--danger);
+  background: var(--red-soft);
+}
+
+.toggle-row .toggle { flex-shrink: 0; margin-top: 2px; }
+
+.toggle-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-row__body strong {
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+
+.toggle-row__body em {
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-style: normal;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Litsenziya natijasi — "ko'rish / yuklab olish" holati
+   -------------------------------------------------------------------------- */
+
+.legal {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+}
+
+.legal__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 5px var(--s-3);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: var(--fs-xs);
+}
+
+.legal__chip svg { width: 14px; height: 14px; }
+
+.legal__chip b { font-weight: 600; color: var(--text-muted); }
+
+.legal__chip i {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--text-faint);
+}
+
+.legal__chip.is-on {
+  border-color: rgba(46, 204, 113, 0.4);
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--success);
+}
+
+.legal__chip.is-on svg,
+.legal__chip.is-on i { color: var(--success); }
+
+.legal__chip.is-off { opacity: 0.75; }
+
+.legal__note {
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+.license-note--soft {
+  margin-bottom: var(--s-4);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.license-note--soft svg { color: var(--info); }
+
+/* --------------------------------------------------------------------------
+   Formset qatorlari (video sifatlari, aktyorlar) — jadval emas, kartochka
+   -------------------------------------------------------------------------- */
+
+.fset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.fset__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: opacity var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease);
+}
+
+.fset__row:hover { border-color: var(--border-strong); }
+
+/* O'chirish uchun belgilangan qator */
+.fset__row.is-gone {
+  opacity: 0.45;
+  border-color: var(--danger);
+}
+
+.fset__num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 22px;
+  flex-shrink: 0;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.fset__body {
+  display: grid;
+  gap: var(--s-3);
+  flex: 1;
+  min-width: 0;
+}
+
+.fset__body--video { grid-template-columns: 130px minmax(0, 1fr) minmax(0, 1fr); }
+.fset__body--cast { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 110px; }
+
+.fset__err { grid-column: 1 / -1; }
+
+.fset__side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  /* Barcha qatorlarda bir xil — saqlangan qatorda "O'chirish" belgisi,
+     yangi qatorda esa kichik tugma turadi, maydonlar esa tekis qolsin. */
+  width: 112px;
+  margin-top: 22px;
+  flex-shrink: 0;
+}
+
+.btn-icon--danger { color: var(--text-dim); }
+
+.btn-icon--danger:hover {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.checkbox--danger { font-size: var(--fs-xs); white-space: nowrap; }
+
+.checkbox--danger input:checked {
+  background-color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Sanoq belgisi (panel sarlavhasidagi "3 ta aktyor") */
+.pill {
+  padding: 3px var(--s-3);
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1280px) {
+  .media-grid { grid-template-columns: 200px minmax(0, 1fr); }
+  .mpreview { grid-column: 1 / -1; position: static; }
+  .mpreview__card { max-width: 200px; }
+}
+
+@media (max-width: 1024px) {
+  /* Yon menyu gorizontalga o'tganda yopishqoq sarlavha ham pastga tushadi */
+  .mform__head { top: 0; }
+  .media-grid--video { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 860px) {
+  .mform__bar { flex-wrap: wrap; }
+  .mform__id { order: -1; flex-basis: 60%; }
+  .mform__actions { margin-left: auto; }
+  .mform__view { display: none; }
+
+  .mtab { flex: 0 0 auto; }
+  .mtab__label { display: none; }
+  .mtab.is-active .mtab__label { display: inline; }
+
+  .media-grid { grid-template-columns: minmax(0, 1fr); }
+  .drop--poster .drop__frame { max-width: 220px; }
+
+  .fset__body--video,
+  .fset__body--cast { grid-template-columns: minmax(0, 1fr); }
+
+  .fset__num { margin-top: 0; }
+  .fset__side { margin-top: 0; }
+
+  .fset__row {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .fset__body { flex-basis: 100%; order: 2; }
+
+  .field--narrow { max-width: none; }
+}
+
+@media (max-width: 560px) {
+  .mform__head { padding-block: var(--s-2); }
+  .mform__bar { padding: var(--s-3); }
+  .mform__title { font-size: var(--fs-lg); }
+  /* Tugmalar o'z qatoriga tushadi va kerak bo'lsa kichrayadi ham. */
+  .mform__actions { flex: 1 1 100%; min-width: 0; }
+  .mform__actions .btn { flex: 1; justify-content: center; }
+  .mform__foot { flex-wrap: wrap; }
+  .mform__progress { flex-basis: 100%; order: -1; }
+}
+
+/* --------------------------------------------------------------------------
+   Serial fasllari ro'yxati (templates/dashboard/series_form.html)
+   Jadval emas — qatorlar, chunki har bir faslda bir nechta harakat bor.
+   -------------------------------------------------------------------------- */
+
+.season-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  list-style: none;
+}
+
+.season-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.season-row:hover { border-color: var(--border-strong); }
+
+.season-row__num {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+  background: var(--red-soft);
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+}
+
+.season-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.season-row__title {
+  font-size: var(--fs-base);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.season-row__meta {
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+
+.season-row__state { color: var(--text-faint); }
+.season-row__state.is-on { color: var(--success); }
+
+.season-row__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-shrink: 0;
+}
+
+/* Fasl formasidagi poster + holat kaliti yonma-yon */
+.media-grid--season {
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .season-row {
+    flex-wrap: wrap;
+  }
+
+  .season-row__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .media-grid--season { grid-template-columns: minmax(0, 1fr); }
+}

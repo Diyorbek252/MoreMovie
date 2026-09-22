@@ -1,18 +1,18 @@
 """Serial katalogi — public sahifalar: ro'yxat va detail (epizod pleeri bilan).
 
-movies/views.py dagi naqshlarni takrorlaydi (QueryStringMixin, SORT_OPTIONS
-lug'ati). Farqi: Series/Episode'da litsenziya (LicenseType) yo'q, shuning
-uchun ko'rish ruxsati faqat `is_published` + video manbasi borligiga
+Seriallar ro'yxati (filtr bilan) alohida emas -- u umumiy katalogda,
+`core/catalog.py` da: bitta filtr kino, multfilm va seriallarga birdek
+ishlaydi. Bu yerda faqat detail sahifasi va katalogga yo'naltirish qoladi.
+
+Series/Episode'da litsenziya (LicenseType) yo'q, shuning uchun ko'rish
+ruxsati faqat `is_published` + video manbasi borligiga
 (`Episode.can_watch`) qaraladi.
 """
 
-from django.conf import settings
 from django.db.models import Count, F, Q
-from django.shortcuts import get_object_or_404
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView
 
-from movies.models import Genre
-from movies.views import CatalogRedirectView, QueryStringMixin
+from movies.views import CatalogRedirectView
 from reviews.models import Rating, Review
 
 from .models import Episode, Series
@@ -22,63 +22,6 @@ class SeriesListRedirectView(CatalogRedirectView):
     """`/series/` -> umumiy katalog, «Seriallar» turi tanlangan holda."""
 
     content_type = "series"
-
-
-class SeriesListView(QueryStringMixin, ListView):
-    """Barcha seriallar — qidiruv, janr filtri va saralash bilan.
-
-    ESLATMA: URL'ga ulanmagan -- qarang `SeriesListRedirectView`.
-    """
-
-    model = Series
-    template_name = "series/series_list.html"
-    context_object_name = "series_list"
-    paginate_by = settings.MOVIES_PER_PAGE
-
-    SORT_OPTIONS = {
-        "latest": ("-created_at", "Eng yangi"),
-        "popular": ("-views_count", "Eng mashhur"),
-        "rating": ("-imdb_rating", "Yuqori reyting"),
-        "year": ("-release_year", "Yil bo'yicha"),
-        "az": ("title", "A-Z"),
-    }
-
-    def get_queryset(self):
-        queryset = Series.objects.published().with_relations()
-        params = self.request.GET
-
-        if query := params.get("q", "").strip():
-            queryset = queryset.filter(
-                Q(title__icontains=query)
-                | Q(original_title__icontains=query)
-                | Q(description__icontains=query)
-                | Q(genres__name__icontains=query)
-            ).distinct()
-
-        if genre := params.get("genre"):
-            queryset = queryset.filter(genres__slug=genre)
-
-        sort = params.get("sort", "latest")
-        order_field = self.SORT_OPTIONS.get(sort, self.SORT_OPTIONS["latest"])[0]
-        return queryset.order_by(order_field)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        params = self.request.GET
-
-        context.update(
-            {
-                "genres": Genre.objects.all(),
-                "sort_options": self.SORT_OPTIONS,
-                "current": {
-                    "q": params.get("q", ""),
-                    "genre": params.get("genre", ""),
-                    "sort": params.get("sort", "latest"),
-                },
-                "has_filters": any(params.get(key) for key in ("q", "genre")),
-            }
-        )
-        return context
 
 
 class SeriesDetailView(DetailView):
@@ -96,8 +39,8 @@ class SeriesDetailView(DetailView):
     def get_queryset(self):
         return (
             Series.objects.published()
-            .select_related("country", "language")
-            .prefetch_related("genres", "cast_members__actor", "directors")
+            .select_related("language")
+            .prefetch_related("genres", "cast_members__actor", "directors", "countries")
         )
 
     def get_context_data(self, **kwargs):
@@ -105,8 +48,14 @@ class SeriesDetailView(DetailView):
         series = self.object
         user = self.request.user
 
+        # `published_count` — fasl tabidagi epizodlar soni uchun. Shablonda
+        # sanab bo'lmaydi (chop etilmaganlari chiqarib tashlanadi), shuning
+        # uchun bitta so'rovda annotatsiya qilinadi.
         seasons = (
             series.seasons.filter(is_published=True)
+            .annotate(
+                published_count=Count("episodes", filter=Q(episodes__is_published=True))
+            )
             .prefetch_related("episodes")
             .order_by("number")
         )
@@ -128,6 +77,11 @@ class SeriesDetailView(DetailView):
             current_episode = published_episodes.first()
 
         context["current_episode"] = current_episode
+        # Fasl tablaridan qaysi biri ochiq turishi: joriy epizodniki, aks
+        # holda birinchisi.
+        context["active_season_id"] = (
+            current_episode.season_id if current_episode else (seasons[0].pk if seasons else None)
+        )
         # `can_watch` (chop etilgan + video bor) USTIGA obuna tekshiruvi —
         # pleer faqat shu bayroq True bo'lganda ko'rsatiladi (Movie bilan
         # bir xil naqsh).

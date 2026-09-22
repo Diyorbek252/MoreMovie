@@ -7,6 +7,7 @@ from . import views
 app_name = "series"
 
 urlpatterns = [
-    path("series/", views.SeriesListView.as_view(), name="series_list"),
+    # Seriallar ro'yxati ham umumiy katalogda (`core:catalog`).
+    path("series/", views.SeriesListRedirectView.as_view(), name="series_list"),
     path("series/<slug:slug>/", views.SeriesDetailView.as_view(), name="series_detail"),
 ]

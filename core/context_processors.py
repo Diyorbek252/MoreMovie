@@ -26,7 +26,7 @@ def site_globals(request):
         "unread_notifications_count": 0,
         # Navbar'dagi cinepoint chipi uchun.
         "cinepoint_balance": 0,
-        # Navbar'dagi oltin Premium chipi va qulflangan filmlar uchun.
+        # Profil menyusidagi oltin Premium belgisi va qulflangan filmlar uchun.
         "active_subscription": None,
         "has_premium_access": False,
     }

@@ -44,8 +44,8 @@
               <th>Litsenziya</th>
               <th>Ko'rish</th>
               <th>Chop etilgan</th>
-              <th>Tanlangan</th>
-              <th>Trendda</th>
+              <th>Premium</th>
+              <th>Premyera</th>
               <th></th>
             </tr>
           </thead>
@@ -92,19 +92,19 @@
                 </td>
 
                 <td>
-                  <button class="switch js-toggle {% if movie.is_featured %}is-on{% endif %}"
+                  <button class="switch js-toggle {% if movie.is_premium %}is-on{% endif %}"
                           type="button" role="switch"
-                          aria-checked="{% if movie.is_featured %}true{% else %}false{% endif %}"
-                          aria-label="Tanlangan holati"
-                          data-url="{% url 'dashboard:api_toggle_featured' movie.pk %}"></button>
+                          aria-checked="{% if movie.is_premium %}true{% else %}false{% endif %}"
+                          aria-label="Premium holati"
+                          data-url="{% url 'dashboard:api_toggle_premium' movie.pk %}"></button>
                 </td>
 
                 <td>
-                  <button class="switch js-toggle {% if movie.is_trending %}is-on{% endif %}"
+                  <button class="switch js-toggle {% if movie.is_premiere %}is-on{% endif %}"
                           type="button" role="switch"
-                          aria-checked="{% if movie.is_trending %}true{% else %}false{% endif %}"
-                          aria-label="Trendda holati"
-                          data-url="{% url 'dashboard:api_toggle_trending' movie.pk %}"></button>
+                          aria-checked="{% if movie.is_premiere %}true{% else %}false{% endif %}"
+                          aria-label="Premyera holati"
+                          data-url="{% url 'dashboard:api_toggle_premiere' movie.pk %}"></button>
                 </td>
 
                 <td>

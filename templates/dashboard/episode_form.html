@@ -1,109 +1,173 @@
 {% extends "dashboard/base_dashboard.html" %}
+{% load static %}
 
 {% block dash_title %}{% if object %}Epizodni tahrirlash{% else %}Yangi epizod{% endif %}{% endblock %}
 
+{% comment %}
+  Epizod formasi — bosqichlarsiz, lekin film formasi bilan bir xil
+  komponentlar: yopishqoq ustki panel, «dropzone» fayl maydoni,
+  toggle'lar va video/yuklash holatini jonli ko'rsatuvchi belgilar
+  (static/js/content-form.js).
+
+  Epizodning huquqiy holati serialdan meros — shu sababli bu yerda
+  litsenziya tanlovi yo'q, faqat yuklab olish ruxsati so'raladi.
+{% endcomment %}
+
 {% block dash_content %}
-  <div class="dash-head">
-    <div>
-      <h1 class="dash-head__title">
-        {% if object %}{{ object.title }}{% else %}Yangi epizod{% endif %}
-      </h1>
-      <p class="dash-head__sub">{{ season.series.title }} — {{ season.display_title }}</p>
+
+<form class="mform" method="post" enctype="multipart/form-data" data-content-form novalidate>
+  {% csrf_token %}
+
+  <div class="mform__head">
+    <div class="mform__bar">
+      <a class="mform__back" href="{% url 'dashboard:episode_list' season.pk %}"
+         aria-label="Epizodlarga qaytish">
+        {% include "partials/icon.html" with name="chevron-left" %}
+      </a>
+
+      <div class="mform__id">
+        <h1 class="mform__title">
+          {% if object %}{{ object.episode_number }}. {{ object.title }}{% else %}Yangi epizod{% endif %}
+        </h1>
+        <p class="mform__sub">
+          {% if object %}
+            {% if object.is_published %}
+              <span class="mform__dot is-on"></span> Chop etilgan
+            {% else %}
+              <span class="mform__dot"></span> Qoralama
+            {% endif %}
+            ·
+          {% endif %}
+          {{ season.series.title }} — {{ season.display_title }}
+        </p>
+      </div>
+
+      <div class="mform__actions">
+        <a class="btn btn--ghost" href="{% url 'dashboard:episode_list' season.pk %}">Bekor qilish</a>
+        <button class="btn btn--primary" type="submit">
+          {% include "partials/icon.html" with name="check" %}
+          {% if object %}Saqlash{% else %}Qo'shish{% endif %}
+        </button>
+      </div>
     </div>
-    <a class="btn btn--ghost" href="{% url 'dashboard:episode_list' season.pk %}">← Epizodlarga qaytish</a>
   </div>
 
-  <form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="alert alert--error">
+      {% include "partials/icon.html" with name="alert" %}
+      <div>{{ form.non_field_errors }}</div>
+    </div>
+  {% endif %}
 
-    {% if form.non_field_errors %}
-      <div class="alert alert--error">
-        {% include "partials/icon.html" with name="alert" %}
-        <div>{{ form.non_field_errors }}</div>
+  {# ---- Asosiy ma'lumot ---- #}
+  <div class="panel">
+    <div class="panel__head">
+      <div>
+        <h2 class="panel__title">Asosiy ma'lumot</h2>
+        <p class="panel__sub">Epizodlar ro'yxatda raqam bo'yicha tartiblanadi.</p>
       </div>
+    </div>
+
+    <div class="form-grid form-grid--3">
+      {% include "dashboard/partials/field.html" with field=form.episode_number only %}
+      {% include "dashboard/partials/field.html" with field=form.duration_minutes help="Daqiqada. 0 — noma'lum." only %}
+      {% include "dashboard/partials/field.html" with field=form.air_date hint="ixtiyoriy" only %}
+      {% include "dashboard/partials/field.html" with field=form.quality only %}
+      {% include "dashboard/partials/field.html" with field=form.language only %}
+    </div>
+
+    <div class="mt-4">
+      {% include "dashboard/partials/field.html" with field=form.title only %}
+    </div>
+
+    <div class="mt-4">
+      {% include "dashboard/partials/field.html" with field=form.description hint="ixtiyoriy" only %}
+    </div>
+  </div>
+
+  {# ---- Video ---- #}
+  <div class="panel">
+    <div class="panel__head">
+      <div>
+        <h2 class="panel__title">Video</h2>
+        <p class="panel__sub">Havola yoki fayldan biri yetarli — fayl havoladan ustun turadi.</p>
+      </div>
+    </div>
+
+    <div class="license-note license-note--soft">
+      {% include "partials/icon.html" with name="info" %}
+      <div>
+        Kadr rasmi alohida so'ralmaydi — epizod serialning backdrop
+        rasmini avtomatik ishlatadi.
+      </div>
+    </div>
+
+    <div class="media-grid media-grid--video">
+      {% include "dashboard/partials/field.html" with field=form.video_url help="To'g'ridan-to'g'ri MP4/HLS havolasi (qonuniy manba)." only %}
+      {% include "dashboard/partials/drop.html" with field=form.video_file kind="video" icon="upload" lead="Video fayl" current=object.video_file help="Katta fayl yuborilayotganda sahifani yopmang." only %}
+    </div>
+
+    <div class="mt-4">
+      {% include "dashboard/partials/field.html" with field=form.download_url help="Yuklab olishga ruxsat berilgan bo'lsa majburiy." only %}
+    </div>
+
+    <label class="toggle-row mt-4">
+      <span class="toggle">{{ form.is_download_allowed }}<span class="toggle__track"></span></span>
+      <span class="toggle-row__body">
+        <strong>{{ form.is_download_allowed.label }}</strong>
+        <em>Faqat huquq egasi ruxsat bergan epizodlar uchun belgilang.</em>
+      </span>
+    </label>
+    {% if form.is_download_allowed.errors %}
+      <p class="field__error">{{ form.is_download_allowed.errors|first }}</p>
     {% endif %}
 
-    <div class="panel">
-      <div class="panel__head"><h2 class="panel__title">Asosiy ma'lumot</h2></div>
+    {# Natija jonli ko'rsatiladi — huquqiy holat serialdan meros bo'ladi. #}
+    <div class="legal" data-legal>
+      <span class="legal__chip" data-legal-watch>
+        {% include "partials/icon.html" with name="play" %}
+        <b>Ko'rish</b><i>—</i>
+      </span>
+      <span class="legal__chip" data-legal-download>
+        {% include "partials/icon.html" with name="download" %}
+        <b>Yuklab olish</b><i>—</i>
+      </span>
+      <span class="legal__note" data-legal-note></span>
+    </div>
+  </div>
 
-      <div class="form-grid">
-        {% for field in form %}
-          {% if field.name == "episode_number" or field.name == "title" or field.name == "duration_minutes" or field.name == "quality" or field.name == "language" or field.name == "air_date" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-
-      <div class="form-grid form-grid--full" style="margin-top: var(--s-4)">
-        {% for field in form %}
-          {% if field.name == "description" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
+  {# ---- Chop etish ---- #}
+  <div class="panel">
+    <div class="panel__head">
+      <div>
+        <h2 class="panel__title">Chop etish</h2>
+        <p class="panel__sub">
+          Epizod saytda ko'rinishi uchun fasl va serial ham chop etilgan bo'lishi kerak.
+        </p>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel__head"><h2 class="panel__title">Media</h2></div>
+    <label class="toggle-row">
+      <span class="toggle">{{ form.is_published }}<span class="toggle__track"></span></span>
+      <span class="toggle-row__body">
+        <strong>Chop etilgan</strong>
+        <em>O'chirilsa epizod faqat dashboardda ko'rinadi.</em>
+      </span>
+    </label>
+  </div>
 
-      <div class="license-note" style="margin-bottom: var(--s-4)">
-        {% include "partials/icon.html" with name="info" %}
-        <div>
-          Kadr rasmi alohida so'ralmaydi — bu epizod serialning backdrop
-          rasmini avtomatik ishlatadi.
-        </div>
-      </div>
+  <div class="mform__foot">
+    <span class="mform__progress">{{ season.series.title }} · {{ season.display_title }}</span>
+    <a class="btn btn--ghost" href="{% url 'dashboard:episode_list' season.pk %}">Bekor qilish</a>
+    <button class="btn btn--primary" type="submit">
+      {% include "partials/icon.html" with name="check" %}
+      {% if object %}O'zgarishlarni saqlash{% else %}Epizodni qo'shish{% endif %}
+    </button>
+  </div>
+</form>
 
-      <div class="form-grid">
-        {% for field in form %}
-          {% if field.name == "video_file" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
+{% endblock %}
 
-      <div class="form-grid" style="margin-top: var(--s-4)">
-        {% for field in form %}
-          {% if field.name == "video_url" or field.name == "download_url" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-
-      <label class="checkbox" style="margin-top: var(--s-4)">
-        {{ form.is_download_allowed }} {{ form.is_download_allowed.label }}
-      </label>
-      {% if form.is_download_allowed.errors %}
-        <p class="field__error">{{ form.is_download_allowed.errors|first }}</p>
-      {% endif %}
-    </div>
-
-    <div class="panel">
-      <div class="panel__head"><h2 class="panel__title">Chop etish</h2></div>
-      <label class="checkbox">{{ form.is_published }} {{ form.is_published.label }}</label>
-    </div>
-
-    <div class="row">
-      <button class="btn btn--primary btn--lg" type="submit">
-        {% if object %}O'zgarishlarni saqlash{% else %}Epizodni qo'shish{% endif %}
-      </button>
-      <a class="btn btn--ghost btn--lg" href="{% url 'dashboard:episode_list' season.pk %}">Bekor qilish</a>
-    </div>
-  </form>
+{% block dash_js %}
+  <script src="{% static 'js/content-form.js' %}" defer></script>
 {% endblock %}

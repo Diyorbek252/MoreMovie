@@ -1,32 +1,127 @@
 {% extends "dashboard/base_dashboard.html" %}
+{% load static %}
 
 {% block dash_title %}{% if object %}Faslni tahrirlash{% else %}Yangi fasl{% endif %}{% endblock %}
 
+{% comment %}
+  Fasl formasi — maydonlari kam, shuning uchun bosqichlarsiz: bitta
+  yopishqoq ustki panel + ikki panel. Fayl maydoni, toggle va belgilar
+  hisoblagichi film formasidagi bilan bir xil (static/js/content-form.js).
+{% endcomment %}
+
 {% block dash_content %}
-  <div class="dash-head">
-    <div>
-      <h1 class="dash-head__title">
-        {% if object %}{{ object.display_title }}{% else %}Yangi fasl{% endif %}
-      </h1>
-      <p class="dash-head__sub">{{ series.title }}</p>
+
+<form class="mform" method="post" enctype="multipart/form-data" data-content-form novalidate>
+  {% csrf_token %}
+
+  <div class="mform__head">
+    <div class="mform__bar">
+      <a class="mform__back" href="{% url 'dashboard:season_list' series.pk %}"
+         aria-label="Fasllarga qaytish">
+        {% include "partials/icon.html" with name="chevron-left" %}
+      </a>
+
+      <div class="mform__id">
+        <h1 class="mform__title">
+          {% if object %}{{ object.display_title }}{% else %}Yangi fasl{% endif %}
+        </h1>
+        <p class="mform__sub">
+          {% if object %}
+            {% if object.is_published %}
+              <span class="mform__dot is-on"></span> Chop etilgan
+            {% else %}
+              <span class="mform__dot"></span> Qoralama
+            {% endif %}
+            · {{ series.title }}
+            · {{ object.episode_count }} ta epizod
+          {% else %}
+            {{ series.title }} — yangi fasl qo'shish
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="mform__actions">
+        {% if object %}
+          <a class="btn btn--ghost btn--sm mform__view" href="{% url 'dashboard:episode_list' object.pk %}">
+            {% include "partials/icon.html" with name="film" %} Epizodlar
+          </a>
+        {% endif %}
+        <a class="btn btn--ghost" href="{% url 'dashboard:season_list' series.pk %}">Bekor qilish</a>
+        <button class="btn btn--primary" type="submit">
+          {% include "partials/icon.html" with name="check" %}
+          {% if object %}Saqlash{% else %}Qo'shish{% endif %}
+        </button>
+      </div>
     </div>
-    <a class="btn btn--ghost" href="{% url 'dashboard:season_list' series.pk %}">← Fasllarga qaytish</a>
   </div>
 
-  <form method="post" enctype="multipart/form-data" class="panel" style="max-width: 640px">
-    {% csrf_token %}
-
-    {% for field in form %}
-      <div class="field" style="margin-bottom: var(--s-4)">
-        <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
-      </div>
-    {% endfor %}
-
-    <div class="row">
-      <button class="btn btn--primary btn--lg" type="submit">Saqlash</button>
-      <a class="btn btn--ghost btn--lg" href="{% url 'dashboard:season_list' series.pk %}">Bekor qilish</a>
+  {% if form.non_field_errors %}
+    <div class="alert alert--error">
+      {% include "partials/icon.html" with name="alert" %}
+      <div>{{ form.non_field_errors }}</div>
     </div>
-  </form>
+  {% endif %}
+
+  <div class="panel">
+    <div class="panel__head">
+      <div>
+        <h2 class="panel__title">Fasl ma'lumoti</h2>
+        <p class="panel__sub">Nomi bo'sh bo'lsa saytda «{{ form.number.value|default:1 }}-fasl» deb ko'rinadi.</p>
+      </div>
+    </div>
+
+    <div class="form-grid form-grid--3">
+      {% include "dashboard/partials/field.html" with field=form.number help="Saytdagi tartibni belgilaydi." only %}
+      {% include "dashboard/partials/field.html" with field=form.year hint="ixtiyoriy" only %}
+    </div>
+
+    <div class="mt-4">
+      {% include "dashboard/partials/field.html" with field=form.title hint="ixtiyoriy" help="Masalan «Qaytish». Bo'sh qoldirsangiz raqam bo'yicha nomlanadi." only %}
+    </div>
+
+    <div class="mt-4">
+      {% include "dashboard/partials/field.html" with field=form.description hint="ixtiyoriy" only %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head">
+      <div>
+        <h2 class="panel__title">Poster va holat</h2>
+        <p class="panel__sub">Poster bo'sh bo'lsa serialning umumiy posteri ishlatiladi.</p>
+      </div>
+    </div>
+
+    <div class="media-grid media-grid--season">
+      {% include "dashboard/partials/drop.html" with field=form.poster kind="poster" icon="image" lead="Fasl posteri" hint="2:3" current=object.poster help="Ixtiyoriy. Vertikal, masalan 500×750 px." only %}
+
+      <label class="toggle-row">
+        <span class="toggle">{{ form.is_published }}<span class="toggle__track"></span></span>
+        <span class="toggle-row__body">
+          <strong>Chop etilgan</strong>
+          <em>
+            O'chirilsa fasl va uning barcha epizodlari saytda ko'rinmaydi —
+            serial chop etilgan bo'lsa ham.
+          </em>
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <div class="mform__foot">
+    <span class="mform__progress">
+      {% if object %}{{ object.episode_count }} ta epizod{% else %}Saqlagandan keyin epizod qo'shasiz{% endif %}
+    </span>
+    <a class="btn btn--ghost" href="{% url 'dashboard:season_list' series.pk %}">Bekor qilish</a>
+    <button class="btn btn--primary" type="submit">
+      {% include "partials/icon.html" with name="check" %}
+      {% if object %}O'zgarishlarni saqlash{% else %}Faslni qo'shish{% endif %}
+    </button>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block dash_js %}
+  <script src="{% static 'js/content-form.js' %}" defer></script>
 {% endblock %}

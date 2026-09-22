@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ director.full_name }} — {{ SITE_NAME }}{% endblock %}
-{% block meta_description %}{{ director.full_name }} rejissyorligidagi filmlar {{ SITE_NAME }} platformasida.{% endblock %}
+{% block meta_description %}{{ director.full_name }} rejissyorligidagi kino, multfilm va seriallar {{ SITE_NAME }} platformasida.{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -14,24 +14,32 @@
     <div>
       <h1 class="page-head__title" style="margin-bottom: var(--s-2)">{{ director.full_name }}</h1>
       <p class="muted">
-        {{ page_obj.paginator.count }} ta film
+        {{ page_obj.paginator.count }} ta ish
         {% if director.bio %} — {{ director.bio }}{% endif %}
       </p>
     </div>
   </div>
 
-  {% if movies %}
+  {% comment %}
+    Kino, multfilm VA serial birga -- rejissyor ikkalasida ham
+    ishlagan bo'lishi mumkin (umumiy katalog bilan bir xil naqsh).
+  {% endcomment %}
+  {% if items %}
     <div class="grid">
-      {% for movie in movies %}
-        {% include "partials/movie_card.html" with movie=movie %}
+      {% for item in items %}
+        {% if item.kind == "series" %}
+          {% include "partials/series_card.html" with series=item.object %}
+        {% else %}
+          {% include "partials/movie_card.html" with movie=item.object %}
+        {% endif %}
       {% endfor %}
     </div>
     {% include "partials/pagination.html" %}
   {% else %}
     <div class="empty">
       {% include "partials/icon.html" with name="film" %}
-      <h2 class="empty__title">Bu rejissyorning hali filmi yo'q</h2>
-      <a class="btn btn--primary" href="{% url 'movies:movie_list' %}">Barcha filmlar</a>
+      <h2 class="empty__title">Bu rejissyorning hali ishi yo'q</h2>
+      <a class="btn btn--primary" href="{% url 'core:catalog' %}">Butun katalog</a>
     </div>
   {% endif %}
 </div>

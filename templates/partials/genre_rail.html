@@ -1,0 +1,53 @@
+{% comment %}
+Janr bo'yicha KO'P TANLOVLI filtr — bosh sahifadagi bilan bir xil dizayn
+(`.genre-tile`), doim ko'rsatiladi. Bir nechta janr bir vaqtda faol
+bo'lishi mumkin (birlashma/OR mantig'i — kontent istalgan tanlangan
+janrga tegishli bo'lsa yetarli, hammasiga birdan emas). Har bir chip
+bosilganda tanlovga qo'shiladi yoki undan olib tashlanadi.
+
+Kontekst:
+    genre_rail — [{"genre", "url", "active"}, ...] yoki `None`
+    current.genre — tanlangan janr slug'lari ro'yxati
+    genre_clear_url — barcha janr tanlovini tozalovchi havola
+{% endcomment %}
+{% if genre_rail %}
+  <div class="catalog-rail">
+    <div class="catalog-rail__head">
+      <span class="catalog-rail__label">
+        Janr bo'yicha
+        {% if current.genre %}<em>{{ current.genre|length }} ta tanlandi</em>{% endif %}
+      </span>
+      {% if current.genre %}
+        <a class="section__link" href="{{ genre_clear_url }}">
+          {% include "partials/icon.html" with name="x" %} Tozalash
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="rail-wrap">
+      <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
+        {% include "partials/icon.html" with name="chevron-left" %}
+      </button>
+
+      <div class="rail rail--genres">
+        {% for row in genre_rail %}
+          <a class="genre-tile {% if row.active %}is-active{% endif %}" href="{{ row.url }}"
+             aria-pressed="{% if row.active %}true{% else %}false{% endif %}">
+            <span class="genre-tile__glow" aria-hidden="true"></span>
+            <span class="genre-tile__mark" aria-hidden="true">
+              {% include "partials/icon.html" with name="tag" %}
+            </span>
+            <span class="genre-tile__name">{{ row.genre.name }}</span>
+            <span class="genre-tile__go" aria-hidden="true">
+              {% include "partials/icon.html" with name="chevron-right" %}
+            </span>
+          </a>
+        {% endfor %}
+      </div>
+
+      <button class="rail-btn rail-btn--next" type="button" aria-label="Oldinga" data-rail="next">
+        {% include "partials/icon.html" with name="chevron-right" %}
+      </button>
+    </div>
+  </div>
+{% endif %}

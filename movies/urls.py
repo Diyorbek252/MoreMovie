@@ -7,7 +7,9 @@ from . import api, views
 app_name = "movies"
 
 urlpatterns = [
-    path("movies/", views.MovieListView.as_view(), name="movie_list"),
+    # Filmlar ro'yxati endi umumiy katalogda (`core:catalog`) -- eski
+    # havolalar filtrlari bilan birga o'sha yerga yo'naltiriladi.
+    path("movies/", views.MovieListRedirectView.as_view(), name="movie_list"),
     path("genres/", views.GenreListView.as_view(), name="genre_list"),
     path("genre/<slug:slug>/", views.GenreDetailView.as_view(), name="genre_detail"),
     path("category/<slug:slug>/", views.CategoryDetailView.as_view(), name="category_detail"),

@@ -22,6 +22,7 @@ from django.views.generic.edit import CreateView
 from django.views.static import was_modified_since
 
 from movies.models import Genre, Movie, ViewHistory
+from series.models import Series
 from siteconfig.models import HomepageSection
 
 from .forms import ContactForm
@@ -52,35 +53,52 @@ class HomeView(TemplateView):
 
     Hero va "Davom ettirish" shablonda maxsus (qat'iy) joylashuvga ega --
     ular faqat yoqilgan/o'chirilgan holatini o'zgartira oladi, sahifadagi
-    o'rnini emas. Qolgan oltita bo'lim turi (Trending, Popular, New
-    Releases, Top Rated, Janrlar, Featured) esa `HomepageSection.order`
-    bo'yicha TO'LIQ qayta tartiblanadi.
+    o'rnini emas. Qolgan bo'limlar (Premyeralar, Kinolar, Multfilmlar,
+    Seriallar, Janrlar) esa `HomepageSection.order` bo'yicha TO'LIQ qayta
+    tartiblanadi.
+
+    Bo'limlar kontent TURI bo'yicha ajratilgan ("trending"/"popular" kabi
+    o'lchovlar bo'yicha emas) -- har bir bo'lim umumiy katalogning
+    (`core:catalog`) tegishli filtriga olib boradi.
     """
 
     template_name = "core/home.html"
 
-    # (kalit, standart sarlavha, standart limit, qidiruv sahifasiga havola qo'shimchasi)
+    #: (kalit, standart sarlavha, standart limit, katalogdagi filtr).
+    #: Oxirgi element -- "Barchasini ko'rish" havolasining query qismi.
+    #: Premyeralar uchun `link_suffix` yo'q (`None`) — bu bo'lim umumiy
+    #: katalogda alohida filtrga ega emas, shuning uchun "Barchasini
+    #: ko'rish" havolasi ko'rsatilmaydi (qarang: get_context_data).
     RAIL_CONFIG = [
-        ("trending", "Trending", 14, "?sort=popular"),
-        ("popular", "Popular Movies", 14, "?sort=popular"),
-        ("new_releases", "New Releases", 14, "?sort=latest"),
-        ("top_rated", "Top Rated", 14, "?sort=rating"),
-        ("genres", "Janrlar", 10, ""),
-        ("featured", "Featured", 14, ""),
+        ("premieres", "Premyeralar", 14, None),
+        ("movies", "Kinolar", 14, "?type=movie"),
+        ("cartoons", "Multfilmlar", 14, "?type=cartoon"),
+        ("series", "Seriallar", 14, "?type=series"),
+        # Janrlar va yillar ham gorizontal karusel — to'rda emas, shuning
+        # uchun limit kattaroq bo'lishi mumkin (ortiqchasi surib ko'riladi).
+        ("genres", "Janrlar", 20, ""),
+        ("years", "Yillar", 24, ""),
     ]
+
+    #: Serial kartasi boshqa shablon bilan chiziladi (partials/series_card.html).
+    SERIES_KEYS = {"series"}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         shared = self._get_shared_sections()
         data = shared["data"]
         config = shared["config"]
-        # Konfiguratsiya umuman yo'q bo'lsa — hech narsa yashirilmaydi,
-        # bu HomepageSection joriy etilishidan oldingi asl holat.
-        has_config = bool(config)
 
         def is_active(key):
+            """Sozlamada yozuv bo'lmasa bo'lim KO'RINADI.
+
+            Yangi bo'lim turi qo'shilganda (masalan «Premyeralar») eski
+            konfiguratsiyada uning qatori bo'lmaydi -- shunda bo'lim
+            jimgina yo'qolib qolmasligi kerak. Yashirish faqat admin
+            aniq o'chirganda bo'ladi.
+            """
             row = config.get(key)
-            return row.is_active if row else not has_config
+            return row.is_active if row else True
 
         def item_limit(key, default):
             row = config.get(key)
@@ -94,15 +112,31 @@ class HomeView(TemplateView):
             row = config.get(key)
             return row.subtitle if row else ""
 
-        def order(key, fallback_index):
-            row = config.get(key)
-            return row.order if row else fallback_index
-
         context["hero"] = data["hero"] if is_active("hero") else None
 
-        movies_list_url = reverse("movies:movie_list")
+        # Tartib. Sozlamada qatori bor bo'lim o'z `order` qiymatida turadi;
+        # qatori YO'Q yangi bo'lim (masalan «Yillar») RAIL_CONFIG da o'zidan
+        # oldin turgan bo'limdan keyingi joyni oladi.
+        #
+        # RAIL_CONFIG indeksiga qaytish XATO bo'lardi: bazadagi qiymatlar
+        # 0, 10, 20 ... qadam bilan yoziladi, ya'ni indeksdan ancha katta --
+        # shunda qatori yo'q yangi bo'lim sahifaning eng TEPASIGA sakrab
+        # chiqib ketadi. Boshlang'ich nuqta -- rail bo'lmagan bo'limlarning
+        # (hero, davom ettirish) eng katta tartibi.
+        rail_keys = {key for key, *_ in self.RAIL_CONFIG}
+        previous_order = max(
+            (row.order for key, row in config.items() if key not in rail_keys),
+            default=-1,
+        )
+        effective_order = {}
+        for key, *_ in self.RAIL_CONFIG:
+            row = config.get(key)
+            previous_order = float(row.order) if row else previous_order + 0.5
+            effective_order[key] = previous_order
+
+        catalog_url = reverse("core:catalog")
         rail_sections = []
-        for index, (key, default_title, default_limit, link_suffix) in enumerate(self.RAIL_CONFIG):
+        for key, default_title, default_limit, link_suffix in self.RAIL_CONFIG:
             if not is_active(key):
                 continue
             rail_sections.append(
@@ -111,17 +145,25 @@ class HomeView(TemplateView):
                     "title": title(key, default_title),
                     "subtitle": subtitle(key),
                     "movies": data.get(key, [])[: item_limit(key, default_limit)],
-                    "link": movies_list_url + link_suffix if key != "genres" else reverse("movies:genre_list"),
-                    "order": order(key, index),
+                    "is_series": key in self.SERIES_KEYS,
+                    "link": (
+                        reverse("movies:genre_list")
+                        if key == "genres"
+                        else (catalog_url + link_suffix if link_suffix is not None else "")
+                    ),
+                    "order": effective_order[key],
                 }
             )
         rail_sections.sort(key=lambda section: section["order"])
         context["rail_sections"] = rail_sections
 
         # Foydalanuvchiga xos bo'lim — keshdan tashqarida, faqat "Davom
-        # ettirish" bo'limi yoqilgan bo'lsagina hisoblanadi.
+        # ettirish" bo'limi (admin tomonidan) yoqilgan VA foydalanuvchi
+        # o'zi uni yashirmagan bo'lsagina hisoblanadi (Profile.
+        # show_continue_watching — bosh sahifadagi «Yashirish» tugmasi
+        # yoki profil sozlamalaridan boshqariladi).
         user = self.request.user
-        if is_active("continue") and user.is_authenticated:
+        if is_active("continue") and user.is_authenticated and user.profile.show_continue_watching:
             context["continue_watching"] = (
                 ViewHistory.objects.filter(user=user, is_finished=False, progress_seconds__gt=30)
                 .select_related("movie", "movie__language")
@@ -148,16 +190,14 @@ class HomeView(TemplateView):
         if hero is None:
             hero = published.with_relations().first()
 
-        trending_pool = list(Movie.objects.trending()[:RAW_POOL_SIZE])
-
         data = {
             "hero": hero,
-            "trending": trending_pool,
-            # "Popular" va "Trending" bir xil bo'lmasligi uchun siljitilgan oyna.
-            "popular": list(Movie.objects.trending()[14 : 14 + RAW_POOL_SIZE]) or trending_pool,
-            "new_releases": list(Movie.objects.newest()[:RAW_POOL_SIZE]),
-            "top_rated": list(Movie.objects.top_rated()[:RAW_POOL_SIZE]),
-            "featured": list(Movie.objects.featured()[:RAW_POOL_SIZE]),
+            # Bo'limlar kontent turi bo'yicha -- umumiy katalogdagi
+            # `?type=` filtri bilan bir xil bo'linish.
+            "premieres": list(Movie.objects.premieres()[:RAW_POOL_SIZE]),
+            "movies": list(Movie.objects.films().order_by("-created_at")[:RAW_POOL_SIZE]),
+            "cartoons": list(Movie.objects.cartoons().order_by("-created_at")[:RAW_POOL_SIZE]),
+            "series": list(Series.objects.newest()[:RAW_POOL_SIZE]),
             # Faqat filmi bor janrlar ko'rsatiladi.
             "genres": list(
                 Genre.objects.annotate(
@@ -166,6 +206,7 @@ class HomeView(TemplateView):
                 .filter(movie_total__gt=0)
                 .order_by("-movie_total")[:20]
             ),
+            "years": self._release_years(),
         }
 
         config = {row.key: row for row in HomepageSection.objects.all()}
@@ -173,6 +214,29 @@ class HomeView(TemplateView):
         result = {"data": data, "config": config}
         cache.set("home_sections", result, HOME_CACHE_TTL)
         return result
+
+    @staticmethod
+    def _release_years():
+        """Kamida bitta yozuv chiqqan yillar — yangisidan eskisiga.
+
+        Kino, multfilm va seriallar BIRGA olinadi: foydalanuvchi yilni
+        tanlaganda umumiy katalog (`?year=`) ham aynan shu uchchalasini
+        qaytaradi, shuning uchun ro'yxat ham shunga mos bo'lishi kerak.
+
+        Bo'limda yozuvlar SONI ko'rsatilmaydi (bu bo'lim yil tanlash
+        uchun), shuning uchun agregat emas, oddiy `distinct` yetarli —
+        modelga bittadan yengil so'rov.
+        """
+        years = set()
+
+        for queryset in (Movie.objects.published(), Series.objects.published()):
+            years.update(
+                queryset.exclude(release_year__isnull=True)
+                .values_list("release_year", flat=True)
+                .distinct()
+            )
+
+        return sorted(years, reverse=True)
 
 
 class AboutView(TemplateView):

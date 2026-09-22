@@ -104,7 +104,7 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ["avatar", "bio", "country"]
+        fields = ["avatar", "bio", "country", "show_continue_watching"]
         widgets = {
             "bio": forms.Textarea(
                 attrs={"class": "textarea", "rows": 4, "placeholder": "O'zingiz haqingizda..."}
@@ -112,8 +112,17 @@ class ProfileForm(forms.ModelForm):
             "country": forms.TextInput(
                 attrs={"class": "input", "placeholder": "Masalan: O'zbekiston"}
             ),
+            # Kalit-tugma ko'rinishida — shablonda alohida chiziladi
+            # (do'kon filtridagi "Cinepointlarim yetadi" bilan bir xil
+            # naqsh), shuning uchun oddiy `.field` qatoriga tushmaydi.
+            "show_continue_watching": forms.CheckboxInput(attrs={"class": "toggle__input"}),
         }
-        labels = {"avatar": "Avatar", "bio": "Bio", "country": "Davlat"}
+        labels = {
+            "avatar": "Avatar",
+            "bio": "Bio",
+            "country": "Davlat",
+            "show_continue_watching": "Bosh sahifada «Davom ettirish» bo'limini ko'rsatish",
+        }
 
 
 class UserForm(forms.ModelForm):

@@ -167,15 +167,38 @@ h4 { font-size: var(--fs-lg); }
 }
 
 .section__link {
+  /* `<a>` (masalan "Barchasini ko'rish →") va `<button>` (masalan
+     "Davom ettirish" bo'limidagi "Yashirish") ikkalasida ham
+     ishlatiladi — shuning uchun ikonka bilan ham to'g'ri joylashadi. */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
   color: var(--text-muted);
   font-size: var(--fs-sm);
   font-weight: 600;
   white-space: nowrap;
 }
 
+.section__link svg { width: 16px; height: 16px; }
+
 .section__link:hover {
   color: var(--red);
 }
+
+/* Sarlavha ustidagi kichik yozuv -- hozircha faqat 'Premyeralar' bo'limida. */
+.section__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+  color: var(--red);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.section__eyebrow svg { width: 16px; height: 16px; }
 
 /* --- Yordamchi klasslar --- */
 

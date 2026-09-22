@@ -85,6 +85,15 @@ class Profile(models.Model):
     )
     bio = models.TextField("bio", max_length=500, blank=True)
     country = models.CharField("davlat", max_length=80, blank=True)
+    show_continue_watching = models.BooleanField(
+        "bosh sahifada «Davom ettirish» bo'limini ko'rsatish",
+        default=True,
+        help_text=(
+            "O'chirilsa, bosh sahifada davom etayotgan filmlar bo'limi "
+            "umuman chiqmaydi. Foydalanuvchi buni bosh sahifadagi "
+            "bo'lim ustidagi «Yashirish» tugmasi orqali ham o'chira oladi."
+        ),
+    )
     balance = models.PositiveIntegerField(
         "cinepoint balansi",
         default=0,

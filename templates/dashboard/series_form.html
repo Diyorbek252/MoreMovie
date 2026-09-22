@@ -1,140 +1,229 @@
 {% extends "dashboard/base_dashboard.html" %}
+{% load static %}
 
 {% block dash_title %}{% if object %}Serialni tahrirlash{% else %}Yangi serial{% endif %}{% endblock %}
 
+{% comment %}
+  Serial qo'shish/tahrirlash — film formasi bilan bir xil bosqichli naqsh
+  (qarang: dashboard/movie_form.html va static/js/content-form.js).
+
+  Bitta `<form>` ichida bir nechta bo'lim bor; tablar faqat ko'rinishni
+  almashtiradi, submit esa doim hamma maydonni yuboradi. Shu sababli
+  bo'limlar DOM'dan olib tashlanmaydi — `hidden` bilan yashiriladi.
+{% endcomment %}
+
 {% block dash_content %}
 
-  <div class="dash-head">
-    <div>
-      <h1 class="dash-head__title">
-        {% if object %}{{ object.title }}{% else %}Yangi serial{% endif %}
-      </h1>
-      <p class="dash-head__sub">
-        {% if object %}Mavjud yozuvni tahrirlash{% else %}Katalogga yangi serial qo'shish{% endif %}
-      </p>
+<form class="mform" method="post" enctype="multipart/form-data" data-content-form novalidate>
+  {% csrf_token %}
+
+  {# ---- Ustki panel va tablar (yopishqoq) ---- #}
+  <div class="mform__head">
+    <div class="mform__bar">
+      <a class="mform__back" href="{% url 'dashboard:series_list' %}" aria-label="Ro'yxatga qaytish">
+        {% include "partials/icon.html" with name="chevron-left" %}
+      </a>
+
+      <div class="mform__id">
+        <h1 class="mform__title">{% if object %}{{ object.title }}{% else %}Yangi serial{% endif %}</h1>
+        <p class="mform__sub">
+          {% if object %}
+            {% if object.is_published %}
+              <span class="mform__dot is-on"></span> Saytda chop etilgan
+            {% else %}
+              <span class="mform__dot"></span> Qoralama — saytda ko'rinmaydi
+            {% endif %}
+            · {{ object.release_year }}
+            · {{ object.seasons.count }} fasl
+          {% else %}
+            Katalogga yangi serial qo'shish
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="mform__actions">
+        {% if object %}
+          <a class="btn btn--ghost btn--sm mform__view" href="{{ object.get_absolute_url }}"
+             target="_blank" rel="noopener">
+            {% include "partials/icon.html" with name="eye" %} Saytda
+          </a>
+        {% endif %}
+        <a class="btn btn--ghost" href="{% url 'dashboard:series_list' %}">Bekor qilish</a>
+        <button class="btn btn--primary" type="submit">
+          {% include "partials/icon.html" with name="check" %}
+          {% if object %}Saqlash{% else %}Qo'shish{% endif %}
+        </button>
+      </div>
     </div>
-    <a class="btn btn--ghost" href="{% url 'dashboard:series_list' %}">← Ro'yxatga qaytish</a>
+
+    <div class="mform__tabs" role="tablist" aria-label="Forma bo'limlari">
+      <button type="button" class="mtab is-active" data-tab="basic" role="tab" aria-selected="true">
+        {% include "partials/icon.html" with name="tv" %}
+        <span class="mtab__label">Asosiy</span>
+      </button>
+      <button type="button" class="mtab" data-tab="media" role="tab" aria-selected="false">
+        {% include "partials/icon.html" with name="image" %}
+        <span class="mtab__label">Media</span>
+      </button>
+      <button type="button" class="mtab" data-tab="taxonomy" role="tab" aria-selected="false">
+        {% include "partials/icon.html" with name="tag" %}
+        <span class="mtab__label">Tasnif</span>
+      </button>
+      <button type="button" class="mtab" data-tab="seasons" role="tab" aria-selected="false">
+        {% include "partials/icon.html" with name="layers" %}
+        <span class="mtab__label">Fasllar</span>
+      </button>
+      <button type="button" class="mtab" data-tab="cast" role="tab" aria-selected="false">
+        {% include "partials/icon.html" with name="users" %}
+        <span class="mtab__label">Aktyorlar</span>
+      </button>
+      <button type="button" class="mtab" data-tab="publish" role="tab" aria-selected="false">
+        {% include "partials/icon.html" with name="upload" %}
+        <span class="mtab__label">Chop etish</span>
+      </button>
+    </div>
   </div>
 
-  <form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
-
-    {% if form.non_field_errors %}
-      <div class="alert alert--error">
-        {% include "partials/icon.html" with name="alert" %}
-        <div>{{ form.non_field_errors }}</div>
-      </div>
-    {% endif %}
-
-    {# ==================== ASOSIY MA'LUMOT ==================== #}
-    <div class="panel">
-      <div class="panel__head"><h2 class="panel__title">Asosiy ma'lumot</h2></div>
-
-      <div class="form-grid">
-        {% for field in form %}
-          {% if field.name == "title" or field.name == "original_title" or field.name == "slug" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
-              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-
-      <div class="form-grid form-grid--full" style="margin-top: var(--s-4)">
-        {% for field in form %}
-          {% if field.name == "short_description" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
-              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
+  {% if form.non_field_errors %}
+    <div class="alert alert--error">
+      {% include "partials/icon.html" with name="alert" %}
+      <div>{{ form.non_field_errors }}</div>
     </div>
+  {% endif %}
 
-    {# ==================== MEDIA ==================== #}
-    <div class="panel">
-      <div class="panel__head"><h2 class="panel__title">Media</h2></div>
-
-      <div class="form-grid">
-        {% for field in form %}
-          {% if field.name == "poster" or field.name == "backdrop" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
-
-              {% if object %}
-                {% if field.name == "poster" and object.poster %}
-                  <div class="preview"><img src="{{ object.poster.url }}" alt="Joriy poster"></div>
-                {% elif field.name == "backdrop" and object.backdrop %}
-                  <div class="preview"><img src="{{ object.backdrop.url }}" alt="Joriy backdrop"></div>
-                {% endif %}
-              {% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-
-      <div class="form-grid" style="margin-top: var(--s-4)">
-        {% for field in form %}
-          {% if field.name == "trailer_url" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-    </div>
-
-    {# ==================== TASNIF ==================== #}
-    <div class="panel">
-      <div class="panel__head"><h2 class="panel__title">Tasnif</h2></div>
-
-      <div class="field" style="margin-bottom: var(--s-4)">
-        <label class="field__label">{{ form.genres.label }}</label>
-        <ul class="checks">{{ form.genres }}</ul>
-        {% if form.genres.errors %}<p class="field__error">{{ form.genres.errors|first }}</p>{% endif %}
-      </div>
-
-      <div class="field" style="margin-bottom: var(--s-4)">
-        <label class="field__label">{{ form.categories.label }}</label>
-        <ul class="checks">{{ form.categories }}</ul>
-        {% if form.categories.errors %}<p class="field__error">{{ form.categories.errors|first }}</p>{% endif %}
-      </div>
-
-      <div class="field" style="margin-bottom: var(--s-4)">
-        <label class="field__label">{{ form.directors.label }}</label>
-        <ul class="checks">{{ form.directors }}</ul>
-        {% if form.directors.errors %}<p class="field__error">{{ form.directors.errors|first }}</p>
-        {% else %}<p class="field__help">{{ form.directors.help_text }}</p>{% endif %}
-      </div>
-
-      <div class="form-grid">
-        {% for field in form %}
-          {% if field.name == "country" or field.name == "language" or field.name == "release_year" or field.name == "end_year" or field.name == "status" or field.name == "age_rating" or field.name == "imdb_rating" %}
-            <div class="field">
-              <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>
-              {% elif field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-    </div>
-
-    {# ==================== FASLLAR ==================== #}
+  {# ---- 1 — ASOSIY MA'LUMOT ---- #}
+  <section class="mform__step is-active" data-step="basic">
     <div class="panel">
       <div class="panel__head">
-        <h2 class="panel__title">Fasllar</h2>
+        <div>
+          <h2 class="panel__title">Nomi va tavsifi</h2>
+          <p class="panel__sub">Katalogda va qidiruvda shu matnlar ishlatiladi.</p>
+        </div>
+      </div>
+
+      <div class="form-grid form-grid--2">
+        {% include "dashboard/partials/field.html" with field=form.title only %}
+        {% include "dashboard/partials/field.html" with field=form.original_title hint="ixtiyoriy" only %}
+      </div>
+
+      <div class="field" data-field="slug">
+        <label class="field__label" for="{{ form.slug.id_for_label }}">
+          <span>{{ form.slug.label }}</span>
+          <em class="field__hint">bo'sh qoldirilsa nomdan avtomatik yasaladi</em>
+        </label>
+        <div class="slug-box">
+          <span class="slug-box__prefix">/series/</span>
+          {{ form.slug }}
+        </div>
+        {% if form.slug.errors %}<p class="field__error">{{ form.slug.errors|first }}</p>{% endif %}
+      </div>
+
+      {% include "dashboard/partials/field.html" with field=form.short_description counter="yes" only %}
+    </div>
+
+    <div class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Efir va holat</h2>
+          <p class="panel__sub">
+            Serial davom etayotgan bo'lsa «tugagan yil» bo'sh qoldiriladi.
+          </p>
+        </div>
+      </div>
+
+      <div class="form-grid form-grid--3">
+        {% include "dashboard/partials/field.html" with field=form.release_year only %}
+        {% include "dashboard/partials/field.html" with field=form.end_year hint="ixtiyoriy" help="Serial tugagan bo'lsa." only %}
+        {% include "dashboard/partials/field.html" with field=form.status help="Davom etmoqda / tugagan / kutilmoqda." only %}
+        {% include "dashboard/partials/field.html" with field=form.age_rating only %}
+        {% include "dashboard/partials/field.html" with field=form.imdb_rating help="Tashqi manba reytingi (0-10)." only %}
+      </div>
+
+      <div class="form-grid form-grid--2 mt-4">
+        {% include "dashboard/partials/field.html" with field=form.language only %}
+      </div>
+    </div>
+  </section>
+
+  {# ---- 2 — MEDIA ---- #}
+  <section class="mform__step" data-step="media" hidden>
+    <div class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Rasmlar</h2>
+          <p class="panel__sub">
+            Poster kartalarda, backdrop esa serial sahifasining fonida va
+            epizod kadri sifatida ishlatiladi.
+          </p>
+        </div>
+      </div>
+
+      <div class="media-grid">
+        {% include "dashboard/partials/drop.html" with field=form.poster kind="poster" icon="image" lead="Poster" hint="2:3" current=object.poster help="Vertikal, masalan 500×750 px." only %}
+        {% include "dashboard/partials/drop.html" with field=form.backdrop kind="backdrop" icon="image" lead="Backdrop" hint="16:9" current=object.backdrop help="Gorizontal, masalan 1920×1080 px." only %}
+
+        {# Jonli ko'rinish — poster, sarlavha va janr o'zgarganda darhol yangilanadi. #}
+        <div class="mpreview" aria-hidden="true">
+          <span class="mpreview__cap">Kartada shunday ko'rinadi</span>
+          <div class="mpreview__card">
+            <div class="mpreview__poster">
+              <img data-preview-poster src="{% if object.poster %}{{ object.poster.url }}{% endif %}"
+                   alt="" {% if not object.poster %}hidden{% endif %}>
+              <span class="mpreview__blank" data-preview-blank {% if object.poster %}hidden{% endif %}>
+                {% include "partials/icon.html" with name="tv" %}
+              </span>
+              <span class="mpreview__q" data-preview-quality hidden></span>
+            </div>
+            <strong class="mpreview__title" data-preview-title>
+              {% if object %}{{ object.title }}{% else %}Serial nomi{% endif %}
+            </strong>
+            <span class="mpreview__meta">
+              <span data-preview-year>{{ object.release_year|default:"—" }}</span>
+              <span data-preview-genres>janr tanlanmagan</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Treyler</h2>
+          <p class="panel__sub">Serial sahifasida epizodlardan oldin ko'rsatiladi.</p>
+        </div>
+      </div>
+      {% include "dashboard/partials/field.html" with field=form.trailer_url help="YouTube/Vimeo embed havolasi — masalan https://www.youtube.com/embed/XXXX" only %}
+    </div>
+  </section>
+
+  {# ---- 3 — TASNIF ---- #}
+  <section class="mform__step" data-step="taxonomy" hidden>
+    <div class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Tasnif</h2>
+          <p class="panel__sub">Janr — bosh sahifadagi bo'limlar va filtrlar uchun asosiy belgi.</p>
+        </div>
+      </div>
+
+      <div class="picker-grid">
+        {% include "dashboard/partials/picker.html" with field=form.genres search="Janr qidirish..." only %}
+        {% include "dashboard/partials/picker.html" with field=form.categories search="Kategoriya qidirish..." only %}
+        {% include "dashboard/partials/picker.html" with field=form.directors search="Rejissyor qidirish..." only %}
+        {% include "dashboard/partials/picker.html" with field=form.countries search="Davlat qidirish..." only %}
+      </div>
+    </div>
+  </section>
+
+  {# ---- 4 — FASLLAR ---- #}
+  <section class="mform__step" data-step="seasons" hidden>
+    <div class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Fasllar va epizodlar</h2>
+          <p class="panel__sub">Videolar epizod darajasida saqlanadi — fasl ichiga kiring.</p>
+        </div>
         {% if object %}
           <a class="btn btn--sm btn--primary" href="{% url 'dashboard:season_add' object.pk %}">
             {% include "partials/icon.html" with name="plus" %} Fasl qo'shish
@@ -143,157 +232,224 @@
       </div>
 
       {% if not object %}
-        <div class="license-note">
+        <div class="license-note license-note--soft">
           {% include "partials/icon.html" with name="info" %}
           <div>
-            Fasllar va epizodlarni (video fayllar bilan birga) serialni
-            saqlagandan keyin qo'sha olasiz.
+            <strong>Avval serialni saqlang.</strong>
+            Fasllar va epizodlarni (video fayllar bilan birga) serial
+            katalogga qo'shilgandan keyin kiritasiz.
           </div>
         </div>
       {% elif object.seasons.all %}
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Fasl</th>
-                <th>Epizodlar</th>
-                <th>Chop etilgan</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for season in object.seasons.all %}
-                <tr>
-                  <td class="table__title">{{ season.display_title }}</td>
-                  <td class="muted">
-                    <a href="{% url 'dashboard:episode_list' season.pk %}">
-                      {{ season.episode_count }} ta epizod
-                    </a>
-                  </td>
-                  <td>
-                    {% if season.is_published %}
-                      <span class="badge badge--success">Ha</span>
-                    {% else %}
-                      <span class="badge">Yo'q</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <div class="table__actions">
-                      <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:episode_list' season.pk %}"
-                         aria-label="Epizodlar (video)">
-                        {% include "partials/icon.html" with name="film" %}
-                      </a>
-                      <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:season_edit' season.pk %}"
-                         aria-label="Faslni tahrirlash">
-                        {% include "partials/icon.html" with name="edit" %}
-                      </a>
-                      <a class="btn btn--sm btn--danger" href="{% url 'dashboard:season_delete' season.pk %}"
-                         aria-label="Faslni o'chirish">
-                        {% include "partials/icon.html" with name="trash" %}
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+        <ul class="season-list">
+          {% for season in object.seasons.all %}
+            <li class="season-row">
+              <span class="season-row__num">{{ season.number }}</span>
+
+              <div class="season-row__body">
+                <strong class="season-row__title">{{ season.display_title }}</strong>
+                <span class="season-row__meta">
+                  {% if season.year %}{{ season.year }} · {% endif %}
+                  {{ season.episode_count }} ta epizod
+                  {% if season.is_published %}
+                    · <span class="season-row__state is-on">chop etilgan</span>
+                  {% else %}
+                    · <span class="season-row__state">qoralama</span>
+                  {% endif %}
+                </span>
+              </div>
+
+              <div class="season-row__actions">
+                <a class="btn btn--sm btn--outline" href="{% url 'dashboard:episode_list' season.pk %}">
+                  {% include "partials/icon.html" with name="film" %} Epizodlar
+                </a>
+                <a class="btn-icon" href="{% url 'dashboard:season_edit' season.pk %}"
+                   aria-label="Faslni tahrirlash">
+                  {% include "partials/icon.html" with name="edit" %}
+                </a>
+                <a class="btn-icon btn-icon--danger" href="{% url 'dashboard:season_delete' season.pk %}"
+                   aria-label="Faslni o'chirish">
+                  {% include "partials/icon.html" with name="trash" %}
+                </a>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
       {% else %}
         <div class="empty">
-          {% include "partials/icon.html" with name="grid" %}
+          {% include "partials/icon.html" with name="layers" %}
           <h2 class="empty__title">Hali fasl qo'shilmagan</h2>
           <a class="btn btn--primary" href="{% url 'dashboard:season_add' object.pk %}">
-            Birinchi faslni qo'shish
+            {% include "partials/icon.html" with name="plus" %} Birinchi faslni qo'shish
           </a>
         </div>
       {% endif %}
     </div>
+  </section>
 
-    {# ==================== AKTYORLAR ==================== #}
+  {# ---- 5 — AKTYORLAR ---- #}
+  <section class="mform__step" data-step="cast" hidden>
     {% if cast_formset %}
       <div class="panel">
-        <div class="panel__head"><h2 class="panel__title">Aktyorlar</h2></div>
+        <div class="panel__head">
+          <div>
+            <h2 class="panel__title">Aktyorlar tarkibi</h2>
+            <p class="panel__sub">«Tartib» kichik bo'lsa, aktyor ro'yxatda yuqorida turadi.</p>
+          </div>
+          <div class="row">
+            <span class="pill" data-fset-count="cast_members"></span>
+            <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:actor_list' %}"
+               target="_blank" rel="noopener">
+              {% include "partials/icon.html" with name="plus" %} Yangi aktyor
+            </a>
+          </div>
+        </div>
 
         {{ cast_formset.management_form }}
         {% if cast_formset.non_form_errors %}
           <div class="alert alert--error">{{ cast_formset.non_form_errors }}</div>
         {% endif %}
 
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Aktyor</th>
-                <th>Rol nomi</th>
-                <th style="width: 100px">Tartib</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody data-formset-rows="cast_members">
-              {% for cast_form in cast_formset %}
-                <tr data-formset-row>
-                  {{ cast_form.id }}
-                  <td>
-                    {{ cast_form.actor }}
-                    {% if cast_form.actor.errors %}
-                      <p class="field__error">{{ cast_form.actor.errors|first }}</p>
-                    {% endif %}
-                  </td>
-                  <td>{{ cast_form.character_name }}</td>
-                  <td style="width: 100px">{{ cast_form.order }}</td>
-                  <td>
-                    {% if cast_form.instance.pk %}
-                      <label class="checkbox">{{ cast_form.DELETE }} O'chirish</label>
-                    {% else %}
-                      <button type="button" class="btn btn--sm btn--ghost" data-formset-remove>
-                        {% include "partials/icon.html" with name="trash" %} Olib tashlash
-                      </button>
-                    {% endif %}
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div class="fset" data-formset-rows="cast_members">
+          {% for cast_form in cast_formset %}
+            <div class="fset__row" data-formset-row>
+              {{ cast_form.id }}
+              <span class="fset__num"></span>
+              <div class="fset__body fset__body--cast">
+                <div class="field">
+                  <label class="field__label" for="{{ cast_form.actor.id_for_label }}">Aktyor</label>
+                  {{ cast_form.actor }}
+                  {% if cast_form.actor.errors %}
+                    <p class="field__error">{{ cast_form.actor.errors|first }}</p>
+                  {% endif %}
+                </div>
+                <div class="field">
+                  <label class="field__label" for="{{ cast_form.character_name.id_for_label }}">Rol nomi</label>
+                  {{ cast_form.character_name }}
+                </div>
+                <div class="field field--narrow">
+                  <label class="field__label" for="{{ cast_form.order.id_for_label }}">Tartib</label>
+                  {{ cast_form.order }}
+                </div>
+              </div>
+              <div class="fset__side">
+                {% if cast_form.instance.pk %}
+                  <label class="checkbox checkbox--danger">{{ cast_form.DELETE }} O'chirish</label>
+                {% else %}
+                  <button type="button" class="btn-icon btn-icon--danger" data-formset-remove
+                          aria-label="Qatorni olib tashlash">
+                    {% include "partials/icon.html" with name="trash" %}
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
         </div>
 
-        <button type="button" class="btn btn--ghost" data-formset-add="cast_members"
-                style="margin-top: var(--s-4)">
+        <button type="button" class="btn btn--outline btn--block mt-4" data-formset-add="cast_members">
           {% include "partials/icon.html" with name="plus" %} Yana aktyor qo'shish
         </button>
 
         <template id="cast_members-empty-form">
-          <tr data-formset-row>
+          <div class="fset__row" data-formset-row>
             {{ cast_formset.empty_form.id }}
-            <td>{{ cast_formset.empty_form.actor }}</td>
-            <td>{{ cast_formset.empty_form.character_name }}</td>
-            <td style="width: 100px">{{ cast_formset.empty_form.order }}</td>
-            <td>
-              <button type="button" class="btn btn--sm btn--ghost" data-formset-remove>
-                {% include "partials/icon.html" with name="trash" %} Olib tashlash
+            <span class="fset__num"></span>
+            <div class="fset__body fset__body--cast">
+              <div class="field">
+                <label class="field__label">Aktyor</label>
+                {{ cast_formset.empty_form.actor }}
+              </div>
+              <div class="field">
+                <label class="field__label">Rol nomi</label>
+                {{ cast_formset.empty_form.character_name }}
+              </div>
+              <div class="field field--narrow">
+                <label class="field__label">Tartib</label>
+                {{ cast_formset.empty_form.order }}
+              </div>
+            </div>
+            <div class="fset__side">
+              <button type="button" class="btn-icon btn-icon--danger" data-formset-remove
+                      aria-label="Qatorni olib tashlash">
+                {% include "partials/icon.html" with name="trash" %}
               </button>
-            </td>
-          </tr>
+            </div>
+          </div>
         </template>
       </div>
     {% endif %}
+  </section>
 
-    {# ==================== CHOP ETISH ==================== #}
+  {# ---- 6 — CHOP ETISH ---- #}
+  <section class="mform__step" data-step="publish" hidden>
     <div class="panel">
-      <div class="panel__head"><h2 class="panel__title">Chop etish</h2></div>
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Ko'rinish</h2>
+          <p class="panel__sub">Serial qayerda ko'rinishini boshqaradi.</p>
+        </div>
+      </div>
 
-      <div class="row row--wrap" style="gap: var(--s-5)">
-        <label class="checkbox">{{ form.is_published }} {{ form.is_published.label }}</label>
-        <label class="checkbox">{{ form.is_featured }} {{ form.is_featured.label }}</label>
-        <label class="checkbox">{{ form.is_trending }} {{ form.is_trending.label }}</label>
+      <div class="toggle-grid">
+        <label class="toggle-row">
+          <span class="toggle">{{ form.is_published }}<span class="toggle__track"></span></span>
+          <span class="toggle-row__body">
+            <strong>Chop etilgan</strong>
+            <em>O'chirilsa serial faqat dashboardda ko'rinadi.</em>
+          </span>
+        </label>
+        <label class="toggle-row">
+          <span class="toggle">{{ form.is_featured }}<span class="toggle__track"></span></span>
+          <span class="toggle-row__body">
+            <strong>Tanlangan</strong>
+            <em>Bosh sahifadagi hero va «Featured» bo'limi.</em>
+          </span>
+        </label>
+        <label class="toggle-row">
+          <span class="toggle">{{ form.is_trending }}<span class="toggle__track"></span></span>
+          <span class="toggle-row__body">
+            <strong>Trendda</strong>
+            <em>«Trend» bo'limiga qo'lda qo'shish.</em>
+          </span>
+        </label>
+        <label class="toggle-row">
+          <span class="toggle">{{ form.is_premium }}<span class="toggle__track"></span></span>
+          <span class="toggle-row__body">
+            <strong>Premium</strong>
+            <em>Faqat obunachilar ko'ra oladi.</em>
+          </span>
+        </label>
+      </div>
+
+      <div class="license-note license-note--soft mt-4">
+        {% include "partials/icon.html" with name="shield" %}
+        <div>
+          Serial chop etilsa ham, tomoshabin faqat <strong>chop etilgan
+          fasl va epizodlarni</strong> ko'ra oladi — ularni «Fasllar»
+          bo'limidan alohida yoqing.
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="row">
-      <button class="btn btn--primary btn--lg" type="submit">
-        {% if object %}O'zgarishlarni saqlash{% else %}Serialni qo'shish{% endif %}
-      </button>
-      <a class="btn btn--ghost btn--lg" href="{% url 'dashboard:series_list' %}">Bekor qilish</a>
-    </div>
-  </form>
+  {# Pastki navigatsiya — bosqichdan bosqichga o'tish #}
+  <div class="mform__foot">
+    <button type="button" class="btn btn--ghost" data-step-prev hidden>
+      {% include "partials/icon.html" with name="chevron-left" %} Orqaga
+    </button>
+    <span class="mform__progress" data-step-progress></span>
+    <button type="button" class="btn btn--outline" data-step-next>
+      Keyingi {% include "partials/icon.html" with name="chevron-right" %}
+    </button>
+    <button class="btn btn--primary" type="submit" data-step-save hidden>
+      {% include "partials/icon.html" with name="check" %}
+      {% if object %}O'zgarishlarni saqlash{% else %}Serialni qo'shish{% endif %}
+    </button>
+  </div>
+</form>
 
+{% endblock %}
+
+{% block dash_js %}
+  <script src="{% static 'js/content-form.js' %}" defer></script>
 {% endblock %}

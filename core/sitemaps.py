@@ -46,7 +46,7 @@ class StaticSitemap(Sitemap):
             "core:contact",
             "core:privacy",
             "core:terms",
-            "movies:movie_list",
+            "core:catalog",
             "movies:genre_list",
         ]
 

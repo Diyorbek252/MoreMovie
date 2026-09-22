@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ type_label }} — {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ SITE_NAME }} katalogi — kinolar, multfilmlar va seriallar bitta joyda.{% endblock %}
+
+{% comment %}
+  Umumiy katalog — kino, multfilm va serial bitta ro'yxatda (core/catalog.py).
+
+  Filtr FORMASI (qidiruv, reyting, til, davlat, saralash) ATAYLAB YO'Q —
+  foydalanuvchi so'rovi bilan butunlay olib tashlandi. Tur navbar'dagi
+  Kinolar/Multfilmlar/Seriallar havolalari orqali (`?type=`) tanlanadi.
+
+  Yil va janr esa `partials/year_rail.html` / `partials/genre_rail.html`
+  orqali -- KO'P TANLOVLI: foydalanuvchi bir nechta yil va/yoki janrni
+  birga yoqib/o'chirib turishi mumkin (masalan 2014 va 2024-yildagi
+  kontentni birga ko'rish). Ikkalasi ham doim ko'rsatiladi, chunki
+  boshqa filtr formasi yo'qligi sabab bular yagona kirish nuqtasi.
+{% endcomment %}
+
+{% block content %}
+<div class="container catalog">
+
+  {% include "partials/genre_rail.html" %}
+  {% include "partials/year_rail.html" %}
+
+  {# ==================== NATIJALAR ==================== #}
+  <div class="results-bar">
+    <span>
+      <strong>{{ page_obj.paginator.count }}</strong> ta natija
+      {% if current.q %} — «{{ current.q }}» so'rovi bo'yicha{% endif %}
+    </span>
+    {% if page_obj.paginator.num_pages > 1 %}
+      <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }} sahifa</span>
+    {% endif %}
+  </div>
+
+  {% if items %}
+    <div class="grid">
+      {% for item in items %}
+        {% if item.kind == "series" %}
+          {% include "partials/series_card.html" with series=item.object %}
+        {% else %}
+          {% include "partials/movie_card.html" with movie=item.object %}
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">
+      {% include "partials/icon.html" with name="film" %}
+      <h2 class="empty__title">Hech narsa topilmadi</h2>
+      <p>Filtrlarni o'zgartirib yoki boshqa so'z bilan qidirib ko'ring.</p>
+      <a class="btn btn--primary" href="{% url 'core:catalog' %}">Filtrlarni tozalash</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -71,12 +71,12 @@
 
         {# --- Ma'lumotlar jadvali --- #}
         <div class="facts">
-          {% if series.country %}
+          {% if series.countries.all %}
             <div class="fact">
               <div class="fact__icon">{% include "partials/icon.html" with name="globe" %}</div>
               <div>
                 <div class="fact__label">Davlat</div>
-                <div class="fact__value">{{ series.country.name }}</div>
+                <div class="fact__value">{{ series.countries.all|join:", " }}</div>
               </div>
             </div>
           {% endif %}
@@ -228,59 +228,101 @@
         <p>Hozircha tomosha qilish uchun epizod mavjud emas.</p>
       </div>
     {% endif %}
-
-    {% if current_episode %}
-      <h2 style="margin-top: var(--s-4); font-size: var(--fs-lg)">
-        {{ current_episode.season.display_title }} — {{ current_episode.episode_number }}-epizod:
-        {{ current_episode.title }}
-      </h2>
-      {% if current_episode.description %}
-        <p class="muted" style="margin-top: var(--s-2)">{{ current_episode.description }}</p>
-      {% endif %}
-    {% endif %}
   </section>
+
+  {% comment %}
+    Epizod sarlavhasi/tavsifi ATAYLAB `#player` bo'limi TASHQARISIDA —
+    to'liq ekranga o'tilganda faqat SHU bo'lim fullscreenlanadi
+    (`#player:fullscreen` qoidasi uni `display:flex` qiladi). Bu matn
+    ichkarida qolganda fullscreen flex konteynerining ikkinchi elementiga
+    aylanib, video yonida g'alati siqilib/burilib chiqib qolar edi.
+  {% endcomment %}
+  {% if current_episode %}
+    <h2 style="margin-top: var(--s-4); font-size: var(--fs-lg)">
+      {{ current_episode.season.display_title }} — {{ current_episode.episode_number }}-epizod:
+      {{ current_episode.title }}
+    </h2>
+    {% if current_episode.description %}
+      <p class="muted" style="margin-top: var(--s-2)">{{ current_episode.description }}</p>
+    {% endif %}
+  {% endif %}
 </div>
 
 <div class="container">
 
   {# ==================== FASLLAR / EPIZODLAR ==================== #}
   {% if seasons %}
+    {% comment %}
+      Fasllar tab sifatida — bir vaqtda faqat bitta faslning epizodlari
+      ko'rinadi, ro'yxatning o'zi esa aylanadigan (scroll) konteynerda.
+      Shu ikkisi tufayli 100 ta epizodli serial ham 10 ta epizodlik
+      bilan bir xil joy egallaydi.
+    {% endcomment %}
     <section class="section">
-      <div class="section__head"><h2 class="section__title">Fasllar va epizodlar</h2></div>
+      <div class="section__head">
+        <h2 class="section__title">Fasllar va epizodlar</h2>
+        <span class="muted" style="font-size: var(--fs-sm)">
+          {{ series.season_count }} fasl · {{ series.episode_count }} epizod
+        </span>
+      </div>
 
-      <div class="stack" style="gap: var(--s-5)">
-        {% for season in seasons %}
-          <div>
-            <h3 style="margin-bottom: var(--s-3); font-size: var(--fs-base)">{{ season.display_title }}</h3>
-            <div class="stack" style="gap: 0">
-              {% for episode in season.episodes.all %}
-                {% if episode.is_published %}
-                  <div class="row" style="justify-content: space-between; align-items: center;
-                       padding: var(--s-3) 0; border-bottom: 1px solid var(--border)">
-                    <div class="row" style="gap: var(--s-3); align-items: center">
-                      <span class="muted" style="width: 28px">{{ episode.episode_number }}</span>
-                      {% if episode.can_watch %}
-                        <a href="?episode={{ episode.pk }}#player"
-                           style="{% if current_episode.pk == episode.pk %}color: var(--red); font-weight: 600{% endif %}">
-                          {{ episode.title }}
-                        </a>
-                      {% else %}
-                        <span class="dim">{{ episode.title }}</span>
-                      {% endif %}
-                    </div>
-                    <div class="row" style="gap: var(--s-3); align-items: center">
-                      {% if current_episode.pk == episode.pk %}
-                        <span class="badge" style="color: var(--red)">Ijro etilmoqda</span>
-                      {% elif not episode.has_video_source %}
-                        <span class="dim" style="font-size: var(--fs-xs)">Video yo'q</span>
-                      {% endif %}
-                      <span class="muted" style="font-size: var(--fs-xs)">{{ episode.duration_display }}</span>
-                    </div>
-                  </div>
-                {% endif %}
-              {% endfor %}
-            </div>
+      <div class="episodes">
+        {% if seasons|length > 1 %}
+          <div class="season-tabs" role="tablist" aria-label="Fasllar">
+            {% for season in seasons %}
+              <button type="button" role="tab"
+                      class="season-tab {% if season.pk == active_season_id %}is-active{% endif %}"
+                      data-season-tab="{{ season.pk }}"
+                      aria-selected="{% if season.pk == active_season_id %}true{% else %}false{% endif %}">
+                {{ season.display_title }}
+                <span class="season-tab__count">{{ season.published_count }}</span>
+              </button>
+            {% endfor %}
           </div>
+        {% endif %}
+
+        {% for season in seasons %}
+          <ol class="ep-list" data-season-panel="{{ season.pk }}"
+              {% if season.pk != active_season_id %}hidden{% endif %}>
+            {% for episode in season.episodes.all %}
+              {% if episode.is_published %}
+                <li class="ep{% if current_episode.pk == episode.pk %} is-current{% endif %}{% if not episode.can_watch %} is-locked{% endif %}">
+                  {% if episode.can_watch %}
+                    <a class="ep__row" href="?episode={{ episode.pk }}#player">
+                  {% else %}
+                    <div class="ep__row">
+                  {% endif %}
+
+                  <span class="ep__num">
+                    <b>{{ episode.episode_number }}</b>
+                    {% if episode.can_watch %}
+                      <span class="ep__play">{% include "partials/icon.html" with name="play" %}</span>
+                    {% endif %}
+                  </span>
+
+                  <span class="ep__body">
+                    <span class="ep__title">{{ episode.title }}</span>
+                    {% if episode.description %}
+                      <span class="ep__desc">{{ episode.description }}</span>
+                    {% endif %}
+                  </span>
+
+                  <span class="ep__side">
+                    {% if current_episode.pk == episode.pk %}
+                      <span class="ep__now" aria-label="Hozir ijro etilmoqda"><i></i><i></i><i></i></span>
+                    {% elif not episode.has_video_source %}
+                      <span class="ep__state">Video yo'q</span>
+                    {% endif %}
+                    {% if episode.duration_minutes %}
+                      <span class="ep__time">{{ episode.duration_display }}</span>
+                    {% endif %}
+                  </span>
+
+                  {% if episode.can_watch %}</a>{% else %}</div>{% endif %}
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ol>
         {% endfor %}
       </div>
     </section>

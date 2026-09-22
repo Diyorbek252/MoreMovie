@@ -1,0 +1,47 @@
+{% comment %}
+Yil bo'yicha KO'P TANLOVLI filtr — bosh sahifadagi bilan bir xil dizayn
+(`.year-chip`), doim ko'rsatiladi (alohida filtr formasi yo'q, shuning
+uchun bu yagona kirish nuqtasi). Bir nechta yil bir vaqtda faol
+bo'lishi mumkin — har bir chip bosilganda tanlovga qo'shiladi yoki
+undan olib tashlanadi (checkbox kabi), boshqa tanlovlar saqlanib qoladi.
+
+Kontekst:
+    year_rail — [{"year", "url", "active"}, ...] yoki `None`
+    current.year — tanlangan yillar ro'yxati (bo'sh bo'lishi mumkin)
+    year_clear_url — barcha yil tanlovini bitta bosishda tozalovchi havola
+{% endcomment %}
+{% if year_rail %}
+  <div class="catalog-rail">
+    <div class="catalog-rail__head">
+      <span class="catalog-rail__label">
+        Yil bo'yicha
+        {% if current.year %}<em>{{ current.year|length }} ta tanlandi</em>{% endif %}
+      </span>
+      {% if current.year %}
+        <a class="section__link" href="{{ year_clear_url }}">
+          {% include "partials/icon.html" with name="x" %} Tozalash
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="rail-wrap">
+      <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
+        {% include "partials/icon.html" with name="chevron-left" %}
+      </button>
+
+      <div class="rail rail--years">
+        {% for row in year_rail %}
+          <a class="year-chip {% if row.active %}is-active{% endif %}" href="{{ row.url }}"
+             aria-pressed="{% if row.active %}true{% else %}false{% endif %}">
+            <span class="year-chip__glow" aria-hidden="true"></span>
+            <span class="year-chip__num">{{ row.year }}</span>
+          </a>
+        {% endfor %}
+      </div>
+
+      <button class="rail-btn rail-btn--next" type="button" aria-label="Oldinga" data-rail="next">
+        {% include "partials/icon.html" with name="chevron-right" %}
+      </button>
+    </div>
+  </div>
+{% endif %}

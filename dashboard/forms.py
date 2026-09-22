@@ -10,6 +10,56 @@ from siteconfig.models import Banner, HomepageSection, Notification, SiteSetting
 from subscriptions.models import Plan, PlanPrice
 
 
+class DropFileInput(forms.ClearableFileInput):
+    """Faqat oddiy ``<input type="file">`` chiqaradi.
+
+    Uni o'rab turgan «dropzone» (sudrab tashlash, oldindan ko'rish, fayl
+    nomi) shablonda — ``dashboard/partials/drop.html`` da chiziladi.
+    Fayllni tozalash mantig'i esa ``ClearableFileInput`` dan meros qoladi:
+    POST'dagi ``<name>-clear`` belgisi shablonda qo'lda ko'rsatiladi.
+    """
+
+    template_name = "django/forms/widgets/file.html"
+
+    def format_value(self, value):
+        """`<input type="file">` ga `value` yozilmaydi.
+
+        ``ClearableFileInput`` mavjud faylni `value` sifatida chiqaradi —
+        brauzer uni baribir e'tiborsiz qoldiradi, HTML esa keraksiz
+        to'ladi. Joriy fayl shablonda alohida ko'rsatiladi.
+        """
+        return None
+
+
+#: Chop etish holati kalitlari — barchasi bir xil ko'rinishdagi toggle.
+_TOGGLE = forms.CheckboxInput(attrs={"class": "toggle__input"})
+
+
+#: Bo'sh tanlov uchun o'zbekcha matn. Django o'zining ingliz tilidagi
+#: "- Select an option -" ni beradi (loyiha LANGUAGE_CODE = en-us).
+BLANK_LABEL = "— tanlanmagan —"
+
+
+def localize_blank_choices(form, labels=None):
+    """Select maydonlaridagi bo'sh variantni o'zbekchaga o'giradi.
+
+    `labels` — maydon nomi -> maxsus matn (masalan "— aktyorni tanlang —").
+    """
+    labels = labels or {}
+
+    for name, field in form.fields.items():
+        text = labels.get(name, BLANK_LABEL)
+
+        if isinstance(field, forms.ModelChoiceField):
+            if field.empty_label is not None:
+                field.empty_label = text
+        elif isinstance(field, forms.ChoiceField):
+            choices = list(field.choices)
+            if choices and choices[0][0] in ("", None):
+                choices[0] = (choices[0][0], text)
+                field.choices = choices
+
+
 class MovieForm(forms.ModelForm):
     """Filmning barcha maydonlari uchun forma.
 
@@ -19,17 +69,20 @@ class MovieForm(forms.ModelForm):
     class Meta:
         model = Movie
         fields = [
+            "kind",
             "title", "original_title", "slug",
             "short_description", "meta_description",
             "poster", "backdrop",
             "trailer_url", "video_url", "video_file", "download_url",
             "release_year", "release_date", "duration_minutes", "quality",
             "age_rating", "imdb_rating",
-            "genres", "categories", "country", "language", "directors",
+            "genres", "categories", "countries", "language", "directors",
             "license_type", "license_note", "is_download_allowed",
+            "is_premiere", "premiere_date",
             "is_featured", "is_trending", "is_premium", "is_published",
         ]
         widgets = {
+            "kind": forms.Select(attrs={"class": "select"}),
             "title": forms.TextInput(attrs={"class": "input", "placeholder": "Film nomi"}),
             "original_title": forms.TextInput(
                 attrs={"class": "input", "placeholder": "Original nomi (ixtiyoriy)"}
@@ -37,22 +90,36 @@ class MovieForm(forms.ModelForm):
             "slug": forms.TextInput(
                 attrs={"class": "input", "placeholder": "bo'sh qoldirilsa avtomatik"}
             ),
-            "short_description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
+            "short_description": forms.Textarea(
+                attrs={
+                    "class": "textarea textarea--sm",
+                    "rows": 3,
+                    "maxlength": 300,
+                    "placeholder": "Film haqida 1-2 jumla — kartalarda va bosh sahifada shu matn ko'rinadi.",
+                }
+            ),
             "meta_description": forms.TextInput(
                 attrs={"class": "input", "maxlength": 170, "placeholder": "SEO tavsifi"}
             ),
+            "poster": DropFileInput(attrs={"accept": "image/*"}),
+            "backdrop": DropFileInput(attrs={"accept": "image/*"}),
+            "video_file": DropFileInput(attrs={"accept": "video/*"}),
             "trailer_url": forms.URLInput(
                 attrs={"class": "input", "placeholder": "https://www.youtube.com/embed/..."}
             ),
             "video_url": forms.URLInput(
                 attrs={"class": "input", "placeholder": "https://.../film.mp4"}
             ),
-            "download_url": forms.URLInput(attrs={"class": "input"}),
+            "download_url": forms.URLInput(
+                attrs={"class": "input", "placeholder": "https://.../film.zip"}
+            ),
             "release_year": forms.NumberInput(
-                attrs={"class": "input", "min": 1888, "max": 2100}
+                attrs={"class": "input", "min": 1888, "max": 2100, "placeholder": "2024"}
             ),
             "release_date": forms.DateInput(attrs={"class": "input", "type": "date"}),
-            "duration_minutes": forms.NumberInput(attrs={"class": "input", "min": 0}),
+            "duration_minutes": forms.NumberInput(
+                attrs={"class": "input", "min": 0, "placeholder": "120"}
+            ),
             "quality": forms.Select(attrs={"class": "select"}),
             "age_rating": forms.Select(attrs={"class": "select"}),
             "imdb_rating": forms.NumberInput(
@@ -60,13 +127,21 @@ class MovieForm(forms.ModelForm):
             ),
             "genres": forms.CheckboxSelectMultiple(),
             "categories": forms.CheckboxSelectMultiple(),
-            "country": forms.Select(attrs={"class": "select"}),
+            "countries": forms.CheckboxSelectMultiple(),
             "language": forms.Select(attrs={"class": "select"}),
             "directors": forms.CheckboxSelectMultiple(),
             "license_type": forms.Select(attrs={"class": "select"}),
             "license_note": forms.TextInput(
                 attrs={"class": "input", "placeholder": "Masalan: CC BY 4.0, Blender Foundation"}
             ),
+            "premiere_date": forms.DateInput(attrs={"class": "input", "type": "date"}),
+            # Holat kalitlari — checkbox emas, toggle ko'rinishida.
+            "is_download_allowed": _TOGGLE,
+            "is_premiere": _TOGGLE,
+            "is_featured": _TOGGLE,
+            "is_trending": _TOGGLE,
+            "is_premium": _TOGGLE,
+            "is_published": _TOGGLE,
         }
 
     def __init__(self, *args, **kwargs):
@@ -80,6 +155,13 @@ class MovieForm(forms.ModelForm):
         # bu yerda endi teskari — save() qisqa tavsifdan to'liq tavsifni
         # to'ldiradi, aksincha emas (Django admin'da esa asl matn to'g'ri).
         self.fields["short_description"].help_text = "Kartalar va hero bo'limida ko'rsatiladi."
+        localize_blank_choices(
+            self,
+            {
+                "language": "— til tanlanmagan —",
+                "age_rating": "— cheklovsiz —",
+            },
+        )
 
     def clean(self):
         """Huquqiy izchillikni tekshiramiz.
@@ -137,6 +219,9 @@ class MovieVideoForm(forms.ModelForm):
             "video_url": forms.URLInput(
                 attrs={"class": "input", "placeholder": "https://.../film-1080p.mp4"}
             ),
+            # Toza `<input type="file">` — "Currently/Clear/Change" o'rniga
+            # shablonda o'zbekcha "Joriy fayl / o'chirish" qatori chiziladi.
+            "video_file": DropFileInput(attrs={"class": "file-slim", "accept": "video/*"}),
         }
 
     def clean(self):
@@ -166,19 +251,31 @@ MovieVideoFormSet = inlineformset_factory(
 )
 
 
+class MovieCastForm(forms.ModelForm):
+    """Filmdagi bitta aktyor qatori."""
+
+    class Meta:
+        model = MovieCast
+        fields = ["actor", "character_name", "order"]
+        widgets = {
+            "actor": forms.Select(attrs={"class": "select"}),
+            "character_name": forms.TextInput(
+                attrs={"class": "input", "placeholder": "Rol nomi (ixtiyoriy)"}
+            ),
+            "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        localize_blank_choices(self, {"actor": "— aktyorni tanlang —"})
+
+
 MovieCastFormSet = inlineformset_factory(
     Movie,
     MovieCast,
-    fields=["actor", "character_name", "order"],
+    form=MovieCastForm,
     extra=1,
     can_delete=True,
-    widgets={
-        "actor": forms.Select(attrs={"class": "select"}),
-        "character_name": forms.TextInput(
-            attrs={"class": "input", "placeholder": "Rol nomi (ixtiyoriy)"}
-        ),
-        "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
-    },
 )
 
 
@@ -235,8 +332,8 @@ class SeriesForm(forms.ModelForm):
             "short_description",
             "poster", "backdrop", "trailer_url",
             "release_year", "end_year", "imdb_rating", "age_rating", "status",
-            "genres", "categories", "country", "language", "directors",
-            "is_featured", "is_trending", "is_published",
+            "genres", "categories", "countries", "language", "directors",
+            "is_featured", "is_trending", "is_premium", "is_published",
         ]
         widgets = {
             "title": forms.TextInput(attrs={"class": "input", "placeholder": "Serial nomi"}),
@@ -246,14 +343,28 @@ class SeriesForm(forms.ModelForm):
             "slug": forms.TextInput(
                 attrs={"class": "input", "placeholder": "bo'sh qoldirilsa avtomatik"}
             ),
-            "short_description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
+            "short_description": forms.Textarea(
+                attrs={
+                    "class": "textarea textarea--sm",
+                    "rows": 3,
+                    "maxlength": 300,
+                    "placeholder": "Serial haqida 1-2 jumla — kartalarda shu matn ko'rinadi.",
+                }
+            ),
+            "poster": DropFileInput(attrs={"accept": "image/*"}),
+            "backdrop": DropFileInput(attrs={"accept": "image/*"}),
             "trailer_url": forms.URLInput(
                 attrs={"class": "input", "placeholder": "https://www.youtube.com/embed/..."}
             ),
             "release_year": forms.NumberInput(
-                attrs={"class": "input", "min": 1888, "max": 2100}
+                attrs={"class": "input", "min": 1888, "max": 2100, "placeholder": "2019"}
             ),
-            "end_year": forms.NumberInput(attrs={"class": "input", "min": 1888, "max": 2100}),
+            "end_year": forms.NumberInput(
+                attrs={
+                    "class": "input", "min": 1888, "max": 2100,
+                    "placeholder": "davom etmoqda",
+                }
+            ),
             "imdb_rating": forms.NumberInput(
                 attrs={"class": "input", "step": "0.1", "min": 0, "max": 10}
             ),
@@ -261,9 +372,14 @@ class SeriesForm(forms.ModelForm):
             "status": forms.Select(attrs={"class": "select"}),
             "genres": forms.CheckboxSelectMultiple(),
             "categories": forms.CheckboxSelectMultiple(),
-            "country": forms.Select(attrs={"class": "select"}),
+            "countries": forms.CheckboxSelectMultiple(),
             "language": forms.Select(attrs={"class": "select"}),
             "directors": forms.CheckboxSelectMultiple(),
+            # Holat kalitlari — checkbox emas, toggle ko'rinishida.
+            "is_featured": _TOGGLE,
+            "is_trending": _TOGGLE,
+            "is_premium": _TOGGLE,
+            "is_published": _TOGGLE,
         }
 
     def __init__(self, *args, **kwargs):
@@ -274,6 +390,13 @@ class SeriesForm(forms.ModelForm):
         # uchun "qisqa tavsif" majburiy (MovieForm bilan bir xil naqsh).
         self.fields["short_description"].required = True
         self.fields["short_description"].help_text = "Kartalar va serial sahifasida ko'rsatiladi."
+        localize_blank_choices(
+            self,
+            {
+                "language": "— til tanlanmagan —",
+                "age_rating": "— cheklovsiz —",
+            },
+        )
 
     def clean(self):
         """end_year berilgan bo'lsa, release_year dan kichik bo'lmasligi kerak."""
@@ -303,19 +426,31 @@ class SeriesForm(forms.ModelForm):
         return instance
 
 
+class SeriesCastForm(forms.ModelForm):
+    """Serialdagi bitta aktyor qatori — `MovieCastForm` bilan bir xil."""
+
+    class Meta:
+        model = SeriesCast
+        fields = ["actor", "character_name", "order"]
+        widgets = {
+            "actor": forms.Select(attrs={"class": "select"}),
+            "character_name": forms.TextInput(
+                attrs={"class": "input", "placeholder": "Rol nomi (ixtiyoriy)"}
+            ),
+            "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        localize_blank_choices(self, {"actor": "— aktyorni tanlang —"})
+
+
 SeriesCastFormSet = inlineformset_factory(
     Series,
     SeriesCast,
-    fields=["actor", "character_name", "order"],
+    form=SeriesCastForm,
     extra=1,
     can_delete=True,
-    widgets={
-        "actor": forms.Select(attrs={"class": "select"}),
-        "character_name": forms.TextInput(
-            attrs={"class": "input", "placeholder": "Rol nomi (ixtiyoriy)"}
-        ),
-        "order": forms.NumberInput(attrs={"class": "input", "min": 0}),
-    },
 )
 
 
@@ -328,8 +463,18 @@ class SeasonForm(forms.ModelForm):
             "title": forms.TextInput(
                 attrs={"class": "input", "placeholder": "Ixtiyoriy — bo'sh bo'lsa '1-fasl' kabi ko'rinadi"}
             ),
-            "description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
-            "year": forms.NumberInput(attrs={"class": "input", "min": 1888, "max": 2100}),
+            "description": forms.Textarea(
+                attrs={
+                    "class": "textarea textarea--sm",
+                    "rows": 3,
+                    "placeholder": "Fasl haqida qisqacha (ixtiyoriy).",
+                }
+            ),
+            "poster": DropFileInput(attrs={"accept": "image/*"}),
+            "year": forms.NumberInput(
+                attrs={"class": "input", "min": 1888, "max": 2100, "placeholder": "2019"}
+            ),
+            "is_published": _TOGGLE,
         }
 
 
@@ -346,16 +491,33 @@ class EpisodeForm(forms.ModelForm):
         widgets = {
             "episode_number": forms.NumberInput(attrs={"class": "input", "min": 1}),
             "title": forms.TextInput(attrs={"class": "input", "placeholder": "Epizod nomi"}),
-            "description": forms.Textarea(attrs={"class": "textarea", "rows": 3}),
+            "description": forms.Textarea(
+                attrs={
+                    "class": "textarea textarea--sm",
+                    "rows": 3,
+                    "placeholder": "Epizod haqida qisqacha (ixtiyoriy).",
+                }
+            ),
             "video_url": forms.URLInput(
                 attrs={"class": "input", "placeholder": "https://.../epizod.mp4"}
             ),
-            "download_url": forms.URLInput(attrs={"class": "input"}),
-            "duration_minutes": forms.NumberInput(attrs={"class": "input", "min": 0}),
+            "video_file": DropFileInput(attrs={"accept": "video/*"}),
+            "download_url": forms.URLInput(
+                attrs={"class": "input", "placeholder": "https://.../epizod.mp4"}
+            ),
+            "duration_minutes": forms.NumberInput(
+                attrs={"class": "input", "min": 0, "placeholder": "45"}
+            ),
             "quality": forms.Select(attrs={"class": "select"}),
             "language": forms.Select(attrs={"class": "select"}),
             "air_date": forms.DateInput(attrs={"class": "input", "type": "date"}),
+            "is_download_allowed": _TOGGLE,
+            "is_published": _TOGGLE,
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        localize_blank_choices(self, {"language": "— til tanlanmagan —"})
 
     def clean(self):
         """Yuklab olish uchun havola talab qilinadi — MovieForm bilan bir xil qoida."""

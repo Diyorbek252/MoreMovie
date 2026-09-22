@@ -11,6 +11,8 @@ Kontekst:
     icon     — ixtiyoriy sarlavha oldidagi ikonka nomi
     compact  — ixtiyoriy, True bo'lsa kartalar biroz kichikroq chiqadi
     subtitle — ixtiyoriy, sarlavha ostida kichik matn (admin panelidan)
+    is_series — ixtiyoriy, True bo'lsa `movies` ichida Series obyektlari
+                bo'lib, serial kartasi bilan chiziladi
 {% endcomment %}
 
 {% if movies %}
@@ -34,7 +36,11 @@ Kontekst:
 
       <div class="rail {% if compact %}rail--sm{% endif %}">
         {% for movie in movies %}
-          {% include "partials/movie_card.html" with movie=movie %}
+          {% if is_series %}
+            {% include "partials/series_card.html" with series=movie %}
+          {% else %}
+            {% include "partials/movie_card.html" with movie=movie %}
+          {% endif %}
         {% endfor %}
       </div>
 

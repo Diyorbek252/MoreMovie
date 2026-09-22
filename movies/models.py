@@ -14,6 +14,7 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.text import slugify
 
 
@@ -272,8 +273,8 @@ class MovieQuerySet(models.QuerySet):
         `videos` ham shu yerda — kartadagi sifat belgisi va `can_watch`
         tekshiruvi qo'shimcha sifatlarni ham hisobga oladi.
         """
-        return self.select_related("country", "language").prefetch_related(
-            "genres", "videos", "directors"
+        return self.select_related("language").prefetch_related(
+            "genres", "videos", "directors", "countries"
         )
 
     def trending(self):
@@ -294,6 +295,34 @@ class MovieQuerySet(models.QuerySet):
     def featured(self):
         return self.published().with_relations().filter(is_featured=True)
 
+    def of_kind(self, kind):
+        """Faqat bitta turdagi kontent — "movie" (kino) yoki "cartoon"."""
+        return self.filter(kind=kind)
+
+    def films(self):
+        """Bosh sahifadagi «Kinolar» bo'limi — multfilmlarsiz."""
+        return self.published().with_relations().of_kind(Movie.Kind.MOVIE)
+
+    def cartoons(self):
+        """Bosh sahifadagi «Multfilmlar» bo'limi."""
+        return self.published().with_relations().of_kind(Movie.Kind.CARTOON)
+
+    def premieres(self):
+        """Admin «premyera» deb e'lon qilgan filmlar.
+
+        Tartib: sanasi ko'rsatilganlar oldinda (eng yaqin premyeradan
+        boshlab), sanasi yo'qlari esa qo'shilgan vaqti bo'yicha.
+        """
+        return (
+            self.published()
+            .with_relations()
+            .filter(is_premiere=True)
+            .order_by(
+                models.F("premiere_date").desc(nulls_last=True),
+                "-created_at",
+            )
+        )
+
     def trending_flagged(self):
         """Admin qo'lda "trendda" deb belgilagan filmlar.
 
@@ -308,6 +337,12 @@ class MovieQuerySet(models.QuerySet):
 class Movie(TimeStampedModel):
     """Katalogdagi bitta film."""
 
+    class Kind(models.TextChoices):
+        """Katalogdagi asosiy bo'linish — bosh sahifa va umumiy filtr shunga tayanadi."""
+
+        MOVIE = "movie", "Kino"
+        CARTOON = "cartoon", "Multfilm"
+
     class Quality(models.TextChoices):
         SD = "SD", "SD 480p"
         HD = "HD", "HD 720p"
@@ -320,6 +355,16 @@ class Movie(TimeStampedModel):
         PUBLIC_DOMAIN = "public_domain", "Public domain / Creative Commons"
         LICENSED = "licensed", "Litsenziyalangan (huquq egasi ruxsati bor)"
         TRAILER_ONLY = "trailer_only", "Faqat treyler (to'liq film yo'q)"
+
+    # --- Tur ---
+    kind = models.CharField(
+        "turi",
+        max_length=10,
+        choices=Kind.choices,
+        default=Kind.MOVIE,
+        db_index=True,
+        help_text="Bosh sahifadagi «Kinolar» va «Multfilmlar» bo'limlari shunga qarab ajraladi.",
+    )
 
     # --- Matn ---
     title = models.CharField("sarlavha", max_length=200)
@@ -393,9 +438,9 @@ class Movie(TimeStampedModel):
     categories = models.ManyToManyField(
         Category, related_name="movies", blank=True, verbose_name="kategoriyalar",
     )
-    country = models.ForeignKey(
-        Country, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="movies", verbose_name="davlat",
+    countries = models.ManyToManyField(
+        Country, related_name="movies", blank=True, verbose_name="davlatlar",
+        help_text="Bir nechta davlat tanlash mumkin.",
     )
     language = models.ForeignKey(
         Language, on_delete=models.SET_NULL, null=True, blank=True,
@@ -428,6 +473,14 @@ class Movie(TimeStampedModel):
     )
 
     # --- Holat ---
+    is_premiere = models.BooleanField(
+        "premyera", default=False, db_index=True,
+        help_text="Bosh sahifadagi «Premyeralar» bo'limida e'lon qilinadi.",
+    )
+    premiere_date = models.DateField(
+        "premyera sanasi", null=True, blank=True,
+        help_text="Ixtiyoriy. Kelajakdagi sana «tez orada» deb ko'rsatiladi.",
+    )
     is_featured = models.BooleanField(
         "tanlangan", default=False,
         help_text="Bosh sahifadagi hero va 'Featured' bo'limida ko'rsatiladi.",
@@ -466,6 +519,7 @@ class Movie(TimeStampedModel):
             models.Index(fields=["is_published", "-created_at"]),
             models.Index(fields=["is_published", "-views_count"]),
             models.Index(fields=["is_published", "-avg_rating"]),
+            models.Index(fields=["is_published", "kind"]),
             models.Index(fields=["is_published", "is_featured"]),
             models.Index(fields=["is_published", "is_trending"]),
             models.Index(fields=["is_published", "is_premium"]),
@@ -626,6 +680,20 @@ class Movie(TimeStampedModel):
         if hours:
             return f"{hours}s"
         return f"{minutes}d"
+
+    @property
+    def is_upcoming_premiere(self):
+        """Premyera sanasi hali kelmaganmi? (sana ko'rsatilmagan bo'lsa — yo'q)"""
+        if not self.is_premiere or not self.premiere_date:
+            return False
+        return self.premiere_date > timezone.localdate()
+
+    @property
+    def premiere_label(self):
+        """Kartadagi belgi matni: «Tez orada» yoki «Premyera»."""
+        if not self.is_premiere:
+            return ""
+        return "Tez orada" if self.is_upcoming_premiere else "Premyera"
 
     @property
     def user_rating_display(self):

@@ -40,12 +40,28 @@
       </div>
 
       {% for field in profile_form %}
-        <div class="field">
-          <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
-        </div>
+        {% if field.name != "show_continue_watching" %}
+          <div class="field">
+            <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="field__error">{{ field.errors|first }}</p>{% endif %}
+          </div>
+        {% endif %}
       {% endfor %}
+
+      {# Kalit-tugma — shop/product_list.html dagi filtr bilan bir xil naqsh. #}
+      <div class="field">
+        <label class="toggle">
+          {{ profile_form.show_continue_watching }}
+          <span class="toggle__track"></span>
+          {{ profile_form.show_continue_watching.label }}
+        </label>
+        <p class="field__help">
+          O'chirib qo'ysangiz, bosh sahifada davom etayotgan filmlar bo'limi
+          umuman chiqmaydi. Buni istalgan payt shu yerdan qaytarib
+          yoqishingiz mumkin.
+        </p>
+      </div>
     </div>
 
     <div class="row">

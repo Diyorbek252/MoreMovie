@@ -170,6 +170,11 @@
       });
 
       if (first) {
+        // Bosqichli formada maydon yashirin bo'limda bo'lishi mumkin —
+        // content-form.js o'sha bo'limni ochib beradi (xatoli tab ham
+        // belgilanadi). Boshqa sahifalarda bu funksiya umuman bo'lmaydi.
+        if (typeof MM.revealField === "function") MM.revealField(first);
+
         first.scrollIntoView({ behavior: "smooth", block: "center" });
         if (first.focus) first.focus({ preventScroll: true });
       }

@@ -115,12 +115,12 @@ class HomepageSection(models.Model):
     class Key(models.TextChoices):
         HERO = "hero", "Hero"
         CONTINUE = "continue", "Davom ettirish"
-        TRENDING = "trending", "Trend"
-        POPULAR = "popular", "Mashhur"
-        NEW_RELEASES = "new_releases", "Yangi qo'shilganlar"
-        TOP_RATED = "top_rated", "Yuqori reytingli"
-        FEATURED = "featured", "Tanlangan"
+        PREMIERES = "premieres", "Premyeralar"
+        MOVIES = "movies", "Kinolar"
+        CARTOONS = "cartoons", "Multfilmlar"
+        SERIES = "series", "Seriallar"
         GENRES = "genres", "Janrlar"
+        YEARS = "years", "Yillar"
         CATEGORY = "category", "Kategoriya bo'yicha"
 
     key = models.CharField("kalit", max_length=20, choices=Key.choices, unique=True)

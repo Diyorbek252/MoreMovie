@@ -462,7 +462,13 @@ class DirectorManageView(DashboardPermissionMixin, ListView):
     context_object_name = "directors"
 
     def get_queryset(self):
-        return Director.objects.annotate(movie_total=Count("directed_movies")).order_by("full_name")
+        # Rejissyor filmda ham, serialda ham ishlagan bo'lishi mumkin
+        # (`directed_movies` / `directed_series`) — faqat filmni hisoblasak,
+        # faqat serial rejissyorlagan kishi "0 ta" bo'lib ko'rinadi.
+        return Director.objects.annotate(
+            movie_total=Count("directed_movies", distinct=True),
+            series_total=Count("directed_series", distinct=True),
+        ).order_by("full_name")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -516,9 +522,14 @@ class ActorManageView(DashboardPermissionMixin, ListView):
     context_object_name = "actors"
 
     def get_queryset(self):
-        return Actor.objects.annotate(movie_total=Count("acted_movies", distinct=True)).order_by(
-            "full_name"
-        )
+        # Aktyor filmda ham, serialda ham o'ynagan bo'lishi mumkin
+        # (`acted_movies` / `acted_series`) — faqat filmni hisoblasak,
+        # faqat serialda o'ynagan aktyor "0 ta" bo'lib ko'rinadi, garchi
+        # saytdagi profil sahifasida seriallari to'g'ri chiqsa ham.
+        return Actor.objects.annotate(
+            movie_total=Count("acted_movies", distinct=True),
+            series_total=Count("acted_series", distinct=True),
+        ).order_by("full_name")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1357,6 +1368,30 @@ def toggle_trending(request, pk):
 
     trend_note = "trendga qo'shildi" if movie.is_trending else "trenddan olib tashlandi"
     return JsonResponse({"state": movie.is_trending, "message": f"«{movie.title}» {trend_note}"})
+
+
+@require_POST
+@dashboard_perm_required("movies.change_movie")
+def toggle_premium(request, pk):
+    """Filmni Premium qilish / bekor qilish (AJAX) — faqat obunachilarga ochiladi."""
+    movie = get_object_or_404(Movie, pk=pk)
+    movie.is_premium = not movie.is_premium
+    movie.save(update_fields=["is_premium", "updated_at"])
+
+    note = "Premium qilindi" if movie.is_premium else "Premium bekor qilindi"
+    return JsonResponse({"state": movie.is_premium, "message": f"«{movie.title}» {note}"})
+
+
+@require_POST
+@dashboard_perm_required("movies.change_movie")
+def toggle_premiere(request, pk):
+    """Filmni bosh sahifadagi «Premyeralar» bo'limiga qo'shish / olib tashlash (AJAX)."""
+    movie = get_object_or_404(Movie, pk=pk)
+    movie.is_premiere = not movie.is_premiere
+    movie.save(update_fields=["is_premiere", "updated_at"])
+
+    note = "premyeralarga qo'shildi" if movie.is_premiere else "premyeralardan olib tashlandi"
+    return JsonResponse({"state": movie.is_premiere, "message": f"«{movie.title}» {note}"})
 
 
 @require_POST

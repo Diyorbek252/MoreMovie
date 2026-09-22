@@ -219,15 +219,58 @@
     totalForms.value = String(index + 1);
   });
 
-  // Yangi (hali saqlanmagan) qatorni bekor qilish — u butunlay olib
-  // tashlanadi, chunki bo'sh formset qatori formaga hech qanday
-  // ma'lumot yubormaydi va Django uni e'tiborsiz qoldiradi.
+  /**
+   * Yangi (hali saqlanmagan) qatorni bekor qiladi.
+   *
+   * DIQQAT — faqat qatorni DOM'dan olib tashlab, TOTAL_FORMS'ni
+   * o'zgartirmaslik YETARLI EMAS: Django formseti "bo'sh (extra) qator
+   * e'tiborsiz qoldiriladi" qoidasini FAQAT `has_changed()` false
+   * bo'lsagina qo'llaydi. Ba'zi maydonlarning model darajasidagi
+   * standart qiymati `None` EMAS (masalan `MovieCast.order` uchun `0`) —
+   * shunday holda Django "boshlang'ich qiymat 0, yuborilgan qiymat yo'q"
+   * farqini "o'zgargan" deb hisoblab, o'chirilgan (demak butunlay bo'sh)
+   * qatorni ham TO'LIQ tekshiradi va "Bu maydon majburiy" xatosini
+   * chiqarib, saqlashni bloklaydi — xuddi shu qator "qaytib kelgandek"
+   * ko'rinadi.
+   *
+   * Yechim — olib tashlangandan keyin qolgan YANGI qatorlarni (INITIAL_FORMS
+   * dan keyingilarini) 0 dan uzilishsiz qayta raqamlab, TOTAL_FORMS'ni
+   * haqiqiy qatorlar soniga moslashtiramiz. Mavjud (saqlangan, DELETE
+   * checkboxli) qatorlar indeksiga tegilmaydi.
+   */
   document.addEventListener("click", function (event) {
     const removeButton = event.target.closest("[data-formset-remove]");
     if (!removeButton) return;
 
     const row = removeButton.closest("[data-formset-row]");
-    if (row) row.remove();
+    const rowsHolder = removeButton.closest("[data-formset-rows]");
+    if (!row || !rowsHolder) return;
+
+    const prefix = rowsHolder.dataset.formsetRows;
+    const totalForms = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+    const initialForms = document.getElementById("id_" + prefix + "-INITIAL_FORMS");
+    row.remove();
+    if (!totalForms) return;
+
+    const initialCount = initialForms ? parseInt(initialForms.value, 10) || 0 : 0;
+    let index = initialCount;
+
+    rowsHolder.querySelectorAll("[data-formset-row]").forEach(function (item) {
+      const namedField = item.querySelector("[name]");
+      const match = namedField && /-(\d+)-/.exec(namedField.name);
+      // Mavjud (saqlangan) qatorlar — indeksi INITIAL_FORMS dan kichik —
+      // teginilmaydi, ular DELETE checkbox orqali boshqariladi.
+      if (!match || parseInt(match[1], 10) < initialCount) return;
+
+      item.querySelectorAll("[name], [id], label[for]").forEach(function (el) {
+        if (el.name) el.name = el.name.replace(/-\d+-/, "-" + index + "-");
+        if (el.id) el.id = el.id.replace(/-\d+-/, "-" + index + "-");
+        if (el.htmlFor) el.htmlFor = el.htmlFor.replace(/-\d+-/, "-" + index + "-");
+      });
+      index += 1;
+    });
+
+    totalForms.value = String(index);
   });
 
   /* --------------------------------------------------------------------
@@ -239,6 +282,10 @@
   document.addEventListener("change", function (event) {
     const input = event.target.closest('input[type="file"]');
     if (!input) return;
+
+    // Film formasidagi "dropzone" maydonlari o'z ko'rinishini o'zi
+    // chizadi (content-form.js) — bu yerda ikkinchi marta chizilmasin.
+    if (input.closest("[data-drop]")) return;
 
     const file = input.files && input.files[0];
     if (!file || !file.type.startsWith("image/")) return;

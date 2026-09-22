@@ -1,6 +1,7 @@
 """Film katalogi view'lari: ro'yxat, filtr, detail (pleer bilan), janr, qidiruv."""
 
 from django.conf import settings
+from django.core.paginator import Paginator
 from django.db.models import Count, F, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -8,6 +9,7 @@ from django.urls import reverse
 from django.views.generic import DetailView, ListView, RedirectView, TemplateView
 
 from reviews.models import Rating, Review
+from series.models import Series
 
 from .models import Actor, Category, Director, Genre, Movie, ViewHistory
 
@@ -23,102 +25,29 @@ class QueryStringMixin:
         return context
 
 
-class MovieListView(QueryStringMixin, ListView):
-    """Barcha filmlar — qidiruv, filtr, saralash va sahifalash bilan."""
+class CatalogRedirectView(RedirectView):
+    """Eski ro'yxat sahifalarini umumiy katalogga olib o'tadi.
 
-    model = Movie
-    template_name = "movies/movie_list.html"
-    context_object_name = "movies"
-    paginate_by = settings.MOVIES_PER_PAGE
+    Filtr endi bitta -- `core.catalog.CatalogView` (`/katalog/`) kino,
+    multfilm va seriallarni birga filtrlaydi. Parametr nomlari (q, genre,
+    year, language, country, rating, sort) eski sahifalar bilan aynan bir
+    xil, shuning uchun mavjud havolalar va bookmarklar ishlayveradi --
+    faqat `type` qo'shiladi.
+    """
 
-    # Foydalanuvchi yuborgan `sort` qiymati shu lug'at orqali tekshiriladi —
-    # bevosita order_by() ga uzatilmaydi (SQL injection va xatoning oldini oladi).
-    SORT_OPTIONS = {
-        "latest": ("-created_at", "Eng yangi"),
-        "popular": ("-views_count", "Eng mashhur"),
-        "rating": ("-avg_rating", "Yuqori reyting"),
-        "year": ("-release_year", "Yil bo'yicha"),
-        "az": ("title", "A-Z"),
-    }
+    permanent = False
 
-    def get_queryset(self):
-        queryset = Movie.objects.published().with_relations()
-        params = self.request.GET
+    #: Katalogda oldindan tanlanadigan kontent turi.
+    content_type = "movie"
 
-        # --- Qidiruv ---
-        query = params.get("q", "").strip()
-        if query:
-            queryset = queryset.filter(
-                Q(title__icontains=query)
-                | Q(original_title__icontains=query)
-                | Q(description__icontains=query)
-                | Q(genres__name__icontains=query)
-                | Q(directors__full_name__icontains=query)
-                | Q(cast__full_name__icontains=query)
-            ).distinct()
+    def get_redirect_url(self, *args, **kwargs):
+        params = self.request.GET.copy()
+        params["type"] = self.content_type
+        return f"{reverse('core:catalog')}?{params.urlencode()}"
 
-        # --- Filtrlar ---
-        if genre := params.get("genre"):
-            queryset = queryset.filter(genres__slug=genre)
 
-        if year := params.get("year"):
-            if year.isdigit():
-                queryset = queryset.filter(release_year=int(year))
-
-        if language := params.get("language"):
-            queryset = queryset.filter(language__slug=language)
-
-        if country := params.get("country"):
-            queryset = queryset.filter(country__slug=country)
-
-        if rating := params.get("rating"):
-            # "7" -> reytingi 7.0 va undan yuqori (10 ballik shkalada).
-            try:
-                queryset = queryset.filter(imdb_rating__gte=float(rating))
-            except ValueError:
-                pass
-
-        # --- Saralash ---
-        sort = params.get("sort", "latest")
-        order_field = self.SORT_OPTIONS.get(sort, self.SORT_OPTIONS["latest"])[0]
-        return queryset.order_by(order_field)
-
-    def get_context_data(self, **kwargs):
-        from .models import Country, Language
-
-        context = super().get_context_data(**kwargs)
-        params = self.request.GET
-
-        context.update(
-            {
-                "genres": Genre.objects.all(),
-                "countries": Country.objects.all(),
-                "languages": Language.objects.all(),
-                # Filtr uchun mavjud yillar — faqat bazada bori.
-                "years": (
-                    Movie.objects.published()
-                    .values_list("release_year", flat=True)
-                    .distinct()
-                    .order_by("-release_year")
-                ),
-                "sort_options": self.SORT_OPTIONS,
-                # Formadagi tanlangan qiymatlarni qayta ko'rsatish uchun.
-                "current": {
-                    "q": params.get("q", ""),
-                    "genre": params.get("genre", ""),
-                    "year": params.get("year", ""),
-                    "language": params.get("language", ""),
-                    "country": params.get("country", ""),
-                    "rating": params.get("rating", ""),
-                    "sort": params.get("sort", "latest"),
-                },
-                "has_filters": any(
-                    params.get(key)
-                    for key in ("q", "genre", "year", "language", "country", "rating")
-                ),
-            }
-        )
-        return context
+class MovieListRedirectView(CatalogRedirectView):
+    content_type = "movie"
 
 
 class MovieDetailView(DetailView):
@@ -140,8 +69,10 @@ class MovieDetailView(DetailView):
     def get_queryset(self):
         return (
             Movie.objects.published()
-            .select_related("country", "language")
-            .prefetch_related("genres", "screenshots", "cast_members__actor", "videos", "directors")
+            .select_related("language")
+            .prefetch_related(
+                "genres", "screenshots", "cast_members__actor", "videos", "directors", "countries"
+            )
         )
 
     def get_context_data(self, **kwargs):
@@ -250,7 +181,29 @@ class GenreDetailView(QueryStringMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["genre"] = self.genre
+        context["genre_rail"] = self._genre_rail()
         return context
+
+    def _genre_rail(self):
+        """Bosh sahifadagi bilan bir xil dizayndagi tezkor janr almashtirish
+        qatori — bu sahifa faqat filmlarni ko'rsatgani uchun (multfilm/serial
+        emas) sanoq ham FAQAT filmlar bo'yicha hisoblanadi.
+        """
+        genres = (
+            Genre.objects.annotate(
+                movie_total=Count("movies", filter=Q(movies__is_published=True))
+            )
+            .filter(movie_total__gt=0)
+            .order_by("-movie_total", "name")
+        )
+        return [
+            {
+                "genre": genre,
+                "url": genre.get_absolute_url(),
+                "active": genre.pk == self.genre.pk,
+            }
+            for genre in genres
+        ]
 
 
 class CategoryDetailView(QueryStringMixin, ListView):
@@ -275,47 +228,90 @@ class CategoryDetailView(QueryStringMixin, ListView):
         return context
 
 
-class DirectorDetailView(QueryStringMixin, ListView):
-    """Bitta rejissyor suratga olgan filmlar — Genre/CategoryDetailView bilan bir xil naqsh."""
+def _paginate_movie_series(request, movie_qs, series_qs, per_page):
+    """Kino/multfilm va serial querysetlarini BIRGA (yil bo'yicha) sahifalaydi.
+
+    `core.catalog.CatalogView` dagi bilan bir xil naqsh: to'liq obyektlar
+    emas, avval faqat `(tur, pk, saralash_kaliti)` juftliklari olinadi —
+    shu bilan sahifalash yengil bo'ladi, so'ng FAQAT joriy sahifadagi
+    yozuvlar to'liq obyekt sifatida (`with_relations()` bilan) yuklanadi.
+
+    Rejissyor/aktyor sahifalari FAQAT filmlarni ko'rsatib kelgan edi —
+    aktyor yoki rejissyor serialda ham qatnashgan bo'lishi mumkin, shu
+    sabab ikkalasi ham birga chiqishi kerak (xuddi umumiy katalogdagidek).
+    """
+    rows = [("movie", pk, year) for pk, year in movie_qs.values_list("pk", "release_year")]
+    rows += [("series", pk, year) for pk, year in series_qs.values_list("pk", "release_year")]
+
+    # `None` yil (masalan kiritilmagan) tartiblashni buzmasligi uchun oxiriga tushadi.
+    rows.sort(key=lambda row: (row[2] is None, row[2] or 0), reverse=True)
+
+    paginator = Paginator(rows, per_page)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    movie_ids = [pk for kind, pk, _ in page_obj.object_list if kind == "movie"]
+    series_ids = [pk for kind, pk, _ in page_obj.object_list if kind == "series"]
+
+    movies = {obj.pk: obj for obj in Movie.objects.with_relations().filter(pk__in=movie_ids)}
+    series = {obj.pk: obj for obj in Series.objects.with_relations().filter(pk__in=series_ids)}
+
+    items = []
+    for kind, pk, _ in page_obj.object_list:
+        obj = movies.get(pk) if kind == "movie" else series.get(pk)
+        if obj is not None:
+            items.append({"kind": kind, "object": obj})
+
+    return {
+        "items": items,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "is_paginated": page_obj.has_other_pages(),
+    }
+
+
+class DirectorDetailView(QueryStringMixin, TemplateView):
+    """Bitta rejissyor suratga olgan kino, multfilm VA seriallar.
+
+    Ilgari faqat `Movie` filtrlangan edi — rejissyor serial suratga
+    olgan bo'lsa ham "hech narsa yo'q" chiqib qolardi. Endi umumiy
+    katalog bilan bir xil naqshda ikkalasi ham birga ko'rsatiladi.
+    """
 
     template_name = "movies/director_detail.html"
-    context_object_name = "movies"
-    paginate_by = settings.MOVIES_PER_PAGE
 
-    def get_queryset(self):
-        self.director = get_object_or_404(Director, slug=self.kwargs["slug"])
-        return (
-            Movie.objects.published()
-            .with_relations()
-            .filter(directors=self.director)
-            .order_by("-release_year", "-created_at")
-        )
+    def get(self, request, *args, **kwargs):
+        self.director = get_object_or_404(Director, slug=kwargs["slug"])
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        movie_qs = Movie.objects.published().filter(directors=self.director)
+        series_qs = Series.objects.published().filter(directors=self.director)
         context["director"] = self.director
+        context.update(_paginate_movie_series(self.request, movie_qs, series_qs, settings.MOVIES_PER_PAGE))
         return context
 
 
-class ActorDetailView(QueryStringMixin, ListView):
-    """Bitta aktyor o'ynagan filmlar — Genre/CategoryDetailView bilan bir xil naqsh."""
+class ActorDetailView(QueryStringMixin, TemplateView):
+    """Bitta aktyor qatnashgan kino, multfilm VA seriallar.
+
+    Ilgari faqat `Movie` filtrlangan edi — aktyor faqat serialda
+    o'ynagan bo'lsa "hech narsa yo'q" chiqib qolardi. Endi umumiy
+    katalog bilan bir xil naqshda ikkalasi ham birga ko'rsatiladi.
+    """
 
     template_name = "movies/actor_detail.html"
-    context_object_name = "movies"
-    paginate_by = settings.MOVIES_PER_PAGE
 
-    def get_queryset(self):
-        self.actor = get_object_or_404(Actor, slug=self.kwargs["slug"])
-        return (
-            Movie.objects.published()
-            .with_relations()
-            .filter(cast=self.actor)
-            .order_by("-release_year", "-created_at")
-        )
+    def get(self, request, *args, **kwargs):
+        self.actor = get_object_or_404(Actor, slug=kwargs["slug"])
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        movie_qs = Movie.objects.published().filter(cast=self.actor)
+        series_qs = Series.objects.published().filter(cast=self.actor)
         context["actor"] = self.actor
+        context.update(_paginate_movie_series(self.request, movie_qs, series_qs, settings.MOVIES_PER_PAGE))
         return context
 
 

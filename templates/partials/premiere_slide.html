@@ -1,0 +1,130 @@
+{% comment %}
+Premyera afishasi — bosh sahifadagi «Premyeralar» bo'limi uchun.
+
+DIQQAT: bu film kartasining VARIANTI EMAS, shuning uchun `.card` emas,
+`.premiere-slide` deb nomlangan. Farqi tubdan: keng 16:9 kadr (vertikal
+poster emas) va matn rasmning USTIDA (pastida emas). Buni
+`movie_card.html` ichiga `{% templatetag openblock %} if variant {% templatetag closeblock %}` bilan tiqish o'sha
+faylni ikki barobar kattalashtirib, ikkala ko'rinishni ham o'qishni
+qiyinlashtirardi — CLAUDE.md dagi «yagona karta shabloni» qoidasining
+maqsadi esa aynan standart kartani toza saqlash.
+
+Kutiladigan kontekst:
+    movie — Movie obyekti (`premieres()` bilan olingan — `with_relations()`)
+
+Kartaning sahnadagi O'RNI (markaz / chap / o'ng / yashirin) `data-pos`
+atributi orqali beriladi — uni `main.js` qo'yadi, uslublari esa
+`pages.css` da (`.premiere-stage`). Shu sababli bu yerda o'rin haqida
+hech narsa yozilmaydi.
+
+Watchlist/Sevimli holati context_processor bergan to'plamlardan olinadi,
+tugmalar esa `interactions.js` dagi umumiy delegatsiyaga ulanadi —
+shuning uchun bu yerda hech qanday yangi JS kerak emas.
+{% endcomment %}
+
+<article class="premiere-slide">
+
+  {% comment %}
+    Zaxira zanjiri: keng kadr bo'lmasa poster kesib ishlatiladi, u ham
+    bo'lmasa — nomdan iborat gradient (kadrsiz film ham chiroyli chiqsin).
+  {% endcomment %}
+  <a class="premiere-slide__media" href="{{ movie.get_absolute_url }}"
+     aria-label="{{ movie.title }} sahifasi">
+    {% if movie.backdrop %}
+      <img class="premiere-slide__img" src="{{ movie.backdrop.url }}"
+           alt="{{ movie.title }} kadri" loading="lazy" width="960" height="540">
+    {% elif movie.poster %}
+      <img class="premiere-slide__img" src="{{ movie.poster.url }}"
+           alt="{{ movie.title }} posteri" loading="lazy" width="960" height="540">
+    {% else %}
+      {# Nom TAKRORLANMAYDI -- u pastda alohida chiqadi, shu yerda belgi. #}
+      <span class="premiere-slide__fallback" aria-hidden="true">
+        {% include "partials/icon.html" with name="film" %}
+      </span>
+    {% endif %}
+  </a>
+
+  {# Matn har qanday kadr ustida o'qilishi uchun qoraytiruvchi qatlam #}
+  <span class="premiere-slide__scrim" aria-hidden="true"></span>
+
+  {% comment %}
+    «Premyera» belgisi bu yerda ATAYLAB yo'q — bo'limning o'zi shundoq
+    ham «Premyeralar» deb turibdi, har kartada takrorlash ortiqcha
+    (film kartasida ham shu sabab olib tashlangan). Faqat sanasi hali
+    kelmagan premyeralar belgilanadi: bu yangi ma'lumot beradi.
+  {% endcomment %}
+  <div class="premiere-slide__tags">
+    {% if movie.is_upcoming_premiere %}
+      {% comment %}
+        Sana raqamli formatda: loyihada LANGUAGE_CODE="en-us", ya'ni
+        `|date:"F"` inglizcha oy nomini berib qo'yardi.
+      {% endcomment %}
+      <span class="badge badge--premiere">
+        {% include "partials/icon.html" with name="calendar" %}
+        {{ movie.premiere_label }} · {{ movie.premiere_date|date:"d.m.Y" }}
+      </span>
+    {% endif %}
+    {% if movie.is_premium %}
+      <span class="badge badge--premium">
+        {% include "partials/icon.html" with name="crown" %} Premium
+      </span>
+    {% endif %}
+  </div>
+
+  {% comment %}
+    Nom va tugmalar BITTA qatorda: ilgari ikkalasi ham alohida
+    `position: absolute` bilan bir xil pastki burchakka yopishtirilgandi
+    va hover'da tugmalar meta yozuvi ustiga tushardi. Flex qatorda
+    tugmalar ko'rinmaganda ham joyini saqlaydi -- hover'da matn joyidan
+    siljimaydi (qarang: pages.css, `.premiere-slide__foot`).
+  {% endcomment %}
+  <div class="premiere-slide__foot">
+    <div class="premiere-slide__body">
+      <h3 class="premiere-slide__title">
+        <a href="{{ movie.get_absolute_url }}">{{ movie.title }}</a>
+      </h3>
+      <div class="premiere-slide__meta">
+        <span>{{ movie.release_year }}</span>
+        <span>{{ movie.duration_display }}</span>
+        {% if movie.imdb_rating %}
+          <span class="badge badge--imdb" title="IMDb reytingi">IMDb {{ movie.imdb_rating }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if movie.can_watch or user.is_authenticated %}
+      <div class="premiere-slide__actions">
+        {% comment %}
+          Tomosha tugmasi DOIM `can_watch` orqali tekshiriladi (HUQUQIY
+          QOIDA) — litsenziya ruxsat bermasa umuman chizilmaydi.
+        {% endcomment %}
+        {% if movie.can_watch %}
+          <a class="btn-icon premiere-slide__play" href="{{ movie.get_watch_url }}"
+             aria-label="{{ movie.title }} — tomosha qilish">
+            {% include "partials/icon.html" with name="play" %}
+          </a>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <button class="btn-icon js-watchlist {% if movie.id in user_watchlist_ids %}is-active{% endif %}"
+                  type="button" data-movie="{{ movie.id }}"
+                  aria-label="Watchlist'ga qo'shish"
+                  aria-pressed="{% if movie.id in user_watchlist_ids %}true{% else %}false{% endif %}">
+            <span data-icon="outline" {% if movie.id in user_watchlist_ids %}hidden{% endif %}>
+              {% include "partials/icon.html" with name="bookmark" %}
+            </span>
+            <span data-icon="filled" {% if movie.id not in user_watchlist_ids %}hidden{% endif %}>
+              {% include "partials/icon.html" with name="bookmark-filled" %}
+            </span>
+          </button>
+          <button class="btn-icon js-favorite {% if movie.id in user_favorite_ids %}is-active{% endif %}"
+                  type="button" data-movie="{{ movie.id }}"
+                  aria-label="Sevimlilarga qo'shish"
+                  aria-pressed="{% if movie.id in user_favorite_ids %}true{% else %}false{% endif %}">
+            {% include "partials/icon.html" with name="heart" %}
+          </button>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</article>

@@ -54,9 +54,11 @@
         <h4 class="footer__title">Sayt</h4>
         <ul class="footer__list">
           <li><a href="{% url 'core:home' %}">Home</a></li>
-          <li><a href="{% url 'movies:movie_list' %}">Movies</a></li>
+          <li><a href="{% url 'core:catalog' %}?type=movie">Kinolar</a></li>
+          <li><a href="{% url 'core:catalog' %}?type=cartoon">Multfilmlar</a></li>
+          <li><a href="{% url 'core:catalog' %}?type=series">Seriallar</a></li>
           <li><a href="{% url 'movies:genre_list' %}">Genres</a></li>
-          <li><a href="{% url 'movies:movie_list' %}?sort=popular">Popular</a></li>
+          <li><a href="{% url 'core:catalog' %}">Butun katalog</a></li>
         </ul>
       </div>
 

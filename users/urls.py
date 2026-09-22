@@ -3,7 +3,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
-from . import views
+from . import api, views
 
 app_name = "users"
 
@@ -20,6 +20,13 @@ urlpatterns = [
     path("profile/edit/", views.profile_edit, name="profile_edit"),
     path("watchlist/", views.WatchlistView.as_view(), name="watchlist"),
     path("favorites/", views.FavoritesView.as_view(), name="favorites"),
+
+    # --- AJAX endpointlar ---
+    path(
+        "api/continue-watching/dismiss/",
+        api.dismiss_continue_watching,
+        name="api_dismiss_continue_watching",
+    ),
 
     # --- Parolni tiklash (Django ning tayyor view lari + o'z shablonlarimiz) ---
     path(

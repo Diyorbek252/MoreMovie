@@ -17,6 +17,7 @@
     favorite: config.urlFavorite || "/api/favorite/toggle/",
     rate: config.urlRate || "/api/rate/",
     review: config.urlReview || "/api/review/",
+    continueDismiss: config.urlContinueDismiss || "/api/continue-watching/dismiss/",
   };
 
   /* --------------------------------------------------------------------
@@ -132,6 +133,42 @@
     } catch (error) {
       MM.toast(error.message, "error");
       removeBtn.disabled = false;
+    }
+  });
+
+  /* --------------------------------------------------------------------
+     Bosh sahifa — "Davom ettirish" bo'limini yashirish
+
+     Bitta bosishda bo'lim shu foydalanuvchi uchun butunlay o'chadi
+     (server tomonda `Profile.show_continue_watching`), keyingi
+     kirishlarida ham chiqmaydi. Qaytarib yoqish faqat profil
+     sozlamalaridan — shuning uchun bu yerda "bekor qilish" yo'q,
+     .js-remove-entry bilan bir xil fade-out naqshi bilan olib
+     tashlanadi.
+     -------------------------------------------------------------------- */
+
+  document.addEventListener("click", async function (event) {
+    const dismissBtn = event.target.closest("#continue-watching-dismiss");
+    if (!dismissBtn) return;
+
+    event.preventDefault();
+    dismissBtn.disabled = true;
+
+    try {
+      const data = await MM.postJSON(ENDPOINTS.continueDismiss, {});
+
+      const section = document.getElementById("continue-watching");
+      if (section) {
+        section.style.transition = "opacity 240ms, transform 240ms";
+        section.style.opacity = "0";
+        section.style.transform = "translateY(-8px)";
+        setTimeout(function () { section.remove(); }, 240);
+      }
+
+      MM.toast(data.message, "info");
+    } catch (error) {
+      MM.toast(error.message, "error");
+      dismissBtn.disabled = false;
     }
   });
 

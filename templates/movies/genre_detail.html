@@ -13,6 +13,12 @@
     </p>
   </div>
 
+  {% comment %}
+    Bosh sahifadagi bilan bir xil dizayn — boshqa janrga tezkor
+    o'tish uchun, joriy janr `is-active` bilan ajralib turadi.
+  {% endcomment %}
+  {% include "partials/genre_rail.html" %}
+
   {% if movies %}
     <div class="grid">
       {% for movie in movies %}

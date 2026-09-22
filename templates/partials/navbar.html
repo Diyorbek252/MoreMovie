@@ -27,16 +27,23 @@
            href="{% url 'core:home' %}">
           {% include "partials/icon.html" with name="home" %} Bosh sahifa
         </a>
-        <a class="nav__link {% if request.resolver_match.url_name == 'movie_list' %}is-active{% endif %}"
-           href="{% url 'movies:movie_list' %}">
+        {% comment %}
+          Uchala bo'lim ham bitta katalogga olib boradi (`core:catalog`),
+          farqi faqat `?type=` filtrida — shu sababli bir turdan
+          ikkinchisiga o'tish filtr panelining o'zidan ham mumkin.
+          Premyeralar bu yerda yo'q — ular bosh sahifadagi maxsus bo'lim
+          (barcha tanlangan premyeralar birga), alohida filtr emas.
+        {% endcomment %}
+        <a class="nav__link {% if request.resolver_match.url_name == 'catalog' and request.GET.type == 'movie' %}is-active{% endif %}"
+           href="{% url 'core:catalog' %}?type=movie">
           {% include "partials/icon.html" with name="film" %} Kinolar
         </a>
-        <a class="nav__link {% if request.resolver_match.url_name == 'category_detail' and request.resolver_match.kwargs.slug == 'multfilmlar' %}is-active{% endif %}"
-           href="{% url 'movies:category_detail' slug='multfilmlar' %}">
+        <a class="nav__link {% if request.resolver_match.url_name == 'catalog' and request.GET.type == 'cartoon' %}is-active{% endif %}"
+           href="{% url 'core:catalog' %}?type=cartoon">
           {% include "partials/icon.html" with name="sparkle" %} Multfilmlar
         </a>
-        <a class="nav__link {% if request.resolver_match.app_name == 'series' %}is-active{% endif %}"
-           href="{% url 'series:series_list' %}">
+        <a class="nav__link {% if request.resolver_match.url_name == 'catalog' and request.GET.type == 'series' %}is-active{% endif %}"
+           href="{% url 'core:catalog' %}?type=series">
           {% include "partials/icon.html" with name="tv" %} Seriallar
         </a>
         <a class="nav__link {% if request.resolver_match.url_name == 'product_list' %}is-active{% endif %}"
@@ -106,14 +113,6 @@
           <span id="cinepoint-balance">{{ cinepoint_balance }}</span>
         </a>
 
-        {% if has_premium_access %}
-          <a class="btn-icon premium-chip" href="{% url 'subscriptions:my_subscription' %}"
-             aria-label="Premium obuna" title="Premium obuna">
-            {% include "partials/icon.html" with name="crown" %}
-            <span>Premium</span>
-          </a>
-        {% endif %}
-
         {# Foydalanuvchi menyusi #}
         <div class="user-menu" id="user-menu">
           <button class="avatar" type="button" id="user-menu-toggle"
@@ -125,7 +124,15 @@
 
           <div class="user-menu__panel" role="menu">
             <div class="user-menu__head">
-              <div class="user-menu__name">{{ user.display_name }}</div>
+              <div class="user-menu__name">
+                {{ user.display_name }}
+                {% if has_premium_access %}
+                  {# Premium belgisi navbardan bu yerga ko'chirildi. #}
+                  <span class="badge badge--premium user-menu__premium">
+                    {% include "partials/icon.html" with name="crown" %} Premium
+                  </span>
+                {% endif %}
+              </div>
               <div class="user-menu__email">{{ user.email }}</div>
             </div>
 
@@ -191,16 +198,16 @@
          href="{% url 'core:home' %}">
         {% include "partials/icon.html" with name="home" %} Bosh sahifa
       </a>
-      <a class="drawer__link {% if request.resolver_match.url_name == 'movie_list' %}is-active{% endif %}"
-         href="{% url 'movies:movie_list' %}">
+      <a class="drawer__link {% if request.resolver_match.url_name == 'catalog' and request.GET.type == 'movie' %}is-active{% endif %}"
+         href="{% url 'core:catalog' %}?type=movie">
         {% include "partials/icon.html" with name="film" %} Kinolar
       </a>
-      <a class="drawer__link {% if request.resolver_match.url_name == 'category_detail' and request.resolver_match.kwargs.slug == 'multfilmlar' %}is-active{% endif %}"
-         href="{% url 'movies:category_detail' slug='multfilmlar' %}">
+      <a class="drawer__link {% if request.resolver_match.url_name == 'catalog' and request.GET.type == 'cartoon' %}is-active{% endif %}"
+         href="{% url 'core:catalog' %}?type=cartoon">
         {% include "partials/icon.html" with name="sparkle" %} Multfilmlar
       </a>
-      <a class="drawer__link {% if request.resolver_match.app_name == 'series' %}is-active{% endif %}"
-         href="{% url 'series:series_list' %}">
+      <a class="drawer__link {% if request.resolver_match.url_name == 'catalog' and request.GET.type == 'series' %}is-active{% endif %}"
+         href="{% url 'core:catalog' %}?type=series">
         {% include "partials/icon.html" with name="tv" %} Seriallar
       </a>
       <a class="drawer__link {% if request.resolver_match.url_name == 'product_list' %}is-active{% endif %}"

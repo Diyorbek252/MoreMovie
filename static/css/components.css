@@ -1067,33 +1067,21 @@
    -------------------------------------------------------------------------- */
 
 /* Premium = oltin (--warning) — cinepoint tangasi bilan bir xil rang,
-   qizil (asosiy harakat rangi) bilan raqobatlashmasin. */
+   qizil (asosiy harakat rangi) bilan raqobatlashmasin.
+   Fon — `.badge--rating`/`.badge--imdb` bilan bir xil qorong'i+blur:
+   shaffof oltin fon poster ustida (masalan oq-kulrang kadr) matnni
+   deyarli ko'rinmas qilib qo'yardi — qorong'i tag kontrastni saqlaydi. */
 .badge--premium {
-  background: rgba(245, 166, 35, 0.15);
-  border-color: var(--warning);
+  background: rgba(0, 0, 0, 0.7);
+  border-color: rgba(245, 166, 35, 0.5);
   color: var(--warning);
   font-weight: 700;
+  backdrop-filter: blur(4px);
 }
 
 .badge--premium svg {
   width: 12px;
   height: 12px;
-}
-
-.premium-chip {
-  width: auto;
-  height: 38px;
-  padding: 0 var(--s-3);
-  gap: var(--s-2);
-  border-radius: var(--r-full);
-  color: var(--warning);
-  border: 1px solid rgba(245, 166, 35, 0.35);
-  font-weight: 700;
-  font-size: var(--fs-sm);
-}
-
-.premium-chip svg {
-  color: var(--warning);
 }
 
 .plan-grid {

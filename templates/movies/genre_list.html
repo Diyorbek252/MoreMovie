@@ -14,8 +14,14 @@
     <div class="genre-grid" style="padding-bottom: var(--s-8)">
       {% for genre in genres %}
         <a class="genre-tile" href="{{ genre.get_absolute_url }}">
-          <span class="genre-tile__count">{{ genre.movie_total }} ta</span>
+          <span class="genre-tile__glow" aria-hidden="true"></span>
+          <span class="genre-tile__mark" aria-hidden="true">
+            {% include "partials/icon.html" with name="tag" %}
+          </span>
           <span class="genre-tile__name">{{ genre.name }}</span>
+          <span class="genre-tile__go" aria-hidden="true">
+            {% include "partials/icon.html" with name="chevron-right" %}
+          </span>
         </a>
       {% endfor %}
     </div>

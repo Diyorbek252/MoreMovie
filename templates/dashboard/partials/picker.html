@@ -1,0 +1,33 @@
+{% comment %}
+Ko'p tanlovli maydon (janr, kategoriya, rejissyor) — qidiruvli chip ro'yxati.
+Maydon widget'i `CheckboxSelectMultiple` bo'lishi kerak.
+
+    {% include "dashboard/partials/picker.html" with field=form.genres search="Janr qidirish..." only %}
+
+`search` — qidiruv maydonidagi placeholder (ixtiyoriy).
+{% endcomment %}
+<div class="picker{% if field.errors %} has-error{% endif %}" data-picker data-field="{{ field.name }}">
+  <div class="picker__head">
+    <span class="picker__label">
+      {{ field.label }}{% if field.field.required %}<b class="field__req" title="Majburiy maydon">*</b>{% endif %}
+    </span>
+    <span class="picker__count" data-picker-count>0 tanlandi</span>
+  </div>
+
+  <div class="picker__search">
+    {% include "partials/icon.html" with name="search" %}
+    <input type="search" class="picker__input" placeholder="{{ search|default:'Qidirish...' }}"
+           data-picker-search aria-label="{{ field.label }} ichidan qidirish">
+    <button type="button" class="picker__reset" data-picker-clear hidden>Tanlovni tozalash</button>
+  </div>
+
+  <div class="picker__list" data-picker-list>{{ field }}</div>
+
+  <p class="picker__none" data-picker-none hidden>Mos element topilmadi.</p>
+
+  {% if field.errors %}
+    <p class="field__error">{{ field.errors|first }}</p>
+  {% elif field.help_text %}
+    <p class="field__help">{{ field.help_text }}</p>
+  {% endif %}
+</div>

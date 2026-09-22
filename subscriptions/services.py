@@ -8,6 +8,7 @@ joyda, izchil bo'lib qoladi.
 
 from datetime import timedelta
 
+from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 
@@ -25,10 +26,21 @@ def get_active_subscription(user):
         return None
 
     if not hasattr(user, "_active_subscription_cache"):
+        now = timezone.now()
         user._active_subscription_cache = (
             Subscription.objects.filter(
-                user=user, status=Subscription.Status.ACTIVE, ends_at__gt=timezone.now()
+                user=user, status=Subscription.Status.ACTIVE, ends_at__gt=now
             )
+            # `starts_at` hali kelmagan obuna -- NAVBATGA qo'yilgan obuna --
+            # bu yerda hisobga olinmaydi. Masalan foydalanuvchi Premium
+            # obunasi tugamasdan turib Standard sotib olsa,
+            # `activate_subscription` Standardning `starts_at`sini
+            # Premiumning `ends_at`siga tenglashtiradi (navbatga qo'yadi) --
+            # Standard hali boshlanmagan bo'ladi. Shu tekshiruv bo'lmasa,
+            # pastdagi `order_by("-ends_at")` navbatdagi (uzoqroq
+            # tugaydigan, lekin hali boshlanmagan) Standardni tanlab, hali
+            # tugamagan Premium huquqini muddatidan OLDIN yo'qotib qo'yardi.
+            .filter(Q(starts_at__isnull=True) | Q(starts_at__lte=now))
             .select_related("plan")
             .order_by("-ends_at")
             .first()

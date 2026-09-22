@@ -41,7 +41,7 @@
       <div class="table-wrap">
         <table class="table">
           <thead>
-            <tr><th></th><th>To'liq ism</th><th>Slug</th><th>Filmlar</th><th></th></tr>
+            <tr><th></th><th>To'liq ism</th><th>Slug</th><th>Filmlar</th><th>Seriallar</th><th></th></tr>
           </thead>
           <tbody>
             {% for actor in actors %}
@@ -56,6 +56,7 @@
                 <td><strong>{{ actor.full_name }}</strong></td>
                 <td class="dim">{{ actor.slug }}</td>
                 <td class="muted">{{ actor.movie_total }} ta</td>
+                <td class="muted">{{ actor.series_total }} ta</td>
                 <td>
                   <div class="table__actions">
                     <a class="btn btn--sm btn--ghost" href="{% url 'dashboard:actor_edit' actor.pk %}"

@@ -32,14 +32,17 @@ har karta uchun alohida so'rov qilinmaydi.
     {% endcomment %}
     <div class="card__tags">
       <div class="card__qualities">
+        {% comment %}
+          Premyera belgisi shu yerda ATAYLAB yo'q — bosh sahifadagi
+          «Premyeralar» bo'limining o'zi buni bildiradi, kartada
+          takrorlash ortiqcha. Sifat belgilari ham kerak emas — faqat
+          Premium holati ko'rsatiladi.
+        {% endcomment %}
         {% if movie.is_premium %}
           <span class="badge badge--premium">
             {% include "partials/icon.html" with name="crown" %} Premium
           </span>
         {% endif %}
-        {% for quality in movie.quality_badges %}
-          <span class="badge badge--quality">{{ quality }}</span>
-        {% endfor %}
       </div>
       <div class="card__saved js-watchlist-badge" data-movie="{{ movie.id }}"
            title="Watchlist'da" {% if movie.id not in user_watchlist_ids %}hidden{% endif %}>

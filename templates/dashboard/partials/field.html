@@ -1,0 +1,25 @@
+{% comment %}
+Dashboard formalaridagi bitta maydon: yorliq + widget + xato/yordam matni.
+
+    {% include "dashboard/partials/field.html" with field=form.title only %}
+
+Ixtiyoriy parametrlar:
+    help    — model help_text o'rniga ko'rsatiladigan matn
+    hint    — yorliq yonidagi kichik kulrang izoh (masalan "ixtiyoriy")
+    counter — "yes" bo'lsa maxlength bo'yicha belgilar hisoblagichi chiqadi
+{% endcomment %}
+<div class="field" data-field="{{ field.name }}">
+  <label class="field__label" for="{{ field.id_for_label }}">
+    <span>{{ field.label }}{% if field.field.required %}<b class="field__req" title="Majburiy maydon">*</b>{% endif %}</span>
+    {% if hint %}<em class="field__hint">{{ hint }}</em>{% endif %}
+    {% if counter %}<em class="field__hint" data-counter-for="{{ field.id_for_label }}"></em>{% endif %}
+  </label>
+  {{ field }}
+  {% if field.errors %}
+    <p class="field__error">{{ field.errors|first }}</p>
+  {% elif help %}
+    <p class="field__help" id="{{ field.auto_id }}_helptext">{{ help }}</p>
+  {% elif field.help_text %}
+    <p class="field__help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>
+  {% endif %}
+</div>

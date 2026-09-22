@@ -3,7 +3,7 @@
 
 {% block title %}{{ site_settings.seo_title|default:SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}
 
-{% block meta_description %}{{ site_settings.seo_description|default:SITE_NAME }} — public domain va litsenziyalangan filmlarni HD sifatda onlayn tomosha qiling. Trending, mashhur va yuqori reytingli filmlar.{% endblock %}
+{% block meta_description %}{{ site_settings.seo_description|default:SITE_NAME }} — public domain va litsenziyalangan kontentni HD sifatda onlayn tomosha qiling — premyeralar, kinolar, multfilmlar va seriallar.{% endblock %}
 
 {% block content %}
 
@@ -74,10 +74,23 @@
 
   {# ==================== DAVOM ETTIRISH ==================== #}
   {% if continue_watching %}
-    <section class="section reveal">
+    {% comment %}
+      id — JS shu orqali bo'limni topib, "Yashirish" bosilganda butun
+      <section>'ni olib tashlaydi (qarang: interactions.js).
+    {% endcomment %}
+    <section class="section reveal" id="continue-watching">
       <div class="container">
         <div class="section__head">
           <h2 class="section__title">Davom ettirish</h2>
+          {% comment %}
+            Bitta so'rov bilan bo'lim shu foydalanuvchi uchun butunlay
+            o'chadi (Profile.show_continue_watching) — qaytarib yoqish
+            faqat profil sozlamalaridan, shuning uchun matn shuni eslatadi.
+          {% endcomment %}
+          <button type="button" class="section__link" id="continue-watching-dismiss"
+                  title="Bu bo'limni yashiradi. Profil sozlamalaridan qaytarib yoqish mumkin.">
+            {% include "partials/icon.html" with name="x" %} Yashirish
+          </button>
         </div>
         <div class="rail-wrap">
           <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
@@ -104,7 +117,59 @@
     ajratiladi.
   {% endcomment %}
   {% for section in rail_sections %}
-    {% if section.key == "genres" %}
+    {% if section.key == "premieres" %}
+      {% comment %}
+        Premyeralar — ATAYLAB boshqa bo'limlardan farqli: 2:3 poster
+        kartalari o'rniga 16:9 «keng kadr» (afisha) slaydlari, kattaroq
+        va bo'lim foni ham alohida (qizil nur bilan) ajratilgan. Maqsad —
+        bu bo'lim sahifani varaqlaganda birinchi bo'lib ko'zga tashlansin.
+      {% endcomment %}
+      {% if section.movies %}
+        <section class="section section--premiere reveal">
+          <div class="container">
+            <div class="section__head">
+              <div>
+                <p class="section__eyebrow">
+                  {% include "partials/icon.html" with name="sparkle" %}
+                  Afisha
+                </p>
+                <h2 class="section__title">{{ section.title }}</h2>
+                {% if section.subtitle %}<p class="muted" style="margin-top: var(--s-1)">{{ section.subtitle }}</p>{% endif %}
+              </div>
+              {# RAIL_CONFIG da premyeralar uchun link_suffix=None -- havola ataylab yo'q. #}
+              {% if section.link %}
+                <a class="section__link" href="{{ section.link }}">Barchasini ko'rish →</a>
+              {% endif %}
+            </div>
+
+            {% comment %}
+              Bu SURILADIGAN tasma emas, «sahna»: kartalar ustma-ust
+              qo'yilgan, yorqini doim MARKAZDA, ikkitasi esa uning ikki
+              yonida teng masofada turadi. Aylanish cheksiz (loop) --
+              shuning uchun `.rail` klassi ATAYLAB yo'q: main.js dagi
+              umumiy tasma (scroll) mantig'i bu yerga tegmasligi kerak,
+              o'q tugmalarini premyera skripti o'zi boshqaradi.
+            {% endcomment %}
+            <div class="rail-wrap">
+              <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
+                {% include "partials/icon.html" with name="chevron-left" %}
+              </button>
+
+              <div class="premiere-stage">
+                {% for movie in section.movies %}
+                  {% include "partials/premiere_slide.html" with movie=movie %}
+                {% endfor %}
+              </div>
+
+              <button class="rail-btn rail-btn--next" type="button" aria-label="Oldinga" data-rail="next">
+                {% include "partials/icon.html" with name="chevron-right" %}
+              </button>
+            </div>
+          </div>
+        </section>
+      {% endif %}
+
+    {% elif section.key == "genres" %}
       {% if section.movies %}
         <section class="section reveal">
           <div class="container">
@@ -116,19 +181,78 @@
               <a class="section__link" href="{{ section.link }}">Barchasini ko'rish →</a>
             </div>
 
-            <div class="genre-grid">
-              {% for genre in section.movies %}
-                <a class="genre-tile" href="{{ genre.get_absolute_url }}">
-                  <span class="genre-tile__count">{{ genre.movie_total }}</span>
-                  <span class="genre-tile__name">{{ genre.name }}</span>
-                </a>
-              {% endfor %}
+            <div class="rail-wrap">
+              <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
+                {% include "partials/icon.html" with name="chevron-left" %}
+              </button>
+
+              <div class="rail rail--genres">
+                {% for genre in section.movies %}
+                  <a class="genre-tile" href="{{ genre.get_absolute_url }}">
+                    <span class="genre-tile__glow" aria-hidden="true"></span>
+                    <span class="genre-tile__mark" aria-hidden="true">
+                      {% include "partials/icon.html" with name="tag" %}
+                    </span>
+                    <span class="genre-tile__name">{{ genre.name }}</span>
+                    <span class="genre-tile__go" aria-hidden="true">
+                      {% include "partials/icon.html" with name="chevron-right" %}
+                    </span>
+                  </a>
+                {% endfor %}
+              </div>
+
+              <button class="rail-btn rail-btn--next" type="button" aria-label="Oldinga" data-rail="next">
+                {% include "partials/icon.html" with name="chevron-right" %}
+              </button>
             </div>
           </div>
         </section>
       {% endif %}
+
+    {% elif section.key == "years" %}
+      {% comment %}
+        Yillar — janrlar bilan bir xil naqsh, lekin o'z modeli yo'q:
+        har bir yil to'g'ridan-to'g'ri umumiy katalogning `?year=`
+        filtriga olib boradi (kino, multfilm va serial birga chiqadi).
+      {% endcomment %}
+      {% if section.movies %}
+        <section class="section reveal">
+          <div class="container">
+            <div class="section__head">
+              <div>
+                <h2 class="section__title">{{ section.title }}</h2>
+                {% if section.subtitle %}
+                  <p class="muted" style="margin-top: var(--s-1)">{{ section.subtitle }}</p>
+                {% else %}
+                {% endif %}
+              </div>
+              <a class="section__link" href="{{ section.link }}">Barchasini ko'rish →</a>
+            </div>
+
+            <div class="rail-wrap">
+              <button class="rail-btn rail-btn--prev" type="button" aria-label="Orqaga" data-rail="prev">
+                {% include "partials/icon.html" with name="chevron-left" %}
+              </button>
+
+              <div class="rail rail--years">
+                {% for year in section.movies %}
+                  <a class="year-chip" href="{{ section.link }}?year={{ year }}">
+                    <span class="year-chip__glow" aria-hidden="true"></span>
+                    <span class="year-chip__num">{{ year }}</span>
+                  </a>
+                {% endfor %}
+              </div>
+
+              <button class="rail-btn rail-btn--next" type="button" aria-label="Oldinga" data-rail="next">
+                {% include "partials/icon.html" with name="chevron-right" %}
+              </button>
+            </div>
+          </div>
+        </section>
+      {% endif %}
+
     {% else %}
-      {% include "partials/movie_row.html" with title=section.title subtitle=section.subtitle movies=section.movies link=section.link %}
+      {% include "partials/movie_row.html" with title=section.title subtitle=section.subtitle movies=section.movies link=section.link is_series=section.is_series %}
     {% endif %}
   {% endfor %}
 
