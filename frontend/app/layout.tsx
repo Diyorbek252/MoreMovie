@@ -4,6 +4,7 @@ import { Inter, Poppins } from "next/font/google";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { getCurrentUser, getGenres, getSiteSettings } from "@/lib/api";
+import { mediaSrc } from "@/lib/media";
 
 import "./globals.css";
 
@@ -22,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
       `${siteSettings.site_name} — litsenziyalangan va public domain filmlarni onlayn tomosha qiling.`,
     keywords: siteSettings.seo_keywords || undefined,
     icons: siteSettings.favicon
-      ? [{ url: siteSettings.favicon }]
+      ? [{ url: mediaSrc(siteSettings.favicon)! }]
       : [{ url: "/img/favicon.svg", type: "image/svg+xml" }],
   };
 }

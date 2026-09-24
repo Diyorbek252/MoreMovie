@@ -12,6 +12,7 @@ import RatingBox from "@/components/RatingBox";
 import Section from "@/components/Section";
 import WatchlistButton from "@/components/WatchlistButton";
 import { ApiError, getCurrentUser, getMovie, getReviews } from "@/lib/api";
+import { mediaSrc } from "@/lib/media";
 
 export async function generateMetadata({
   params,
@@ -21,6 +22,11 @@ export async function generateMetadata({
   const { slug } = await params;
   try {
     const movie = await getMovie(slug);
+    // OG rasm tashqi xizmatlar (Facebook/Telegram bot) tomonidan
+    // yuklanadi — ular ham ICHKI (127.0.0.1) manzilga yeta olmaydi,
+    // shuning uchun saytning TASHQI manziliga ulanadi.
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const ogImage = mediaSrc(movie.backdrop || movie.poster);
     return {
       title: `${movie.title} (${movie.release_year})`,
       description: movie.meta_description_text,
@@ -28,7 +34,7 @@ export async function generateMetadata({
         type: "video.movie",
         title: `${movie.title} (${movie.release_year})`,
         description: movie.meta_description_text,
-        images: movie.backdrop || movie.poster ? [movie.backdrop || movie.poster!] : undefined,
+        images: ogImage ? [`${siteUrl}${ogImage}`] : undefined,
       },
     };
   } catch {
@@ -57,7 +63,7 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
         {movie.backdrop && (
           <div className="detail__bg">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={movie.backdrop} alt="" width={1600} height={900} />
+            <img src={mediaSrc(movie.backdrop)} alt="" width={1600} height={900} />
           </div>
         )}
         <div className="detail__scrim"></div>
@@ -221,12 +227,12 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
       <div className="container">
         <section className="section" id="player">
           {movie.can_play ? (
-            <Player slug={movie.slug} sources={movie.video_sources} poster={movie.backdrop} resumeAt={movie.resume_at} />
+            <Player slug={movie.slug} sources={movie.video_sources} poster={mediaSrc(movie.backdrop)} resumeAt={movie.resume_at} />
           ) : movie.can_watch && movie.is_premium ? (
             <div className="premium-lock">
               {movie.backdrop && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img className="premium-lock__bg" src={movie.backdrop} alt="" width={1600} height={900} />
+                <img className="premium-lock__bg" src={mediaSrc(movie.backdrop)} alt="" width={1600} height={900} />
               )}
               <div className="premium-lock__content">
                 <div className="premium-lock__icon">
@@ -324,7 +330,7 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
                   <div className="avatar">
                     {review.user.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={review.user.avatar_url} alt="" width={38} height={38} />
+                      <img src={mediaSrc(review.user.avatar_url)} alt="" width={38} height={38} />
                     ) : (
                       review.user.display_name.slice(0, 2).toUpperCase()
                     )}

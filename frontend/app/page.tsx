@@ -6,6 +6,7 @@ import MovieCard from "@/components/MovieCard";
 import Section from "@/components/Section";
 import SeriesCard from "@/components/SeriesCard";
 import { getCurrentUser, getHome } from "@/lib/api";
+import { mediaSrc } from "@/lib/media";
 import type { Genre, MovieCard as MovieCardType, SeriesCard as SeriesCardType } from "@/lib/types";
 
 export const revalidate = 60;
@@ -21,10 +22,10 @@ export default async function HomePage() {
           <div className="hero__bg">
             {hero.backdrop ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={hero.backdrop} alt="" fetchPriority="high" width={1600} height={900} />
+              <img src={mediaSrc(hero.backdrop)} alt="" fetchPriority="high" width={1600} height={900} />
             ) : hero.poster ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={hero.poster} alt="" fetchPriority="high" />
+              <img src={mediaSrc(hero.poster)} alt="" fetchPriority="high" />
             ) : null}
           </div>
           <div className="hero__scrim"></div>

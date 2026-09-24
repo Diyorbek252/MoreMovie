@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { apiPost } from "@/lib/api-client";
+import { mediaSrc } from "@/lib/media";
 import type { User } from "@/lib/types";
 import Icon from "./Icon";
 
@@ -101,7 +102,7 @@ export default function NavUserMenu({ user }: { user: User | null }) {
         >
           {user.profile.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.profile.avatar_url} alt="" width={38} height={38} />
+            <img src={mediaSrc(user.profile.avatar_url)} alt="" width={38} height={38} />
           ) : (
             user.initials
           )}

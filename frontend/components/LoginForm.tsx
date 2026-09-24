@@ -28,8 +28,11 @@ export default function LoginForm() {
     try {
       await apiPost("/api/v1/auth/login/", { username, password, remember_me: rememberMe });
       const next = searchParams.get("next") || "/";
-      router.push(next);
-      router.refresh();
+      // `router.push()` EMAS: `next` Django tomonidagi sahifa bo'lishi
+      // mumkin (masalan /profile/, /shop/) — aralash marshrutda Next
+      // bunday yo'lni o'ziniki deb hisoblab 404 berardi. To'liq sahifa
+      // yuklash esa nginx'ga to'g'ri joyga yo'naltirish imkonini beradi.
+      window.location.href = next;
     } catch (err) {
       setError((err as ApiClientError).message);
     } finally {
