@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import type { SiteSettings, User } from "@/lib/types";
-import Icon from "./Icon";
+import NavLinks from "./NavLinks";
 import NavSearch from "./NavSearch";
 import NavUserMenu from "./NavUserMenu";
 
@@ -24,23 +25,9 @@ export default function Navbar({
           )}
         </Link>
 
-        <nav className="nav__menu" aria-label="Asosiy menyu">
-          <Link className="nav__link" href="/">
-            <Icon name="home" /> Bosh sahifa
-          </Link>
-          <Link className="nav__link" href="/katalog/?type=movie">
-            <Icon name="film" /> Kinolar
-          </Link>
-          <Link className="nav__link" href="/katalog/?type=cartoon">
-            <Icon name="sparkle" /> Multfilmlar
-          </Link>
-          <Link className="nav__link" href="/katalog/?type=series">
-            <Icon name="tv" /> Seriallar
-          </Link>
-          <Link className="nav__link" href="/shop/">
-            <Icon name="coin" /> Do&apos;kon
-          </Link>
-        </nav>
+        <Suspense fallback={<nav className="nav__menu" aria-label="Asosiy menyu" />}>
+          <NavLinks />
+        </Suspense>
 
         <div className="nav__actions">
           <NavSearch />
