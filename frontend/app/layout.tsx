@@ -3,6 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import RevealObserver from "@/components/RevealObserver";
 import { getCurrentUser, getGenres, getSiteSettings } from "@/lib/api";
 import { mediaSrc } from "@/lib/media";
 
@@ -49,6 +50,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main id="main">{children}</main>
 
         <Footer siteSettings={siteSettings} genres={genres} />
+
+        <RevealObserver />
+
+        {/* JS o'chirilgan yoki sekin yuklansa ham `.reveal` bo'limlari
+            ko'rinib tursin — `RevealObserver` ishga tushmagan taqdirda ham
+            kontent butunlay yo'qolib qolmaydi. */}
+        <noscript>
+          <style>{`.reveal { opacity: 1 !important; }`}</style>
+        </noscript>
       </body>
     </html>
   );
