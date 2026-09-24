@@ -71,8 +71,8 @@ class MovieCardSerializer(serializers.ModelSerializer):
             "short_description", "release_year", "duration_display",
             "quality_badges", "imdb_rating", "user_rating_display",
             "is_premiere", "premiere_label", "is_upcoming_premiere",
-            "is_featured", "is_trending", "is_premium", "can_watch",
-            "genres", "in_watchlist", "in_favorite",
+            "premiere_date", "is_featured", "is_trending", "is_premium",
+            "can_watch", "genres", "in_watchlist", "in_favorite",
         ]
 
     def _ids_set(self, key):

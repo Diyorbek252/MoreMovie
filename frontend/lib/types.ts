@@ -66,6 +66,7 @@ export interface MovieCard {
   is_premiere: boolean;
   premiere_label: string;
   is_upcoming_premiere: boolean;
+  premiere_date: string | null;
   is_featured: boolean;
   is_trending: boolean;
   is_premium: boolean;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import HeroWatchlistButton from "@/components/HeroWatchlistButton";
 import Icon from "@/components/Icon";
 import MovieCard from "@/components/MovieCard";
+import PremiereCarousel from "@/components/PremiereCarousel";
 import Section from "@/components/Section";
 import SeriesCard from "@/components/SeriesCard";
 import { getCurrentUser, getHome } from "@/lib/api";
@@ -93,6 +94,37 @@ export default async function HomePage() {
 
       {rail_sections.map((section) => {
         if (section.items.length === 0) return null;
+
+        if (section.key === "premieres") {
+          const premieres = section.items as MovieCardType[];
+          return (
+            <section className="section section--premiere reveal" key={section.key}>
+              <div className="container">
+                <div className="section__head">
+                  <div>
+                    <p className="section__eyebrow">
+                      <Icon name="sparkle" /> Afisha
+                    </p>
+                    <h2 className="section__title">{section.title}</h2>
+                    {section.subtitle && (
+                      <p className="muted" style={{ marginTop: "var(--s-1)" }}>
+                        {section.subtitle}
+                      </p>
+                    )}
+                  </div>
+                  {/* RAIL_CONFIG'da premyeralar uchun havola ATAYLAB yo'q. */}
+                  {section.link && (
+                    <Link className="section__link" href={section.link}>
+                      Barchasini ko&apos;rish →
+                    </Link>
+                  )}
+                </div>
+
+                <PremiereCarousel movies={premieres} isAuthenticated={!!user} />
+              </div>
+            </section>
+          );
+        }
 
         if (section.key === "genres") {
           const genres = section.items as Genre[];
