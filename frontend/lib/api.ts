@@ -7,11 +7,18 @@
  * 1. Kiruvchi so'rovning `Cookie` header'ini Django'ga UZATADI — shu
  *    bilan SSR sahifalar (masalan `/watchlist`) joriy foydalanuvchining
  *    sessiyasini ko'radi.
- * 2. `X-Forwarded-Proto`/`Host` header'larini qo'shadi — production'da
+ * 2. `X-Forwarded-Proto` header'ini qo'shadi — production'da
  *    `DEBUG=False` bo'lganda Django'ning `SECURE_SSL_REDIRECT` sozlamasi
  *    ICHKI (http://127.0.0.1:8000) SSR so'rovini ham HTTPS'ga 301 qilib
  *    yubormasligi uchun (`config/settings.py:SECURE_PROXY_SSL_HEADER`
  *    aynan shu header'ni kutadi). Bu CLAUDE.md rejasidagi 2-tuzoq.
+ *
+ * MUHIM (serverda sinab ko'rilgan): `Host` header'ini BU YERDA
+ * o'rnatib bo'lmaydi — fetch spetsifikatsiyasida u "taqiqlangan header",
+ * Node/undici uni jimgina olib tashlaydi va Django baribir URL'dagi
+ * hostni (`127.0.0.1:8000`) ko'radi. Shuning uchun serverning `.env`
+ * faylidagi `ALLOWED_HOSTS` ro'yxatiga ichki manzil ham qo'shilishi
+ * kerak, masalan: `ALLOWED_HOSTS=more-movie.uz,127.0.0.1`.
  */
 
 import { cookies, headers } from "next/headers";
@@ -53,7 +60,6 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     headers: {
       Cookie: cookieHeader,
       "X-Forwarded-Proto": SITE_PROTO,
-      Host: SITE_HOST,
       ...(options.body ? { "Content-Type": "application/json" } : {}),
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
