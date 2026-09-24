@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>MORE-MOVIE</title>
+  <!-- Qora fon -->
+  <rect width="64" height="64" rx="14" fill="#000000"/>
+  <!-- Logodagi "O" belgisi: aylana emas, to'rtburchak halqa (logo.svg bilan bir xil nisbat) -->
+  <rect x="15" y="15" width="34" height="34" rx="8" ry="8"
+        fill="none" stroke="#ffffff" stroke-width="8"/>
+  <!-- Ichkaridagi qizil play tugmasi -->
+  <polygon points="26,23.5 26,40.5 41,32" fill="#FF2A00" stroke="#FF2A00"
+           stroke-width="2.5" stroke-linejoin="round"/>
+</svg>

@@ -2,6 +2,7 @@
 
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.http import JsonResponse
 from django.shortcuts import redirect
 
 
@@ -21,6 +22,13 @@ class BlockedUserMiddleware:
 
         if user is not None and user.is_authenticated and user.is_blocked:
             logout(request)
+            # API so'rovlari HTML redirect emas, JSON 403 kutadi — Next.js
+            # fetch'i 302'ni HTML sifatida o'qib, tushunarsiz xatoga uchraydi.
+            if request.path.startswith("/api/"):
+                return JsonResponse(
+                    {"detail": "Hisobingiz administrator tomonidan bloklangan."},
+                    status=403,
+                )
             messages.error(
                 request,
                 "Hisobingiz administrator tomonidan bloklangan. "

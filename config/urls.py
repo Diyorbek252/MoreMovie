@@ -24,6 +24,10 @@ sitemaps = {
 urlpatterns = [
     path("admin/", admin.site.urls),
 
+    # DRF API — Next.js frontend shu orqali ma'lumot oladi. Eski
+    # shablon/AJAX marshrutlari (pastda) hozircha o'zgarishsiz qoladi.
+    path("api/v1/", include("config.api_urls")),
+
     path("", include("users.urls")),
     path("", include("movies.urls")),
     path("", include("series.urls")),

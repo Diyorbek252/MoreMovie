@@ -75,6 +75,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django.contrib.sitemaps",
+    # Uchinchi tomon — DRF API uchun.
+    "rest_framework",
+    "django_filters",
+    "drf_spectacular",
     # Loyiha ilovalari
     "core.apps.CoreConfig",
     "users.apps.UsersConfig",
@@ -296,6 +300,41 @@ MOVIES_PER_PAGE = 24
 # Cinepoint do'koni — avtomatik mukofot miqdorlari.
 CINEPOINT_MOVIE_REWARD = 5
 CINEPOINT_REVIEW_REWARD = 15
+
+
+# ---------------------------------------------------------------------------
+# DRF API
+# Frontend (Next.js) shu orqali ma'lumot oladi. Autentifikatsiya sessiya
+# cookie orqali — bitta domenda ishlagani uchun token/JWT shart emas.
+# ---------------------------------------------------------------------------
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": MOVIES_PER_PAGE,
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        # Qidiruv va sharh/reyting kabi tez-tez chaqiriladigan endpointlar uchun.
+        "search": "60/minute",
+        "write": "30/minute",
+    },
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "MORE-MOVIE API",
+    "DESCRIPTION": "MORE-MOVIE frontend uchun DRF API.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 
 # ---------------------------------------------------------------------------
