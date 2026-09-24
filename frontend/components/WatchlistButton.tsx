@@ -31,6 +31,10 @@ export default function WatchlistButton({
     setActive((prev) => !prev);
     try {
       await apiPost<{ added: boolean }>(`/api/v1/movies/${slug}/watchlist/`);
+      // Server komponentini qayta chizamiz — aks holda `/watchlist/`
+      // sahifasida ro'yxatdan olib tashlangan film ekranda qolib ketadi
+      // (faqat tugma ko'rinishi o'zgargan bo'lardi).
+      router.refresh();
     } catch (err) {
       setActive((prev) => !prev); // orqaga qaytarish
       const status = (err as { status?: number }).status;

@@ -122,7 +122,26 @@ import type {
   User,
 } from "./types";
 
-export const getHome = () => apiFetch<HomeResponse>("/api/v1/home/", { revalidate: 60 });
+/* ---------------------------------------------------------------------------
+   KESHLASH QOIDASI (buzilmaydi)
+
+   Next.js Data Cache so'rovni URL bo'yicha kalitlaydi — `Cookie` header'ga
+   QARAMAYDI. Shuning uchun javobida FOYDALANUVCHIGA XOS maydon bo'lgan
+   har qanday endpoint `revalidate: false` (= `cache: "no-store"`) bilan
+   olinishi SHART. Aks holda bir foydalanuvchining javobi boshqasiga
+   berilishi mumkin:
+
+     - `in_watchlist` / `in_favorite`  → chalkash tugma holati
+     - `can_play` / `video_sources`    → PREMIUM kontent obunasiz odamga
+                                          ochilib qolishi (CLAUDE.md dagi
+                                          huquqiy qoidaning buzilishi)
+     - `resume_at` / `user_rating`     → boshqa odamning ko'rish tarixi
+
+   Faqat hammaga bir xil (`site/settings/`, `genres/`) javoblar
+   keshlanadi.
+   --------------------------------------------------------------------------- */
+
+export const getHome = () => apiFetch<HomeResponse>("/api/v1/home/", { revalidate: false });
 
 export function getCatalog(searchParams: Record<string, string | string[] | undefined>) {
   const params = new URLSearchParams();
@@ -131,14 +150,14 @@ export function getCatalog(searchParams: Record<string, string | string[] | unde
     params.set(key, Array.isArray(value) ? value.join(",") : value);
   }
   const qs = params.toString();
-  return apiFetch<CatalogResponse>(`/api/v1/catalog/${qs ? `?${qs}` : ""}`, { revalidate: 30 });
+  return apiFetch<CatalogResponse>(`/api/v1/catalog/${qs ? `?${qs}` : ""}`, { revalidate: false });
 }
 
 export const getMovie = (slug: string) =>
-  apiFetch<MovieDetail>(`/api/v1/movies/${slug}/`, { revalidate: 30 });
+  apiFetch<MovieDetail>(`/api/v1/movies/${slug}/`, { revalidate: false });
 
 export const getSeries = (slug: string) =>
-  apiFetch<SeriesDetail>(`/api/v1/series/${slug}/`, { revalidate: 30 });
+  apiFetch<SeriesDetail>(`/api/v1/series/${slug}/`, { revalidate: false });
 
 export function getReviews(target: { movie: string } | { series: string }) {
   // TS eslatmasi: ikkala tomoni ham OPTIONAL bo'lgan union'da `in` orqali
@@ -191,8 +210,10 @@ export const getProducts = (searchParams: Record<string, string | undefined>) =>
     if (value) params.set(key, value);
   }
   const qs = params.toString();
+  // `?affordable=1` foydalanuvchi balansiga qarab filtrlaydi — ya'ni bu
+  // javob ham foydalanuvchiga xos, keshlanmaydi.
   return apiFetch<Paginated<Product>>(`/api/v1/shop/products/${qs ? `?${qs}` : ""}`, {
-    revalidate: 60,
+    revalidate: false,
   });
 };
 

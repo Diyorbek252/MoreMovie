@@ -9,10 +9,11 @@
 
 import Link from "next/link";
 
-import { apiPost } from "@/lib/api-client";
 import { mediaSrc } from "@/lib/media";
 import type { MovieCard } from "@/lib/types";
+import FavoriteButton from "./FavoriteButton";
 import Icon from "./Icon";
+import WatchlistButton from "./WatchlistButton";
 
 export default function PremiereSlide({
   movie,
@@ -27,10 +28,6 @@ export default function PremiereSlide({
 }) {
   const href = `/movie/${movie.slug}/`;
   const image = movie.backdrop || movie.poster;
-
-  async function toggle(model: "watchlist" | "favorite") {
-    await apiPost(`/api/v1/movies/${movie.slug}/${model}/`).catch(() => {});
-  }
 
   return (
     <article className="premiere-slide" data-pos={pos} onPointerDown={onSelect}>
@@ -96,31 +93,11 @@ export default function PremiereSlide({
               </Link>
             )}
             {isAuthenticated && (
+              // Umumiy komponentlar — holatni o'zlari saqlaydi va
+              // bosilgandan keyin server ro'yxatini yangilaydi.
               <>
-                <button
-                  className={`btn-icon js-watchlist${movie.in_watchlist ? " is-active" : ""}`}
-                  type="button"
-                  aria-label="Watchlist'ga qo'shish"
-                  aria-pressed={movie.in_watchlist}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggle("watchlist");
-                  }}
-                >
-                  <Icon name={movie.in_watchlist ? "bookmark-filled" : "bookmark"} />
-                </button>
-                <button
-                  className={`btn-icon js-favorite${movie.in_favorite ? " is-active" : ""}`}
-                  type="button"
-                  aria-label="Sevimlilarga qo'shish"
-                  aria-pressed={movie.in_favorite}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggle("favorite");
-                  }}
-                >
-                  <Icon name="heart" />
-                </button>
+                <WatchlistButton slug={movie.slug} initialActive={movie.in_watchlist} />
+                <FavoriteButton slug={movie.slug} initialActive={movie.in_favorite} />
               </>
             )}
           </div>

@@ -25,6 +25,7 @@ export default function HeroWatchlistButton({
     setActive((prev) => !prev);
     try {
       await apiPost(`/api/v1/movies/${slug}/watchlist/`);
+      router.refresh();
     } catch (err) {
       setActive((prev) => !prev);
       if ((err as { status?: number }).status === 403) {

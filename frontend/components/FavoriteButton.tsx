@@ -25,6 +25,9 @@ export default function FavoriteButton({
     setActive((prev) => !prev);
     try {
       await apiPost<{ added: boolean }>(`/api/v1/movies/${slug}/favorite/`);
+      // `/favorites/` sahifasidagi ro'yxat ham yangilanishi uchun
+      // (qarang: WatchlistButton).
+      router.refresh();
     } catch (err) {
       setActive((prev) => !prev);
       const status = (err as { status?: number }).status;
