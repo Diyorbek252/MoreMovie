@@ -128,11 +128,13 @@ export const getMovie = (slug: string) =>
 export const getSeries = (slug: string) =>
   apiFetch<SeriesDetail>(`/api/v1/series/${slug}/`, { revalidate: 30 });
 
-export const getReviews = (target: { movie?: string } | { series?: string }) => {
-  const key = "movie" in target ? "movie" : "series";
-  const value = "movie" in target ? target.movie : target.series;
-  return apiFetch<Paginated<Review>>(`/api/v1/reviews/?${key}=${value}`, { revalidate: 30 });
-};
+export function getReviews(target: { movie: string } | { series: string }) {
+  // TS eslatmasi: ikkala tomoni ham OPTIONAL bo'lgan union'da `in` orqali
+  // ajratib bo'lmaydi (bo'sh obyekt ikkalasiga ham strukturaviy mos keladi) —
+  // shuning uchun maydonlar shu yerda MAJBURIY, chaqiruvchi ANIQ bittasini beradi.
+  const params = "movie" in target ? `movie=${target.movie}` : `series=${target.series}`;
+  return apiFetch<Paginated<Review>>(`/api/v1/reviews/?${params}`, { revalidate: 30 });
+}
 
 export const getSiteSettings = () =>
   apiFetch<SiteSettings>("/api/v1/site/settings/", { revalidate: 300 });
