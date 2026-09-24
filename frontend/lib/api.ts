@@ -55,6 +55,18 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
+  // MUHIM: `next: { revalidate: false }` Next.js'da "HECH QACHON eskirmaydi"
+  // (cheksiz kesh) degani — "keshlanmasin" degani EMAS! Bu ikkalasini
+  // aralashtirib, avval `getWatchlist`/`getFavorites`/`getMe` kabi shaxsiy
+  // ma'lumotlar CHEKSIZ keshlanib qolgan edi (production'da sinab
+  // ko'rilganda topildi: Favorites'dan o'chirilgan film ro'yxatda qolib
+  // ketardi). To'g'ri yechim — `cache: "no-store"`, umuman keshlanmasin.
+  const isMutation = Boolean(options.method) && options.method !== "GET";
+  const cacheOptions: RequestInit =
+    isMutation || options.revalidate === false
+      ? { cache: "no-store" }
+      : { next: { revalidate: options.revalidate ?? 60 } };
+
   const res = await fetch(`${BACKEND_URL}${path}`, {
     method: options.method || "GET",
     headers: {
@@ -63,13 +75,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
       ...(options.body ? { "Content-Type": "application/json" } : {}),
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
-    next:
-      options.revalidate === false
-        ? { revalidate: false }
-        : { revalidate: options.revalidate ?? 60 },
-    cache: options.revalidate === undefined && options.method && options.method !== "GET"
-      ? "no-store"
-      : undefined,
+    ...cacheOptions,
   });
 
   if (!res.ok) {
