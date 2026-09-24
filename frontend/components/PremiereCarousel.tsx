@@ -30,13 +30,7 @@ function positionOf(slideIndex: number, index: number, total: number): number {
   return offset <= total / 2 ? 2 : -2;
 }
 
-export default function PremiereCarousel({
-  movies,
-  isAuthenticated,
-}: {
-  movies: MovieCard[];
-  isAuthenticated: boolean;
-}) {
+export default function PremiereCarousel({ movies }: { movies: MovieCard[] }) {
   const total = movies.length;
   const [index, setIndex] = useState(0);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -120,7 +114,6 @@ export default function PremiereCarousel({
           <PremiereSlide
             movie={movie}
             pos={positionOf(slideIndex, index, total)}
-            isAuthenticated={isAuthenticated}
             onSelect={() => {
               if (slideIndex !== index) setIndex(slideIndex);
               pause();

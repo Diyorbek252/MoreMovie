@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import HeroWatchlistButton from "@/components/HeroWatchlistButton";
 import Icon from "@/components/Icon";
 import MovieCard from "@/components/MovieCard";
 import PremiereCarousel from "@/components/PremiereCarousel";
@@ -69,16 +68,12 @@ export default async function HomePage() {
                   <Icon name="play" /> Watch Now
                 </Link>
               )}
+              {/* "Add to Watchlist" bu yerdan ATAYLAB olib tashlandi —
+                  watchlist/sevimlilarga qo'shish faqat film sahifasida
+                  (`DetailActions`). */}
               <Link className="btn btn--ghost btn--lg" href={`/movie/${hero.slug}/`}>
                 <Icon name="info" /> More Info
               </Link>
-              {user ? (
-                <HeroWatchlistButton slug={hero.slug} initialActive={hero.in_watchlist} />
-              ) : (
-                <Link className="btn btn--ghost btn--lg" href="/register/">
-                  <Icon name="plus" /> Add to Watchlist
-                </Link>
-              )}
             </div>
           </div>
         </section>
@@ -120,7 +115,7 @@ export default async function HomePage() {
                   )}
                 </div>
 
-                <PremiereCarousel movies={premieres} isAuthenticated={!!user} />
+                <PremiereCarousel movies={premieres} />
               </div>
             </section>
           );

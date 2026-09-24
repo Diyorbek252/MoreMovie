@@ -3,15 +3,17 @@
  * movie_card.html` bilan bir xil CSS klasslari (`components.css` shu
  * klasslarga mo'ljallangan). Yangi ro'yxat uchun yangi komponent
  * yozmang, shuni ishlating (CLAUDE.md qoidasining Next.js ekvivalenti).
+ *
+ * Watchlist/Sevimlilar tugmalari bu yerda ATAYLAB yo'q — qo'shish
+ * faqat film sahifasidan (`DetailActions`) qilinadi. Kartada faqat
+ * holat BELGISI qoladi (`.card__saved`), u tugma emas.
  */
 
 import Image from "next/image";
 import Link from "next/link";
 
 import type { MovieCard as MovieCardType } from "@/lib/types";
-import FavoriteButton from "./FavoriteButton";
 import Icon from "./Icon";
-import WatchlistButton from "./WatchlistButton";
 
 export default function MovieCard({
   movie,
@@ -51,13 +53,6 @@ export default function MovieCard({
           </div>
           <div className="card__saved" title="Watchlist'da" hidden={!movie.in_watchlist}>
             <Icon name="bookmark-filled" />
-          </div>
-        </div>
-
-        <div className="card__overlay">
-          <div className="card__actions">
-            <WatchlistButton slug={movie.slug} initialActive={movie.in_watchlist} />
-            <FavoriteButton slug={movie.slug} initialActive={movie.in_favorite} />
           </div>
         </div>
 

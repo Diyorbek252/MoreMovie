@@ -3,14 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import FavoriteButton from "@/components/FavoriteButton";
+import DetailActions from "@/components/DetailActions";
 import Icon from "@/components/Icon";
 import MovieCard from "@/components/MovieCard";
 import PeopleTabs from "@/components/PeopleTabs";
 import Player from "@/components/Player";
 import RatingBox from "@/components/RatingBox";
 import Section from "@/components/Section";
-import WatchlistButton from "@/components/WatchlistButton";
 import { ApiError, getCurrentUser, getMovie, getReviews } from "@/lib/api";
 import { mediaSrc } from "@/lib/media";
 
@@ -143,12 +142,13 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
                 )}
 
                 {user ? (
-                  <>
-                    <WatchlistButton slug={movie.slug} initialActive={movie.in_watchlist} />
-                    <FavoriteButton slug={movie.slug} initialActive={movie.in_favorite} />
-                  </>
+                  <DetailActions
+                    slug={movie.slug}
+                    inWatchlist={movie.in_watchlist}
+                    inFavorite={movie.in_favorite}
+                  />
                 ) : (
-                  <Link className="btn btn--ghost btn--lg" href={`/login/?next=/movie/${movie.slug}/`}>
+                  <Link className="action-btn" href={`/login/?next=/movie/${movie.slug}/`}>
                     <Icon name="bookmark" /> Watchlist
                   </Link>
                 )}

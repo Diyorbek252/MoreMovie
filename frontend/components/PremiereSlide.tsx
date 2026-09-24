@@ -11,19 +11,15 @@ import Link from "next/link";
 
 import { mediaSrc } from "@/lib/media";
 import type { MovieCard } from "@/lib/types";
-import FavoriteButton from "./FavoriteButton";
 import Icon from "./Icon";
-import WatchlistButton from "./WatchlistButton";
 
 export default function PremiereSlide({
   movie,
   pos,
-  isAuthenticated,
   onSelect,
 }: {
   movie: MovieCard;
   pos: number;
-  isAuthenticated: boolean;
   onSelect: () => void;
 }) {
   const href = `/movie/${movie.slug}/`;
@@ -81,25 +77,18 @@ export default function PremiereSlide({
           </div>
         </div>
 
-        {(movie.can_watch || isAuthenticated) && (
+        {/* Watchlist/Sevimlilar tugmalari bu yerda ATAYLAB yo'q — qo'shish
+            faqat film sahifasidan (`DetailActions`). Bu yerda faqat
+            tomosha tugmasi qoladi. */}
+        {movie.can_watch && (
           <div className="premiere-slide__actions">
-            {movie.can_watch && (
-              <Link
-                className="btn-icon premiere-slide__play"
-                href={`${href}#player`}
-                aria-label={`${movie.title} — tomosha qilish`}
-              >
-                <Icon name="play" />
-              </Link>
-            )}
-            {isAuthenticated && (
-              // Umumiy komponentlar — holatni o'zlari saqlaydi va
-              // bosilgandan keyin server ro'yxatini yangilaydi.
-              <>
-                <WatchlistButton slug={movie.slug} initialActive={movie.in_watchlist} />
-                <FavoriteButton slug={movie.slug} initialActive={movie.in_favorite} />
-              </>
-            )}
+            <Link
+              className="btn-icon premiere-slide__play"
+              href={`${href}#player`}
+              aria-label={`${movie.title} — tomosha qilish`}
+            >
+              <Icon name="play" />
+            </Link>
           </div>
         )}
       </div>
