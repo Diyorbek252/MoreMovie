@@ -17,16 +17,36 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
 
   async rewrites() {
-    return [
-      // Brauzer client komponentlari doim NISBIY `/api/v1/...` manziliga
-      // murojaat qiladi (bir xil origin — production'dagi kabi). Dev
-      // rejimida Next shu so'rovlarni Django'ga proxy qiladi, shu bilan
-      // localhost:3000 va 127.0.0.1:8000 orasidagi CORS/cookie muammosi
-      // butunlay yo'qoladi (loyihada CORS sozlamasi yo'q — bu ataylab).
-      { source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` },
-      // Rasm/video fayllar — poster, backdrop, avatar, yuklangan video.
-      { source: "/media/:path*", destination: `${BACKEND_URL}/media/:path*` },
-    ];
+    // MUHIM (lokalda sinab ko'rilganda topilgan cheksiz-redirect bug'i):
+    // `trailingSlash: true` bilan Next.js so'ralgan URL'ni oxiridagi "/"
+    // bilan KUTADI, lekin `:path*` catch-all segmenti proxy destination
+    // yasaganda o'sha "/" ni SAQLAMAYDI. Natijada `/api/v1/auth/csrf/`
+    // Django'ga SLASHSIZ (`/api/v1/auth/csrf`) boradi, Django
+    // (APPEND_SLASH) buni qaytadan slashli manzilga 301 qiladi, brauzer
+    // yana `/api/v1/auth/csrf/` ga qaytadi — CHEKSIZ HALQA
+    // (ERR_TOO_MANY_REDIRECTS). Yechim: slash bilan va slashsiz
+    // so'rovlarni ALOHIDA qoida sifatida yozib, ikkalasida ham destination
+    // aynan so'ralganidek "/" bilan tugashini ta'minlaymiz.
+    return {
+      // Har doim Django'ga — Next'da bunday sahifa bo'lishidan qat'i nazar.
+      beforeFiles: [
+        { source: "/api/:path*/", destination: `${BACKEND_URL}/api/:path*/` },
+        { source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` },
+        // Rasm/video fayllar — poster, backdrop, avatar, yuklangan video.
+        { source: "/media/:path*", destination: `${BACKEND_URL}/media/:path*` },
+      ],
+      afterFiles: [],
+      // Next'da SAHIFASI YO'Q har qanday yo'l Django'ga (dashboard, admin,
+      // do'kon, obuna, profil va h.k. — hali Next'ga ko'chirilmagan
+      // sahifalar). Bu production'dagi nginx aralash marshrutining lokal
+      // ekvivalenti: u yerda nginx aynan shu yo'llarni gunicorn'ga beradi.
+      // Next'ning o'z sahifalari (/, /katalog/, /movie/..., /series/...)
+      // bunga tushmaydi — `fallback` faqat mos sahifa topilmaganda ishlaydi.
+      fallback: [
+        { source: "/:path*/", destination: `${BACKEND_URL}/:path*/` },
+        { source: "/:path*", destination: `${BACKEND_URL}/:path*` },
+      ],
+    };
   },
   images: {
     remotePatterns: [

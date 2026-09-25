@@ -1,0 +1,88 @@
+/* ==========================================================================
+   Serial sahifasi — "SERIAL · efir holati" qatori
+
+   Sahifaning qolgan tuzilishi FILM sahifasi bilan aynan bir xil
+   (`.detail__grid`, `.detail__actions`, `.facts`) — ular Django'dan
+   ko'chirilgan dizayn sistemasida allaqachon bor, shuning uchun bu yerda
+   faqat serialga xos bitta element uslublanadi: tur yorlig'i va efir
+   holati.
+
+   Ko'chirilgan CSS fayllariga tegilmaydi — faqat mavjud o'zgaruvchilar
+   ishlatiladi (hardcoded rang yozilmaydi; holat ranglari uchun
+   `color-mix()` bilan o'sha o'zgaruvchilardan yumshoq fon olinadi).
+   ========================================================================== */
+
+.series-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+}
+
+/* Ikkala yorliq ham bir xil "pill" shaklida — faqat rangi farq qiladi. */
+.series-eyebrow__tag,
+.series-eyebrow__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 30px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-full);
+  border: 1px solid transparent;
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* --- "SERIAL" — brend rangi --- */
+
+.series-eyebrow__tag {
+  background: var(--red-soft);
+  border-color: color-mix(in srgb, var(--red) 35%, transparent);
+  color: var(--red);
+}
+
+.series-eyebrow__tag svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* --- Efir holati — o'z rangida (yashil / ko'k / sariq) --- */
+
+.series-eyebrow__status {
+  /* Standart (noma'lum holat) — bo'g'iq kulrang. */
+  --status-color: var(--text-dim);
+  background: color-mix(in srgb, var(--status-color) 14%, transparent);
+  border-color: color-mix(in srgb, var(--status-color) 32%, transparent);
+  color: var(--status-color);
+}
+
+.series-eyebrow__status[data-status="ongoing"] { --status-color: var(--warning); }
+/* Tugallangan — yashil (nuqta puls urmaydi, faqat "ongoing" jonli). */
+.series-eyebrow__status[data-status="completed"] { --status-color: var(--success); }
+/* E'lon qilingan — hali boshlanmagan, "kutilayotgan" holat: neytral kumush. */
+.series-eyebrow__status[data-status="announced"] { --status-color: var(--text-muted); }
+
+.series-eyebrow__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: currentColor;
+}
+
+/* Faqat efirdagi serial "tirik" ko'rinadi — tugagan/e'lon qilinganida
+   nuqta tinch turadi. */
+.series-eyebrow__status[data-status="ongoing"] .series-eyebrow__dot {
+  animation: series-pulse 2.4s var(--ease-out) infinite;
+}
+
+@keyframes series-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent); }
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}

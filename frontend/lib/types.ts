@@ -158,6 +158,7 @@ export interface SeriesDetail extends SeriesCard {
   seasons: Season[];
   similar_series: SeriesCard[];
   views_count: number;
+  trailer_url: string;
 }
 
 /** Katalog elementi — `kind` orqali Movie/Series ajratiladi (core/api_v1.py::CatalogAPIView). */

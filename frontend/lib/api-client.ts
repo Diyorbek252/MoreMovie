@@ -42,8 +42,7 @@ function readCookie(name: string): string | null {
 }
 
 /**
- * CSRF cookie mavjudligiga ishonch hosil qiladi. Login/register/logout
- * sahifasi ochilganda bir marta chaqiriladi — Django `ensure_csrf_cookie`
+ * CSRF cookie mavjudligiga ishonch hosil qiladi. Django `ensure_csrf_cookie`
  * shu so'rovda `csrftoken` cookie'sini o'rnatadi (agar hali bo'lmasa).
  */
 export async function ensureCsrfCookie(): Promise<void> {
@@ -69,6 +68,16 @@ export async function apiClientFetch<T>(path: string, options: ClientFetchOption
 
   const headers: Record<string, string> = {};
   if (isUnsafe) {
+    // MUHIM (lokalda sinab ko'rilganda topilgan bug): `csrftoken` cookie
+    // faqat `/auth/csrf/`, `/auth/login/` yoki `/auth/register/` sahifasi
+    // ochilganda o'rnatilardi. Foydalanuvchi TO'G'RIDAN-TO'G'RI boshqa
+    // sahifaga (masalan film detali) kelsa, cookie umuman yo'q edi —
+    // Django "CSRF token missing" bilan 403 qaytarardi, bu esa (401/403
+    // ni "avtorizatsiya yo'q" deb talqin qiluvchi tugmalarda) foydalanuvchi
+    // ALLAQACHON kirgan bo'lsa ham qayta login sahifasiga otib yuborardi
+    // (yoki logout so'rovi jimgina muvaffaqiyatsiz bo'lardi). Endi HAR bir
+    // yozish so'rovidan oldin cookie borligi avtomatik ta'minlanadi.
+    await ensureCsrfCookie();
     const csrftoken = readCookie("csrftoken");
     if (csrftoken) headers["X-CSRFToken"] = csrftoken;
   }

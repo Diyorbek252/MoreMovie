@@ -104,7 +104,7 @@ class SeriesDetailSerializer(SeriesCardSerializer):
         fields = SeriesCardSerializer.Meta.fields + [
             "original_title", "description", "directors", "countries",
             "language", "age_rating", "cast", "seasons", "similar_series",
-            "views_count",
+            "views_count", "trailer_url",
         ]
 
     def get_seasons(self, obj):
