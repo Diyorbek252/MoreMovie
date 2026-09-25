@@ -183,6 +183,8 @@ export interface CatalogResponse extends Paginated<CatalogItem> {
     sort: string;
   };
   type_label: string;
+  /** Yil tanlash qatori uchun — kino va seriallardagi barcha yillar. */
+  available_years: number[];
 }
 
 export interface HomeSection {

@@ -5,6 +5,7 @@ import Icon from "@/components/Icon";
 import MovieCard from "@/components/MovieCard";
 import Pagination from "@/components/Pagination";
 import SeriesCard from "@/components/SeriesCard";
+import YearRail from "@/components/YearRail";
 import { getCatalog, getGenres } from "@/lib/api";
 
 const PAGE_SIZE = 24; // config/settings.py::MOVIES_PER_PAGE bilan bir xil.
@@ -35,6 +36,7 @@ export default async function CatalogPage({
   const [catalog, genres] = await Promise.all([getCatalog(params), getGenres()]);
 
   const selectedGenres = (params.genre || "").split(",").filter(Boolean);
+  const selectedYears = (params.year || "").split(",").filter(Boolean);
   const currentPage = Number(params.page) || 1;
   const totalPages = Math.ceil(catalog.count / PAGE_SIZE);
 
@@ -58,6 +60,12 @@ export default async function CatalogPage({
         genres={genres}
         selected={selectedGenres}
         buildHref={(slugs) => buildHref({ genre: slugs.length ? slugs.join(",") : null })}
+      />
+
+      <YearRail
+        years={catalog.available_years}
+        selected={selectedYears}
+        buildHref={(years) => buildHref({ year: years.length ? years.join(",") : null })}
       />
 
       <div className="results-bar">

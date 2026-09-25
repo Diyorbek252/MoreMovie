@@ -117,6 +117,9 @@ class CatalogAPIView(APIView):
         response = paginator.get_paginated_response(data)
         response.data["current"] = current
         response.data["type_label"] = CONTENT_TYPES[current["type"]][0]
+        # Yil tanlash qatori uchun — HTML katalogdagi `year_rail` bilan bir
+        # xil manba (kino va seriallar birga, yangisidan eskisiga).
+        response.data["available_years"] = helper._available_years()
         return response
 
 
