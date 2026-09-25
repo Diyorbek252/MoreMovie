@@ -53,8 +53,13 @@ jobs:
             # --- Frontend (Next.js) ---
             # SSH skripti interaktiv bo'lmagan shell'da ishlaydi — ~/.bashrc
             # dagi nvm u yerda yuklanmaydi, shuning uchun qo'lda yuklanadi.
+            # nvm.sh `set -u` (e'lon qilinmagan o'zgaruvchi = xato) bilan
+            # mos emas — yuklash paytida vaqtincha o'chiriladi, aks holda
+            # skript shu yerda jim to'xtaydi va Next qayta build bo'lmaydi.
             export NVM_DIR="$HOME/.nvm"
+            set +u
             . "$NVM_DIR/nvm.sh"
+            set -u
             cd ~/more-movie/frontend
             npm ci
             npm run build
