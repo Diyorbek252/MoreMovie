@@ -63,4 +63,24 @@ jobs:
             cd ~/more-movie/frontend
             npm ci
             npm run build
-            sudo systemctl restart more-movie-web
+
+            # Port 3000 ni systemd'dan TASHQARIDA ishga tushirilgan eski
+            # jarayon (qo'lda `npm run start` / `nohup`) ushlab qolsa, yangi
+            # xizmat EADDRINUSE bilan yiqiladi, `restart` esa buni sezmaydi —
+            # sayt eski build'da qolib, JS chunk'lar 400 qaytaradi (bosh
+            # sahifa qora). Shuning uchun portni majburan bo'shatamiz.
+            sudo systemctl stop more-movie-web
+            sudo fuser -k 3000/tcp || true
+            # Oldingi yiqilishlardan keyin systemd "start request repeated
+            # too quickly" deb bloklagan bo'lishi mumkin — hisoblagichni
+            # nolga tushiramiz.
+            sudo systemctl reset-failed more-movie-web || true
+            sudo systemctl start more-movie-web
+
+            # Tekshiruv: Next haqiqatan javob bermasa deploy QIZIL tugaydi.
+            for i in $(seq 1 30); do
+              curl -fsS -o /dev/null http://127.0.0.1:3000/ && break
+              sleep 1
+            done
+            curl -fsS -o /dev/null http://127.0.0.1:3000/
+            systemctl is-active --quiet more-movie-web
