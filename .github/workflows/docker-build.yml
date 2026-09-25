@@ -49,3 +49,13 @@ jobs:
             .venv/bin/python manage.py migrate --noinput
             .venv/bin/python manage.py collectstatic --noinput
             sudo systemctl restart gunicorn
+
+            # --- Frontend (Next.js) ---
+            # SSH skripti interaktiv bo'lmagan shell'da ishlaydi — ~/.bashrc
+            # dagi nvm u yerda yuklanmaydi, shuning uchun qo'lda yuklanadi.
+            export NVM_DIR="$HOME/.nvm"
+            . "$NVM_DIR/nvm.sh"
+            cd ~/more-movie/frontend
+            npm ci
+            npm run build
+            sudo systemctl restart more-movie-web
