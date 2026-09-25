@@ -1,0 +1,48 @@
+/* ==========================================================================
+   "Eng yuqori baho" saralash tugmasi (components/RatingSortToggle.tsx) —
+   katalogdagi natijalar qatorida (`.results-bar`) o'ngda.
+   ========================================================================== */
+
+.sort-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease);
+}
+
+.sort-toggle svg {
+  width: 14px;
+  height: 14px;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+/* Yulduzcha — kartadagi reyting belgilari bilan bir xil oltin idiom. */
+.sort-toggle svg:first-child {
+  color: var(--warning);
+  fill: currentColor;
+}
+
+.sort-toggle:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--warning) 45%, transparent);
+}
+
+.sort-toggle.is-active {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--text);
+}
+
+.sort-toggle.is-active svg:first-child {
+  color: var(--text);
+}

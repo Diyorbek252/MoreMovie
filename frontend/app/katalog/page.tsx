@@ -4,6 +4,7 @@ import GenreRail from "@/components/GenreRail";
 import Icon from "@/components/Icon";
 import MovieCard from "@/components/MovieCard";
 import Pagination from "@/components/Pagination";
+import RatingSortToggle from "@/components/RatingSortToggle";
 import SeriesCard from "@/components/SeriesCard";
 import YearRail from "@/components/YearRail";
 import { getCatalog, getGenres } from "@/lib/api";
@@ -72,12 +73,12 @@ export default async function CatalogPage({
         <span>
           <strong>{catalog.count}</strong> ta natija
           {params.q && ` — «${params.q}» so'rovi bo'yicha`}
+          {totalPages > 1 && ` · ${currentPage} / ${totalPages} sahifa`}
         </span>
-        {totalPages > 1 && (
-          <span>
-            {currentPage} / {totalPages} sahifa
-          </span>
-        )}
+        <RatingSortToggle
+          active={params.sort === "rating"}
+          buildHref={(sort) => buildHref({ sort })}
+        />
       </div>
 
       {catalog.results.length > 0 ? (

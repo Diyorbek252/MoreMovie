@@ -7,6 +7,7 @@
 /* Next.js uchun qo'shimcha (Django dizayn sistemasida yo'q) uslublar. */
 @import "../styles/detail-actions.css";
 @import "../styles/series-hero.css";
+@import "../styles/sort-toggle.css";
 
 /* Google Fonts endi `next/font` orqali (o'z-o'zidan joylashgan, tashqi
    so'rov yo'q) — shrift oilasi nomi o'rniga next/font CSS o'zgaruvchisi
